@@ -37,11 +37,11 @@ class WhakamahereSemesterStatus extends SimpleORMap
 
     public function getStatusName()
     {
-        $values = $this->getStatusValues();
+        $values = self::getStatusValues();
         return $values[$this->status];
     }
 
-    public function getStatusValues()
+    public static function getStatusValues()
     {
         return [
             'closed' => dgettext('whakamahere', 'Keine Datenerfassung'),
