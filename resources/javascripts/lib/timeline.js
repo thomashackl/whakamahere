@@ -63,8 +63,6 @@ const WhakamahereTimeline = {
                             $('.timeline-grids').css('height', '48px');
                         }
 
-                        $('.timeline-node').each(function (index, element) {
-                        });
                         $('.timeline-node').hover(
                             function(event) {
                                 const fulltitle = $('<div>')
