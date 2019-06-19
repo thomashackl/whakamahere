@@ -57,9 +57,24 @@ class TimelineWidget extends Widgets\Widget {
             return $action;
         };
 
+        $list = function ($element) {
+            $action = new Widgets\WidgetAction(dgettext('whakamahere', 'Listenansicht im Dialog'));
+            $action->setIcon(Icon::create('maximize', Icon::ROLE_CLICKABLE, ['size' => 20]));
+            $action->setCallback([$element, 'getListTemplate']);
+            $action->setAttributes(
+                [
+                    'href' => $element->url_for('list'),
+                    'data-dialog' => 'size=auto',
+                ]
+            );
+
+            return $action;
+        };
+
         return array_filter(
             [
                 'getDates' => $getDates($this),
+                'list' => $list($this)
             ]
         );
     }
@@ -89,12 +104,25 @@ class TimelineWidget extends Widgets\Widget {
      */
     protected function getVariables(\Range $range, $scope)
     {
-        $plugin = PluginEngine::getPlugin('WhakamaherePlugin');
+        $variables = [];
 
-        return [
-            'options' => $this->getOptions(),
-            'pluginurl' => $plugin->getPluginURL()
-        ];
+        switch($scope) {
+            case 'list':
+                $variables = [
+                    'phases' => WhakamaherePlanningPhase::getCurrent()
+                ];
+                break;
+            default:
+                $plugin = PluginEngine::getPlugin('WhakamaherePlugin');
+
+                $variables = [
+                    'options' => $this->getOptions(),
+                    'pluginurl' => $plugin->getPluginURL()
+                ];
+                break;
+        }
+
+        return $variables;
     }
 
     public function getDates(Widgets\Element $element, Widgets\Response $response)
@@ -115,6 +143,31 @@ class TimelineWidget extends Widgets\Widget {
         }
 
         return json_encode($dates);
+    }
+
+    /**
+     * This method is the callback of the `list` action. It returns a
+     * list view of the results of calling self::getFilesAndFolders.
+     *
+     * @param Element  $element  the widget element whose `list`
+     *                           action is performing
+     * @param Response $response a response object given to all widget
+     *                           actions
+     *
+     * @return mixed Content of the response (might be a string or
+     *               a flexi template)
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    public function getListTemplate(Widgets\Element $element, Widgets\Response $response)
+    {
+        $response->addHeader('X-Title', dgettext('whakamahere', 'Listenansicht').': '.rawurlencode($this->getTitle()));
+
+        return $this->getTemplate(
+            'timeline-list.php',
+            $this->getVariables($GLOBALS['user']->getAuthenticatedUser(), 'list')
+        );
     }
 
 }
