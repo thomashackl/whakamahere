@@ -35,6 +35,10 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
                 new Navigation(dgettext('whakamahere', 'Dashboard'),
                     PluginEngine::getURL($this, [], 'dashboard')));
 
+            $navigation->addSubNavigation('planning',
+                new Navigation(dgettext('whakamahere', 'Planung'),
+                    PluginEngine::getURL($this, [], 'planning')));
+
             $navigation->addSubNavigation('semesters',
                 new Navigation(dgettext('whakamahere', 'Semestereinstellungen'),
                     PluginEngine::getURL($this, [], 'semesters')));
