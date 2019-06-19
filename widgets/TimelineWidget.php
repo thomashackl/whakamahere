@@ -1,0 +1,120 @@
+<?php
+
+class TimelineWidget extends Widgets\Widget {
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getName()
+    {
+        return dgettext('whakamahere', 'Planungsphasen');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getDescription()
+    {
+        return dgettext('whkaamahere', 'Zeigt aktuelle Planungsphasen an.');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function suitableForRange(\Range $range, $scope = null)
+    {
+        return $range->getRangeType() === 'user' && $scope === 'whakamahere_dashboard';
+    }
+
+    /**
+     * Returns whether this widget instance may be removed from a container.
+     *
+     * @return bool
+     */
+    public function mayBeRemoved()
+    {
+        return false;
+    }
+
+    /**
+     * Returns whether this widget instance may be duplicated or used more than
+     * once in a container.
+     *
+     * @return bool
+     */
+    public function mayBeDuplicated()
+    {
+        return false;
+    }
+
+    public function getActions(Range $range, $scope)
+    {
+        $getDates = function ($element) {
+            $action = new Widgets\WidgetAction('');
+            $action->setCallback([$element, 'getDates']);
+            $action->hasIcon(false);
+
+            return $action;
+        };
+
+        return array_filter(
+            [
+                'getDates' => $getDates($this),
+            ]
+        );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getContent(\Range $range, $scope)
+    {
+        $plugin = PluginEngine::getPlugin('WhakamaherePlugin');
+        $version = $plugin->getVersion();
+
+        PageLayout::addScript($plugin->getPluginURL() . '/assets/javascripts/timeline.js?v=' . $version);
+        PageLayout::addStylesheet($plugin->getPluginURL() . '/assets/stylesheets/timeline-style.css?v=' . $version);
+        return $this
+            ->getTemplate('timeline.php')
+            ->render($this->getVariables($range, $scope));
+    }
+
+    /**
+     * This method return all the variables used for the templates of
+     * the `basic` widget view and of the `list` view.
+     *
+     * @param Range $range The range whose files and folders shall be retrieved
+     *
+     * @return array an array of all the template variables
+     */
+    protected function getVariables(\Range $range, $scope)
+    {
+        $plugin = PluginEngine::getPlugin('WhakamaherePlugin');
+
+        return [
+            'options' => $this->getOptions(),
+            'pluginurl' => $plugin->getPluginURL()
+        ];
+    }
+
+    public function getDates(Widgets\Element $element, Widgets\Response $response)
+    {
+
+        $now = new DateTime();
+
+        foreach (WhakamaherePlanningPhase::getCurrent() as $phase) {
+            $dates[] = [
+                'id' => $phase->id,
+                'start' => $phase->start->format('Y-m-d 00:00:00'),
+                'end' => $phase->end->format('Y-m-d 23:59:59'),
+                'title' => $phase->name,
+                'semester' => $phase->semester->name,
+                'color' => $phase->color,
+                'current' => $phase->start <= $now && $phase->end >= $now
+            ];
+        }
+
+        return json_encode($dates);
+    }
+
+}

@@ -1,0 +1,42 @@
+@import "~jquery.timeline.psk/dist/timeline.min.css";
+
+@font-face{
+  font-family: jQueryTimeline;
+  src: url(../timeline/fonts/jQueryTimeline.eot?t4qpol);
+  src: url(../timeline/fonts/jQueryTimeline.eot?t4qpol#iefix) format("embedded-opentype"),
+    url(../timeline/fonts/jQueryTimeline.ttf?t4qpol) format("truetype"),
+    url(../timeline/fonts/jQueryTimeline.woff?t4qpol) format("woff"),
+    url(../timeline/fonts/jQueryTimeline.svg?t4qpol#jQueryTimeline) format("svg");
+  font-weight: 400;
+  font-style: normal}
+
+#phases {
+
+  #timeline-fulltitle {
+    display: none;
+    font-size: larger;
+    padding: 5px 10px 5px 10px;
+  }
+
+  .timeline-node {
+
+    border-radius: 0;
+
+    &.timeline-current {
+      font-size: larger;
+      line-height: 28px;
+    }
+
+    &.timeline-text-truncate:after {
+      content: '';
+    }
+  }
+
+  .timeline-needle-pointer {
+    border-color: #000000;
+    bottom: 25px;
+    height: calc(100% - 32px);
+    width: 3px;
+  }
+
+}
