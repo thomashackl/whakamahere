@@ -19,18 +19,15 @@ class TimelinesController extends AuthenticatedController {
     /**
      * Actions and settings taking place before every page call.
      */
-    public function before_filter(&$action, &$args) {
+    public function before_filter(&$action, &$args)
+    {
         $this->plugin = $this->dispatcher->plugin;
 
         if (!$this->plugin->hasPermission('root')) {
             throw new AccessDeniedException();
         }
 
-        if (Request::isXhr()) {
-            $this->set_layout(null);
-        } else {
-            $this->set_layout($GLOBALS['template_factory']->open('layouts/base'));
-        }
+        $this->set_layout(Request::isXhr() ? null : $GLOBALS['template_factory']->open('layouts/base'));
 
         $this->sidebar = Sidebar::get();
         $this->sidebar->setImage('sidebar/schedule-sidebar.png');
