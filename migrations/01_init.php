@@ -123,13 +123,19 @@ class Init extends Migration {
             require_once $file;
 
             $class = basename($file, '.php');
+
+            $width = 6;
+            if ($class === 'TImelineWidget') {
+                $width = 12;
+            }
+
             $widget = Widgets\Widget::registerWidget(new $class);
             $element = new Widgets\Element();
             $element->container_id = $container->id;
             $element->widget_id = $widget->id;
             $element->x = 0;
             $element->y = 0;
-            $element->width = 12;
+            $element->width = $width;
             $element->height = 3;
             $element->locked = 1;
             $element->removable = 0;
