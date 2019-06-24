@@ -1,8 +1,8 @@
 <?php
 
 /**
- * Class TimelineWidget
- * Dashboard widget for showing planning timelines.
+ * Class StatisticsWidget
+ * Dashboard widget for some statistics.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -14,14 +14,14 @@
  * @category    Whakamahere
  */
 
-class TimelineWidget extends Widgets\Widget {
+class Statisticsidget extends Widgets\Widget {
 
     /**
      * {@inheritdoc}
      */
     public function getName()
     {
-        return dgettext('whakamahere', 'Planungsphasen');
+        return dgettext('whakamahere', 'Statistik');
     }
 
     /**
@@ -29,7 +29,7 @@ class TimelineWidget extends Widgets\Widget {
      */
     public function getDescription()
     {
-        return dgettext('whkaamahere', 'Zeigt aktuelle Planungsphasen an.');
+        return dgettext('whkaamahere', 'Zeigt Statistiken zur aktuellen Planung.');
     }
 
     /**
@@ -63,14 +63,6 @@ class TimelineWidget extends Widgets\Widget {
 
     public function getActions(Range $range, $scope)
     {
-        $getDates = function ($element) {
-            $action = new Widgets\WidgetAction('');
-            $action->setCallback([$element, 'getDates']);
-            $action->hasIcon(false);
-
-            return $action;
-        };
-
         $list = function ($element) {
             $action = new Widgets\WidgetAction(dgettext('whakamahere', 'Listenansicht im Dialog'));
             $action->setIcon(Icon::create('maximize', Icon::ROLE_CLICKABLE, ['size' => 20]));
@@ -87,7 +79,6 @@ class TimelineWidget extends Widgets\Widget {
 
         return array_filter(
             [
-                'getDates' => $getDates($this),
                 'list' => $list($this)
             ]
         );
@@ -120,43 +111,7 @@ class TimelineWidget extends Widgets\Widget {
     {
         $variables = [];
 
-        switch($scope) {
-            case 'list':
-                $variables = [
-                    'phases' => WhakamaherePlanningPhase::getCurrent()
-                ];
-                break;
-            default:
-                $plugin = PluginEngine::getPlugin('WhakamaherePlugin');
-
-                $variables = [
-                    'options' => $this->getOptions(),
-                    'pluginurl' => $plugin->getPluginURL()
-                ];
-                break;
-        }
-
         return $variables;
-    }
-
-    public function getDates(Widgets\Element $element, Widgets\Response $response)
-    {
-
-        $now = new DateTime();
-
-        foreach (WhakamaherePlanningPhase::getCurrent() as $phase) {
-            $dates[] = [
-                'id' => $phase->id,
-                'start' => $phase->start->format('Y-m-d 00:00:00'),
-                'end' => $phase->end->format('Y-m-d 23:59:59'),
-                'title' => $phase->name,
-                'semester' => $phase->semester->name,
-                'color' => $phase->color,
-                'current' => $phase->start <= $now && $phase->end >= $now
-            ];
-        }
-
-        return json_encode($dates);
     }
 
     /**
@@ -179,7 +134,7 @@ class TimelineWidget extends Widgets\Widget {
         $response->addHeader('X-Title', dgettext('whakamahere', 'Listenansicht').': '.rawurlencode($this->getTitle()));
 
         return $this->getTemplate(
-            'timeline-list.php',
+            'statistics-list.php',
             $this->getVariables($GLOBALS['user']->getAuthenticatedUser(), 'list')
         );
     }
