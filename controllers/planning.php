@@ -29,6 +29,8 @@ class PlanningController extends AuthenticatedController {
         }
 
         $this->set_layout(Request::isXhr() ? null : $GLOBALS['template_factory']->open('layouts/base'));
+
+        PageLayout::addScript($this->plugin->getPluginURL() . '/assets/javascripts/planning.js?v=' . $version);
     }
 
     public function index_action($show = 'semester')
@@ -70,83 +72,24 @@ class PlanningController extends AuthenticatedController {
         $selectedSemester = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_SEMESTER != '' ?
             UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_SEMESTER :
             Semester::findNext()->id;
-        $semesterFilter = new SelectWidget(dgettext('whakamahere', 'Semester'),
-            $this->url_for('filter/select_semester'), 'semester');
-        foreach ($semesters as $semester) {
-            $semesterFilter->addElement(new SelectElement(
-                $semester->semester_id,
-                $semester->semester->name,
-                $semester->semester_id === $selectedSemester
-            ), 'semester-' . $semester->semester_id);
-        }
-        $sidebar->addWidget($semesterFilter);
 
-        $instituteFilter = new SelectWidget(dgettext('whakamahere', 'Einrichtung'),
-            $this->url_for('filter/select_institute'), 'institute');
-        $instituteFilter->addElement(new SelectElement(
-            '',
-            dgettext('whakamahere', 'Keine Einrichtung'),
-            UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE == ''
-        ), 'institute-empty');
-        foreach (Institute::getMyInstitutes() as $inst) {
-            $element = new SelectElement(
-                $inst['Institut_id'],
-                $inst['is_fak'] ? $inst['Name'] : '  ' . $inst['Name'],
-                $inst['Institut_id'] === UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE
-            );
-            if ($inst['is_fak']) {
-                $element->setAsHeader();
-            }
-            $instituteFilter->addElement($element, 'institute-' . $inst['Institut_id']);
+        $institutes = Institute::getMyInstitutes();
 
-            if ($inst['is_fak']) {
-                $instituteFilter->addElement(new SelectElement(
-                    $inst['Institut_id'] . '+children',
-                    '  ' . dgettext('whakamahere', ' + Untereinrichtungen'),
-                    $inst['Institut_id'] === UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE
-                ), 'institute-' . $inst['Institut_id'] . '+children');
-            }
-        }
-        $sidebar->addWidget($instituteFilter);
+        $locations = Location::findAll();
 
-        $resourceFilter = new SelectWidget(dgettext('whakamahere', 'Raum'),
-            $this->url_for('filter/select_room'), 'room');
-
-        foreach (Location::findAll() as $location) {
-
-            $element = new SelectElement(
-                $location->id,
-                $location->getFullname(),
-                $location->id === UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_RESOURCE
-            );
-            $element->setIndentLevel(0);
-            $element->setAsHeader();
-            $resourceFilter->addElement($element, 'resource-' . $location->id);
-
-            foreach ($location->buildings as $building) {
-                $element = new SelectElement(
-                    $building->id,
-                    $building->getFullname(),
-                    $building->id === UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_RESOURCE
-                );
-                $element->setIndentLevel(1);
-                $element->setAsHeader();
-                $resourceFilter->addElement($element, 'resource-' . $building->id);
-
-                foreach ($building->rooms as $room) {
-                    $element = new SelectElement(
-                        $room->id,
-                        '  ' . $room->name,
-                        $room->id === UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_RESOURCE
-                    );
-                    $element->setIndentLevel(2);
-                    $resourceFilter->addElement($element, 'resource-' . $room->id);
-                }
-            }
-
-        }
-
-        $sidebar->addWidget($resourceFilter);
+        $factory = $this->get_template_factory();
+        $template = $factory->open('filter/sidebar');
+        $sidebar->addWidget(new TemplateWidget(
+            dgettext('whakamahere', 'Filter'),
+            $template,
+            [
+                'semesters' => $semesters,
+                'selectedSemester' => $selectedSemester,
+                'institutes' => $institutes,
+                'locations' => $locations,
+                'controller' => $this
+            ]
+        ));
     }
 
 }

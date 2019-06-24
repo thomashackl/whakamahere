@@ -7,6 +7,7 @@ const assetsPath = path.resolve(__dirname, "resources");
 
 module.exports = {
     entry: {
+        "planning": assetsPath + "/javascripts/entry-planning.js",
         "semesterstatus": assetsPath + "/javascripts/entry-semesterstatus.js",
         "timeline": assetsPath + "/javascripts/entry-timeline.js",
         "timeline-style": assetsPath + "/stylesheets/timeline.scss"
