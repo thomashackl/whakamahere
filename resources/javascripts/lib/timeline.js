@@ -17,69 +17,82 @@ const WhakamahereTimeline = {
                 },
                 success: function(data, status, xhr) {
 
-                    let ul = $('<ul>').addClass('timeline-events');
+                    if (data != null && data.length > 0) {
 
-                    let current = [];
+                        let ul = $('<ul>').addClass('timeline-events');
 
-                    $.each(data, function(index, phase) {
-                        let li = $('<li>')
-                            .attr('data-timeline-node', "{ eventId: '" + phase.id +
-                                "', start: '" + phase.start +
-                                "', end: '" + phase.end +
-                                "', content: '" + phase.title +
-                                "', bgColor: '" + phase.color +
-                                "', color: '" + WhakamahereTimeline.getContrastColor(phase.color) +
-                                "'}")
-                            .attr('data-phase-color', phase.color)
-                            .attr('data-title', phase.title)
-                            .text(phase.title);
-                        ul.append(li);
+                        let current = [];
 
-                        if (phase.current) {
-                            current.push(phase.id);
-                        }
-                    });
+                        $.each(data, function (index, phase) {
+                            let li = $('<li>')
+                                .attr('data-timeline-node', "{ eventId: '" + phase.id +
+                                    "', start: '" + phase.start +
+                                    "', end: '" + phase.end +
+                                    "', content: '" + phase.title +
+                                    "', bgColor: '" + phase.color +
+                                    "', color: '" + WhakamahereTimeline.getContrastColor(phase.color) +
+                                    "'}")
+                                .attr('data-phase-color', phase.color)
+                                .attr('data-title', phase.title)
+                                .text(phase.title);
+                            ul.append(li);
 
-                    element.append(ul);
-
-                    element.timeline({
-                        startDatetime: '2019-04-01',
-                        type: 'bar',
-                        range: 6,
-                        rows: 1,
-                        scale: 'months',
-                        rangeAlign: 'current',
-                        langsDir: element.data('plugin-url') + '/assets/timeline/langs/',
-                        minGridSize: 5
-                    });
-
-                    element.on('afterRender.timeline', function () {
-                        for (let i = 0 ; i < current.length ; i++) {
-                            $('#evt-' + current[i]).addClass('timeline-current');
-                        }
-
-                        if (current.length > 0) {
-                            $('.timeline-events').css('height', '48px');
-                            $('.timeline-grids').css('height', '48px');
-                        }
-
-                        $('.timeline-node').hover(
-                            function(event) {
-                                const fulltitle = $('<div>')
-                                    .attr('id', 'timeline-fulltitle')
-                                    .css('background-color', $(this).css('background-color'))
-                                    .css('color', $(this).css('color'))
-                                    .html($(this).html());
-                                element.append(fulltitle);
-                                fulltitle.fadeIn();
-                            },
-                            function(event) {
-                                $('#timeline-fulltitle')
-                                    .fadeOut()
-                                    .remove();
+                            if (phase.current) {
+                                current.push(phase.id);
                             }
+                        });
+
+                        element.append(ul);
+
+                        element.timeline({
+                            startDatetime: '2019-04-01',
+                            type: 'bar',
+                            range: 6,
+                            rows: 1,
+                            scale: 'months',
+                            rangeAlign: 'current',
+                            langsDir: element.data('plugin-url') + '/assets/timeline/langs/',
+                            minGridSize: 5
+                        });
+
+                        element.on('afterRender.timeline', function () {
+                            for (let i = 0; i < current.length; i++) {
+                                $('#evt-' + current[i]).addClass('timeline-current');
+                            }
+
+                            if (current.length > 0) {
+                                $('.timeline-events').css('height', '48px');
+                                $('.timeline-grids').css('height', '48px');
+                            }
+
+                            $('.timeline-node').hover(
+                                function (event) {
+                                    const fulltitle = $('<div>')
+                                        .attr('id', 'timeline-fulltitle')
+                                        .css('background-color', $(this).css('background-color'))
+                                        .css('color', $(this).css('color'))
+                                        .html($(this).html());
+                                    element.append(fulltitle);
+                                    fulltitle.fadeIn();
+                                },
+                                function (event) {
+                                    $('#timeline-fulltitle')
+                                        .fadeOut()
+                                        .remove();
+                                }
+                            );
+                        });
+
+                    } else {
+
+                        element.html(
+                            $('<div>')
+                                .addClass('messagebox')
+                                .addClass('messagebox_info')
+                                .html(element.data('no-phases-message'))
                         );
-                    })
+
+                    }
                 },
                 error: function(xhr, status, error) {
                     alert(error);
