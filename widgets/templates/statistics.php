@@ -1,0 +1,1 @@
+<div id="room-usage" data-get-usage-url="<?= $widget->url_for('roomUsage') ?>"></div>

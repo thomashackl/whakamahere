@@ -14,7 +14,7 @@
  * @category    Whakamahere
  */
 
-class Statisticsidget extends Widgets\Widget {
+class StatisticsWidget extends Widgets\Widget {
 
     /**
      * {@inheritdoc}
@@ -63,6 +63,14 @@ class Statisticsidget extends Widgets\Widget {
 
     public function getActions(Range $range, $scope)
     {
+        $roomUsage = function ($element) {
+            $action = new Widgets\WidgetAction('');
+            $action->setCallback([$element, 'getRoomUsage']);
+            $action->hasIcon(false);
+
+            return $action;
+        };
+
         $list = function ($element) {
             $action = new Widgets\WidgetAction(dgettext('whakamahere', 'Listenansicht im Dialog'));
             $action->setIcon(Icon::create('maximize', Icon::ROLE_CLICKABLE, ['size' => 20]));
@@ -79,6 +87,7 @@ class Statisticsidget extends Widgets\Widget {
 
         return array_filter(
             [
+                'roomUsage' => $roomUsage($this),
                 'list' => $list($this)
             ]
         );
@@ -92,10 +101,10 @@ class Statisticsidget extends Widgets\Widget {
         $plugin = PluginEngine::getPlugin('WhakamaherePlugin');
         $version = $plugin->getVersion();
 
-        PageLayout::addScript($plugin->getPluginURL() . '/assets/javascripts/timeline.js?v=' . $version);
-        PageLayout::addStylesheet($plugin->getPluginURL() . '/assets/stylesheets/timeline-style.css?v=' . $version);
+        PageLayout::addScript($plugin->getPluginURL() . '/assets/javascripts/statisticswidget.js?v=' . $version);
+
         return $this
-            ->getTemplate('timeline.php')
+            ->getTemplate('statistics.php')
             ->render($this->getVariables($range, $scope));
     }
 
@@ -131,12 +140,101 @@ class Statisticsidget extends Widgets\Widget {
      */
     public function getListTemplate(Widgets\Element $element, Widgets\Response $response)
     {
-        $response->addHeader('X-Title', dgettext('whakamahere', 'Listenansicht').': '.rawurlencode($this->getTitle()));
+        $response->addHeader('X-Title', dgettext('whakamahere', 'Listenansicht')
+            . ': ' . rawurlencode($this->getTitle()));
 
-        return $this->getTemplate(
+        return $element->getTemplate(
             'statistics-list.php',
-            $this->getVariables($GLOBALS['user']->getAuthenticatedUser(), 'list')
+            $element->getVariables($GLOBALS['user']->getAuthenticatedUser(), 'list')
         );
+    }
+
+    public function getRoomUsage(Widgets\Element $element, Widgets\Response $response)
+    {
+        $locations = Location::findAll();
+
+        $semester = Semester::findOneByName('WiSe 19/20');
+
+        $start = new DateTime(date('Y-m-d 00:00:00', $semester->vorles_beginn));
+        $end = new DateTime(date('Y-m-d 23:59:59', $semester->vorles_ende));
+
+        $oneDay = new DateInterval('P1D');
+
+        /*
+         * $start and $end are absolute dates, get weeks,
+         * respecting weekday selection setting.
+         */
+        $days = Config::get()->WHAKAMAHERE_OCCUPATION_DAYS;
+
+        // Move start up until we find a weekday that shall be used.
+        while (!in_array($start->format('w'), $days)) {
+            $start->add($oneDay);
+        }
+
+        // ... Now the same for end time.
+        while (!in_array($end->format('w'), $days)) {
+            $end->sub($oneDay);
+        }
+
+        $weekdays = Config::get()->WHAKAMAHERE_OCCUPATION_DAYS;
+        $startHour = Config::get()->WHAKAMAHERE_OCCUPATION_START_HOUR + 2;
+        $endHour = Config::get()->WHAKAMAHERE_OCCUPATION_END_HOUR - 4;
+
+        // Now iterate over days in timespan and build entries for fetching bookings.
+        $days = 0;
+        $times = [];
+        $current = $start;
+        while ($current <= $end) {
+            if (in_array($current->format('w'), $weekdays) && !SemesterHoliday::isHoliday($current->getTimestamp(), false)) {
+                $days++;
+
+                $beginTime = mktime($startHour, 0, 0, $current->format('n'), $current->format('j'), $current->format('Y'));
+                $endTime = mktime($endHour, 0, 0, $current->format('n'), $current->format('j'), $current->format('Y'));
+
+                $times[] = [
+                    'begin' => $beginTime,
+                    'end' => $endTime
+                ];
+            }
+            $current->add($oneDay);
+        }
+
+        // Full time that is available in selected timespan and hours.
+        $theoretical = $days * ($endHour - $startHour) * 60;
+        /*
+         * Theoretical full time, added up across all rooms.
+         * E.g.: for 4 rooms, we have 4 * $theoretical at our disposal.
+         */
+        $fullTime = 0;
+        // Time that is occupied by bookings.
+        $bookedTime = 0;
+
+        foreach ($locations as $location) {
+            foreach ($location->buildings as $building) {
+                foreach ($building->rooms as $room) {
+
+                    if (in_array($room->category->name, ['Hörsäle', 'Übungsräume'])) {
+
+                        $fullTime += $theoretical;
+
+                        $bookings = ResourceBooking::findByResourceAndTimeRanges($room, $times);
+
+                        $minutes = 0;
+
+                        // Get booked minutes for room.
+                        foreach ($bookings as $booking) {
+                            $minutes += ($booking->end - $booking->begin) / 60;
+                        }
+
+                        // Now add up bookings time to total booked time.
+                        $bookedTime += $minutes;
+
+                    }
+                }
+            }
+        }
+
+        return json_encode(['totalUsage' => $bookedTime / $fullTime]);
     }
 
 }

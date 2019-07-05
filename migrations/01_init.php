@@ -18,6 +18,23 @@ use Widgets\Widget;
 
 class Init extends Migration {
 
+    static $widgets = [
+        [
+            'class' => 'TimelineWidget',
+            'x' => 0,
+            'y' => 0,
+            'width' => 6,
+            'height' => 1
+        ],
+        [
+            'class' => 'StatisticsWidget',
+            'x' => 0,
+            'y' => 1,
+            'width' => 3,
+            'height' => 1
+        ]
+    ];
+
     /**
      * Migration UP: We have just installed the plugin
      * and need to prepare all necessary data.
@@ -116,30 +133,12 @@ class Init extends Migration {
         $container->scope = 'whakamahere_dashboard';
         $container->store();
 
-        $files = glob(__DIR__ . '/../widgets/*.php');
-
         // Register plugin widgets
-        foreach ($files as $file) {
-            require_once $file;
+        foreach (self::$widgets as $one) {
+            require_once __DIR__ . '/../widgets/' . $one['class'] . '.php';
 
-            $class = basename($file, '.php');
-
-            $width = 6;
-            if ($class === 'TImelineWidget') {
-                $width = 12;
-            }
-
-            $widget = Widgets\Widget::registerWidget(new $class);
-            $element = new Widgets\Element();
-            $element->container_id = $container->id;
-            $element->widget_id = $widget->id;
-            $element->x = 0;
-            $element->y = 0;
-            $element->width = $width;
-            $element->height = 3;
-            $element->locked = 1;
-            $element->removable = 0;
-            $element->store();
+            $widget = Widgets\Widget::registerWidget(new $one['class']);
+            $container->addWidget($widget, $one['width'], $one['height'], $one['x'], $one['y']);
         }
 
         SimpleORMap::expireTableScheme();
@@ -151,6 +150,25 @@ class Init extends Migration {
     public function down()
     {
         DBManager::get()->execute("DROP TABLE IF EXISTS `mahere_semester_status`");
+        DBManager::get()->execute("DROP TABLE IF EXISTS `mahere_semester_timeline`");
+
+        foreach ([
+                'WHAKAMAHERE_PLANNING_SHOW_WEEKENDS',
+                'WHAKAMAHERE_PLANNING_START_HOUR',
+                'WHAKAMAHERE_PLANNING_END_HOUR',
+                'WHAKAMAHERE_OCCUPATION_DAYS',
+                'WHAKAMAHERE_OCCUPATION_START_HOUR',
+                'WHAKAMAHERE_OCCUPATION_END_HOUR'
+            ] as $field) {
+
+            Config::get()->delete($field);
+
+        }
+
+        Widgets\Widget::deleteBySQL("`class` IN (:classes)",
+            ['classes' => array_column(self::$widgets, 'class')]);
+
+        Widgets\Container::deleteBySQL("`range_type` = 'whakamahere'");
     }
 
 }

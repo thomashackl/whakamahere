@@ -9,8 +9,9 @@ module.exports = {
     entry: {
         "planning": assetsPath + "/javascripts/entry-planning.js",
         "semesterstatus": assetsPath + "/javascripts/entry-semesterstatus.js",
-        "timeline": assetsPath + "/javascripts/entry-timeline.js",
-        "timeline-style": assetsPath + "/stylesheets/timeline.scss"
+        "timelinewidget": assetsPath + "/javascripts/entry-timeline.js",
+        "statisticswidget": assetsPath + "/javascripts/entry-statistics.js",
+        "timeline": assetsPath + "/stylesheets/timeline.scss"
     },
     output: {
         path: path.resolve(__dirname, "assets"),
