@@ -30,7 +30,10 @@ class PlanningController extends AuthenticatedController {
 
         $this->set_layout(Request::isXhr() ? null : $GLOBALS['template_factory']->open('layouts/base'));
 
+        $version = $this->plugin->getVersion();
+
         PageLayout::addScript($this->plugin->getPluginURL() . '/assets/javascripts/planning.js?v=' . $version);
+        PageLayout::addStylesheet($this->plugin->getPluginURL() . '/assets/stylesheets/planning-style.css?v=' . $version);
     }
 
     public function index_action($show = 'semester')

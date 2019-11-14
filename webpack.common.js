@@ -1,17 +1,20 @@
 const webpack = require("webpack");
 const path = require("path");
+const VueLoaderPlugin = require('vue-loader/lib/plugin')
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin")
 
-const assetsPath = path.resolve(__dirname, "resources");
+const assetsPath = path.resolve(__dirname, "resources/assets");
 
 module.exports = {
     entry: {
         "planning": assetsPath + "/javascripts/entry-planning.js",
+        "planning-style": assetsPath + "/stylesheets/planning.scss",
         "semesterstatus": assetsPath + "/javascripts/entry-semesterstatus.js",
         "timelinewidget": assetsPath + "/javascripts/entry-timeline.js",
         "statisticswidget": assetsPath + "/javascripts/entry-statistics.js",
-        "timeline": assetsPath + "/stylesheets/timeline.scss"
+        "timeline": assetsPath + "/stylesheets/timeline.scss",
     },
     output: {
         path: path.resolve(__dirname, "assets"),
@@ -58,10 +61,15 @@ module.exports = {
                         loader: "sass-loader"
                     }
                 ]
+            },
+            {
+                test: /\.vue$/,
+                loader: 'vue-loader'
             }
         ]
     },
     plugins: [
+        new VueLoaderPlugin(),
         new MiniCssExtractPlugin({
             filename: "stylesheets/[name].css",
             chunkFilename: "stylesheets/[id].css"
@@ -82,9 +90,19 @@ module.exports = {
     },
     resolve: {
         alias: {
-            fullcalendar: '@fullcalendar/dist/fullcalendar',
-            scheduler: '@fullcalendar-scheduler/dist/scheduler',
-            timeline: '@fullcalendar/resource-timeline/main'
+            'vue$': 'vue/dist/vue.esm.js',
+            'fullcalendar': '@fullcalendar/dist/fullcalendar'
         }
+    },
+    optimization: {
+        minimizer: [
+            new OptimizeCSSAssetsPlugin({
+                cssProcessorOptions: {
+                    discardComments: {
+                        removeAll: true
+                    }
+                }
+            })
+        ]
     }
 };

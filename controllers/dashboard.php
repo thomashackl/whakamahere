@@ -47,7 +47,7 @@ class DashboardController extends AuthenticatedController {
 
         PageLayout::setTitle(dgettext('whakamahere', 'Dashboard'));
 
-        $this->container = Widgets\Container::findOneByRange_id('whakamahere');
+        $this->container = Widgets\Container::findOneByRange_id('whakamahere') ?: new Widgets\Container();
 
         $this->timelines = [];
 

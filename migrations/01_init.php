@@ -89,15 +89,15 @@ class Init extends Migration {
             'description' => 'Sollen Wochenenden in der Planungsansicht angezeigt werden?'
         ]);
         Config::get()->create('WHAKAMAHERE_PLANNING_START_HOUR', [
-            'value' => '8',
-            'type' => 'integer',
+            'value' => '08:00',
+            'type' => 'string',
             'range' => 'global',
             'section' => 'whakamahereplugin',
             'description' => 'Mit welcher Uhrzeit beginnt die Planungsansicht?'
         ]);
         Config::get()->create('WHAKAMAHERE_PLANNING_END_HOUR', [
-            'value' => '22',
-            'type' => 'integer',
+            'value' => '22:00',
+            'type' => 'string',
             'range' => 'global',
             'section' => 'whakamahereplugin',
             'description' => 'Mit welcher Uhrzeit endet die Planungsansicht?'
@@ -110,16 +110,16 @@ class Init extends Migration {
             'description' => 'Welche Wochentage werden bei der Raumauslastungsstatistik berücksichtigt?'
         ]);
         Config::get()->create('WHAKAMAHERE_OCCUPATION_START_HOUR', [
-            'value' => '8',
-            'type' => 'integer',
+            'value' => '08:00',
+            'type' => 'string',
             'range' => 'global',
             'section' => 'whakamahereplugin',
             'description' =>
                 'Ab welcher Uhrzeit sollen Belegungen in der Raumauslastungsstatistik berücksichtigt werden?'
         ]);
         Config::get()->create('WHAKAMAHERE_OCCUPATION_END_HOUR', [
-            'value' => '22',
-            'type' => 'integer',
+            'value' => '22:00',
+            'type' => 'string',
             'range' => 'global',
             'section' => 'whakamahereplugin',
             'description' =>
