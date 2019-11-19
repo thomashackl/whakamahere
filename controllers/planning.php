@@ -32,8 +32,15 @@ class PlanningController extends AuthenticatedController {
 
         $version = $this->plugin->getVersion();
 
-        PageLayout::addScript($this->plugin->getPluginURL() . '/assets/javascripts/planning.js?v=' . $version);
-        PageLayout::addStylesheet($this->plugin->getPluginURL() . '/assets/stylesheets/planning-style.css?v=' . $version);
+        PageLayout::addScript($this->plugin->getPluginURL() .
+            '/assets/javascripts/planning.js?v=' . $version);
+        PageLayout::addStylesheet($this->plugin->getPluginURL() .
+            '/assets/stylesheets/planning-style.css?v=' . $version);
+
+        $this->selectedSemester = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_SEMESTER != '' ?
+            UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_SEMESTER :
+            Semester::findNext()->id;
+
     }
 
     public function index_action($show = 'semester')
@@ -43,9 +50,27 @@ class PlanningController extends AuthenticatedController {
 
         PageLayout::setTitle(dgettext('whakamahere', 'Planung'));
 
-        $this->view = $show;
+        $this->view = 'semester';
+
+        // Schedule view start and end hours.
+        $this->minTime = Config::get()->WHAKAMAHERE_PLANNING_START_HOUR;
+        $this->maxTime = Config::get()->WHAKAMAHERE_PLANNING_END_HOUR;
+
+        // Use Stud.IP locale
+        $this->locale = $GLOBALS['user']->info->preferred_language ?
+            substr($GLOBALS['user']->info->preferred_language, 0, 2) :
+            'de';
+
+        // Get first lecture week of semester as start.
+        $semester = Semester::find($this->selectedSemester);
+        $this->semesterStart = new DateTime();
+        $this->semesterStart->setTimestamp($semester->vorles_beginn);
+
+        // Show weekends?
+        $this->weekends = Config::get()->WHAKAMAHERE_PLANNING_SHOW_WEEKENDS ? 'true' : 'false';
 
         $this->setupSidebar();
+
     }
 
     private function setupSidebar()
@@ -72,10 +97,6 @@ class PlanningController extends AuthenticatedController {
             return $b->semester->beginn - $a->semester->beginn;
         });
 
-        $selectedSemester = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_SEMESTER != '' ?
-            UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_SEMESTER :
-            Semester::findNext()->id;
-
         $institutes = Institute::getMyInstitutes();
 
         $locations = Location::findAll();
@@ -87,7 +108,7 @@ class PlanningController extends AuthenticatedController {
             $template,
             [
                 'semesters' => $semesters,
-                'selectedSemester' => $selectedSemester,
+                'selectedSemester' => $this->selectedSemester,
                 'institutes' => $institutes,
                 'locations' => $locations,
                 'controller' => $this

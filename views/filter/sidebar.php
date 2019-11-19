@@ -6,8 +6,7 @@
         <option value=""><?= dgettext('whakamahere', 'alle') ?></option>
         <?php foreach ($semesters as $semester) : ?>
             <option value="<?= htmlReady($semester->id) ?>"
-                <?= $semester->id === UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_SEMESTER ?
-                    'selected' : '' ?>>
+                    <?= $semester->id === $selectedSemester ? 'selected' : '' ?>>
                 <?= htmlReady($semester->semester->name) ?>
             </option>
         <?php endforeach ?>

@@ -1,2 +1,21 @@
 @import "~@fullcalendar/core/main.min.css";
 @import "~@fullcalendar/timegrid/main.min.css";
+
+div.fc {
+  div.fc-toolbar {
+    display: none;
+  }
+}
+
+#whakamahere-unplanned-courses {
+  max-height: 250px;
+
+  tr {
+    font-size: 0.9em;
+  }
+}
+
+.gu-mirror {
+  background-color: red;
+  border: 3px solid green;
+}

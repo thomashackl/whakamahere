@@ -1,9 +1,9 @@
-<div id="schedule">
-    <schedule :min-time="'<?= Config::get()->WHAKAMAHERE_PLANNING_START_HOUR ?>'"
-              :max-time="'<?= Config::get()->WHAKAMAHERE_PLANNING_END_HOUR ?>'"></schedule>
+<div id="courseplan">
+    <courseplan :min-time="'<?= $minTime ?>'" :max-time="'<?= $maxTime ?>'" :locale="'<?= $locale ?>'"
+                :weekends="<?= $weekends ?>" :lecture-start="'<?= $semesterStart->format('Y-m-d') ?>'"></courseplan>
 </div>
 <script>
     new Vue({
-        el: '#schedule'
+        el: '#courseplan'
     });
 </script>
