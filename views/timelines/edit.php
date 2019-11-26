@@ -5,6 +5,24 @@
         </label>
         <input type="text" size="40" maxlength="75" name="name" value="<?= htmlReady($phase->name) ?>" id="phase-name">
     </section>
+    <?php if ($phase->isNew()) : ?>
+        <section>
+            <label for="phase-semester">
+                <?= dgettext('whakamahere', 'Semester') ?>
+            </label>
+            <select name="semester" id="phase-semester">
+                <?php foreach ($semesters as $semester) : ?>
+                    <option value="<?= htmlReady($semester->id) ?>"<?= $semester->id === $selectedSemester->id ? ' selected' : '' ?>>
+                        <?= htmlReady($semester->name) ?>
+                    </option>
+                <?php endforeach ?>
+            </select>
+        </section>
+    <?php else: ?>
+        <section>
+            <?= dgettext('whakamahere', 'Semester') ?>: <?= htmlReady($phase->semester->name) ?>
+        </section>
+    <?php endif ?>
     <section class="col-3">
         <label for="phase-start">
             <?= dgettext('whakamahere', 'Beginn') ?>
@@ -36,24 +54,6 @@
             <?php endforeach ?>
         </select>
     </section>
-    <?php if ($phase->isNew()) : ?>
-        <section>
-            <label for="phase-semester">
-                <?= dgettext('whakamahere', 'Semester') ?>
-            </label>
-            <select name="semester" id="phase-semester">
-                <?php foreach ($semesters as $semester) : ?>
-                    <option value="<?= htmlReady($semester->id) ?>"<?= $semester->id === $selectedSemester->id ? ' selected' : '' ?>>
-                        <?= htmlReady($semester->name) ?>
-                    </option>
-                <?php endforeach ?>
-            </select>
-        </section>
-    <?php else: ?>
-    <section>
-        <?= dgettext('whakamahere', 'Semester') ?>: <?= htmlReady($phase->semester->name) ?>
-    </section>
-    <?php endif ?>
     <?= CSRFProtection::tokenTag() ?>
     <footer data-dialog-button>
         <?= Studip\Button::createAccept(dgettext('whakamahere', 'Speichern'),

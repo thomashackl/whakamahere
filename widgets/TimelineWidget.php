@@ -101,7 +101,7 @@ class TimelineWidget extends Widgets\Widget {
         $plugin = PluginEngine::getPlugin('WhakamaherePlugin');
         $version = $plugin->getVersion();
 
-        PageLayout::addScript($plugin->getPluginURL() . '/assets/javascripts/timelinewidget.js?v=' . $version);
+        PageLayout::addScript($plugin->getPluginURL() . '/assets/javascripts/timeline.js?v=' . $version);
         PageLayout::addStylesheet($plugin->getPluginURL() . '/assets/stylesheets/timeline.css?v=' . $version);
         return $this
             ->getTemplate('timeline.php')

@@ -35,7 +35,7 @@ const WhakamahereStatistics = {
                         max: 100,
                         border: { visible: false },
                         caption: {
-                            value: 'Auslastung der Hörsäle und<br>Seminarräume in Prozent,<br>Mo - Fr,<br>jeweils von 10 - 20 Uhr',
+                            value: 'Auslastung Hörsäle + Seminarräume,<br>Mo - Fr, 10 - 20 Uhr',
                             position: 'bottom',
                             offset: [ 0, 50 ]
                         },

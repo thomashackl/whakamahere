@@ -10,11 +10,9 @@ const assetsPath = path.resolve(__dirname, "resources/assets");
 module.exports = {
     entry: {
         "planning": assetsPath + "/javascripts/entry-planning.js",
-        "planning-style": assetsPath + "/stylesheets/planning.scss",
         "semesterstatus": assetsPath + "/javascripts/entry-semesterstatus.js",
-        "timelinewidget": assetsPath + "/javascripts/entry-timeline.js",
-        "statisticswidget": assetsPath + "/javascripts/entry-statistics.js",
-        "timeline": assetsPath + "/stylesheets/timeline.scss",
+        "timeline": assetsPath + "/javascripts/entry-timeline.js",
+        "statisticswidget": assetsPath + "/javascripts/entry-statistics.js"
     },
     output: {
         path: path.resolve(__dirname, "assets"),

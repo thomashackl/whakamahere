@@ -55,8 +55,12 @@ class TimelinesController extends AuthenticatedController {
 
         foreach (Semester::getAll() as $semester) {
             if ($phases = WhakamaherePlanningPhase::findBySemester_id($semester->id, "ORDER BY `start`, `end`")) {
-                $this->timelines[$semester->name] = $phases;
+                $this->timelines[$semester->id] = [
+                    'semester' => $semester->name,
+                    'phases' => $phases
+                ];
             }
+
         }
 
         $this->status = WhakamahereSemesterStatus::getStatusValues();

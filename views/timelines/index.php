@@ -5,9 +5,9 @@
 <?php else : ?>
 
 
-    <?php foreach ($timelines as $semester => $phases) : ?>
+    <?php foreach ($timelines as $data) : ?>
         <table class="default">
-            <caption><?= htmlReady($semester) ?></caption>
+            <caption><?= htmlReady($data['semester']) ?></caption>
             <colgroup>
                 <col width="40">
                 <col>
@@ -28,7 +28,7 @@
             </thead>
             <tbody>
                 <?php
-                    foreach ($phases as $phase) :
+                    foreach ($data['phases'] as $phase) :
                 ?>
                 <tr>
                     <td style="background-color: <?= $phase->color ?>"></td>
