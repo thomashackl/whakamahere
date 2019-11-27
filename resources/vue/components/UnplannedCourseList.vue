@@ -1,49 +1,49 @@
 <template>
-    <table id="whakamahere-unplanned-courses" class="default">
-        <thead>
-            <tr>
-                <th>Nummer</th>
-                <th>Name</th>
-            </tr>
-        </thead>
-        <tbody>
-
-            <tr v-for="course in courses" :id="course.id" class="course">
-                <td>{{ course.number }}</td>
-                <td>{{ course.name }}</td>
-            </tr>
-        </tbody>
-    </table>
+    <div id="whakamahere-unplanned-courses">
+        <table class="default">
+            <caption>
+                {{ courses.length }} ungeplante Veranstaltung(en)
+            </caption>
+            <thead>
+                <tr>
+                    <th>Nummer</th>
+                    <th>Name</th>
+                    <th>Dauer (Stunden)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="course in courses" :id="course.id" class="course" :data-course-number="course.number"
+                    :data-course-name="course.name" :data-course-duration="course.duration">
+                    <td>{{ course.number }}</td>
+                    <td>{{ course.name }}</td>
+                    <td>{{ course.duration }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </template>
 
 <script>
     export default {
         name: 'UnplannedCoursesList',
-        data() {
-            return {
-                courses: [
-                    {
-                        id: 'abcde',
-                        number: '123A',
-                        name: 'Einführung Klingonisch'
-                    },
-                    {
-                        id: 'f034d',
-                        number: '456B',
-                        name: 'Warptechnologie'
-                    },
-                    {
-                        id: '97a33',
-                        number: '789',
-                        name: 'Subraumnavigation'
-                    },
-                    {
-                        id: '1cab4',
-                        number: '815',
-                        name: 'Föderationsrecht'
-                    },
-                ]
-            }
+        props: {
+            courses: Array
         }
     }
 </script>
+
+<style lang="scss" scoped>
+    #whakamahere-unplanned-courses {
+        max-height: 200px;
+        overflow-y: scroll;
+
+        table {
+            caption {
+                font-size: 1em;
+            }
+            tr {
+                font-size: 0.9em;
+            }
+        }
+    }
+</style>

@@ -151,6 +151,8 @@ class StatisticsWidget extends Widgets\Widget {
 
     public function getRoomUsage(Widgets\Element $element, Widgets\Response $response)
     {
+        return json_encode(['totalUsage' => 0.784]);
+
         $locations = Location::findAll();
 
         $semester = Semester::findOneByName('WiSe 19/20');

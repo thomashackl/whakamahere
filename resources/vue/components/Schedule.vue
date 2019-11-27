@@ -1,9 +1,9 @@
 <template>
     <full-calendar ref="schedule" :plugins="calendarPlugins" default-view="timeGridWeek" :locale="locale"
-                   droppable="true" :all-day-slot="false" :headers="headers"
+                   droppable="true" :all-day-slot="false" :header="header" :weekends="weekends"
                    :column-header-format="columnHeaderFormat" week-number-calculation="ISO"
                    :min-time="minTime" :max-time="maxTime" :default-date="lectureStart"
-                   @eventReceive="dropCourse"></full-calendar>
+                   @drop="dropCourse"></full-calendar>
 </template>
 
 <script>
@@ -43,28 +43,56 @@
             const end = this.$el.querySelector('.fc-divider').getBoundingClientRect().top
             this.$refs.schedule.height = end - start + 25
 
-            const container = document.getElementById('whakamahere-unplanned-courses')
+            const container = document.querySelector('#whakamahere-unplanned-courses table.default tbody')
 
+            // Drag & Drop via dragula library
             let drake = dragula({
                 containers: [ container ],
-                copy: true
-            });
+                copy: false,
+                revertOnSpill: true,
+            })
+            drake.on('drag', function(el) {
+            })
+
+            // Now connect dragula to fullcalendar
             new ThirdPartyDraggable(container, {
                 itemSelector: '.course',
                 mirrorSelector: '.gu-mirror',
                 eventData: function(eventEl) {
+                    let title = eventEl.dataset.courseName
+                    if (eventEl.dataset.courseNumber != '') {
+                        title = eventEl.dataset.courseNumber + ' ' + title
+                    }
                     return {
-                        title: eventEl.innerText
+                        id: eventEl.id,
+                        title: title,
+                        start: '10:00',
+                        end: '12:00',
+                        duration: {
+                            hours: eventEl.dataset.courseDuration
+                        }
                     }
                 }
             })
         },
         methods: {
-            dropCourse(info) {
-                console.log(info)
-                const source = document.getElementById(info.draggedEl.id)
-                source.parentNode.removeChild(source)
+            dropCourse: function(el) {
+                for (let hour = 8 ; hour < 22 ; hour++) {
+                    const fullHour = hour < 10 ? '0' + hour : hour
+                    let rows = document.querySelectorAll('tr[data-time="' + fullHour + ':00:00"], tr[data-time="' + fullHour + ':30:00"]')
+                    for (let i = 0 ; i < rows.length ; i++) {
+                        rows[i].style.backgroundColor = null
+                    }
+                }
             }
         }
     }
 </script>
+
+<style lang="scss">
+    div.fc {
+        div.fc-toolbar {
+            display: none !important;
+        }
+    }
+</style>

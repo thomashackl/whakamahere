@@ -1,14 +1,13 @@
-@import "~jquery.timeline.psk/dist/timeline.min.css";
-
 @font-face{
   font-family: jQueryTimeline;
-  src: url(../timeline/fonts/jQueryTimeline.eot?t4qpol);
-  src: url(../timeline/fonts/jQueryTimeline.eot?t4qpol#iefix) format("embedded-opentype"),
-    url(../timeline/fonts/jQueryTimeline.ttf?t4qpol) format("truetype"),
-    url(../timeline/fonts/jQueryTimeline.woff?t4qpol) format("woff"),
-    url(../timeline/fonts/jQueryTimeline.svg?t4qpol#jQueryTimeline) format("svg");
+  src: url(~jquery.timeline.psk/dist/fonts/jQueryTimeline.eot);
+  src: url(~jquery.timeline.psk/dist/fonts/jQueryTimeline.eot#iefix) format("embedded-opentype"),
+    url(~jquery.timeline.psk/dist/fonts/jQueryTimeline.ttf) format("truetype"),
+    url(~jquery.timeline.psk/dist/fonts/jQueryTimeline.woff) format("woff"),
+    url(~jquery.timeline.psk/dist/fonts/jQueryTimeline.svg#jQueryTimeline) format("svg");
   font-weight: 400;
-  font-style: normal}
+  font-style: normal
+}
 
 #phases {
 

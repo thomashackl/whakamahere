@@ -32,6 +32,7 @@ class WhakamahereSemesterStatus extends SimpleORMap
         ];
         $config['additional_fields']['statusname'] = true;
         $config['additional_fields']['statusvalues'] = true;
+        $config['additional_fields']['semestername'] = true;
         parent::configure($config);
     }
 
@@ -51,6 +52,11 @@ class WhakamahereSemesterStatus extends SimpleORMap
             'review' => dgettext('whakamahere', 'Nachbearbeitung'),
             'finished' => dgettext('whakamahere', 'Planung abgeschlossen')
         ];
+    }
+
+    public function getSemesterName()
+    {
+        return $this->semester->name;
     }
 
 }

@@ -42,28 +42,24 @@ module.exports = {
             {
                 test: /\.scss$/,
                 use: [
-                    {
-                        loader: MiniCssExtractPlugin.loader
-                    },
-                    {
-                        loader: "css-loader",
-                        options: {
-                            url: false,
-                            importLoaders: 2
-                        }
-                    },
-                    {
-                        loader: "postcss-loader"
-                    },
-                    {
-                        loader: "sass-loader"
-                    }
+                    'vue-style-loader',
+                    'css-loader',
+                    'sass-loader'
                 ]
             },
             {
                 test: /\.vue$/,
                 loader: 'vue-loader'
-            }
+            },
+            {
+                test: /\.(ttf|woff|eot|svg)(\?.+)?$/,
+                use: {
+                    loader: 'url-loader',
+                    options: {
+                        limit: 8192
+                    }
+                }
+            },
         ]
     },
     plugins: [
@@ -75,11 +71,11 @@ module.exports = {
         new CopyWebpackPlugin([
             {
                 from: './node_modules/jquery.timeline.psk/dist/fonts',
-                to: 'timeline/fonts'
+                to: 'stylesheets/fonts'
             },
             {
                 from: './node_modules/jquery.timeline.psk/dist/langs',
-                to: 'timeline/langs'
+                to: 'stylesheets/langs'
             }
         ])
     ],
@@ -89,7 +85,8 @@ module.exports = {
     resolve: {
         alias: {
             'vue$': 'vue/dist/vue.esm.js',
-            'fullcalendar': '@fullcalendar/dist/fullcalendar'
+            'fullcalendar': '@fullcalendar/dist/fullcalendar',
+            'jsassets': path.resolve(__dirname, 'resources/assets/javascripts/')
         }
     },
     optimization: {

@@ -35,12 +35,16 @@ class PlanningController extends AuthenticatedController {
         PageLayout::addScript($this->plugin->getPluginURL() .
             '/assets/javascripts/planning.js?v=' . $version);
         PageLayout::addStylesheet($this->plugin->getPluginURL() .
-            '/assets/stylesheets/planning-style.css?v=' . $version);
+            '/assets/stylesheets/planning.css?v=' . $version);
 
         $this->selectedSemester = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_SEMESTER != '' ?
             UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_SEMESTER :
             Semester::findNext()->id;
 
+        $this->institutes = Institute::getMyInstitutes();
+        $this->selectedInstitute = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE != '' ?
+            UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE :
+            'f01';
     }
 
     public function index_action($show = 'semester')
@@ -69,8 +73,25 @@ class PlanningController extends AuthenticatedController {
         // Show weekends?
         $this->weekends = Config::get()->WHAKAMAHERE_PLANNING_SHOW_WEEKENDS ? 'true' : 'false';
 
+        $this->courses = $this->getCourses($this->selectedSemester, $this->selectedInstitute);
+
         $this->setupSidebar();
 
+    }
+
+    public function rooms_action()
+    {
+        $this->rooms = [
+            Room::find('161e815b96a7dbe2cc8ee926f5ad4e4c'),
+            Room::find('f9b69d38ec7f15357c5eb3a0008a3263'),
+            Room::find('ef3215775fb17d57f0b8601021676129'),
+            Room::find('14e2a2233a97b2644ff21fdffc577310')
+        ];
+    }
+
+    public function courses_action($semester, $institute)
+    {
+        $this->render_json($this->getCourses($semester, $institute));
     }
 
     private function setupSidebar()
@@ -89,15 +110,20 @@ class PlanningController extends AuthenticatedController {
         )->setActive($this->view === 'week');
         $sidebar->addWidget($views);
 
-        $semesters = array_filter(WhakamahereSemesterStatus::findBySQL("1"),
+        $semesterStatus = array_filter(WhakamahereSemesterStatus::findBySQL("1"),
             function ($s) {
                 return !in_array($s->status, ['closed', 'finished']);
             });
-        usort($semesters, function ($a, $b) {
+        usort($semesterStatus, function ($a, $b) {
             return $b->semester->beginn - $a->semester->beginn;
         });
 
-        $institutes = Institute::getMyInstitutes();
+        $semesters = array_map(function($s) {
+            return [
+                    'id' => $s->semester->id,
+                    'name' => (string) $s->semester->name
+                ];
+        }, $semesterStatus);
 
         $locations = Location::findAll();
 
@@ -109,11 +135,42 @@ class PlanningController extends AuthenticatedController {
             [
                 'semesters' => $semesters,
                 'selectedSemester' => $this->selectedSemester,
-                'institutes' => $institutes,
+                'institutes' => $this->institutes,
+                'selectedInstitute' => $this->selectedInstitute,
                 'locations' => $locations,
                 'controller' => $this
             ]
         ));
+    }
+
+    private function getCourses($semester, $institute)
+    {
+        $sub = explode('+', $institute);
+        if (count($sub) > 1) {
+            $institutes = DBManager::get()->fetchFirst(
+                "SELECT `Institut_id` FROM `Institute` WHERE `fakultaets_id` = :institute",
+                ['institute' => $sub[0]]
+            );
+        } else {
+            $institutes = [$institute];
+        }
+        return DBManager::get()->fetchAll(
+            "SELECT s.`Seminar_id` AS id, s.`VeranstaltungsNummer` AS number, s.`Name` AS name, 2 AS duration
+                FROM `seminare` s
+                    JOIN `semester_data` sem ON (
+                            s.`start_time` + s.`duration_time` BETWEEN sem.`beginn` AND sem.`ende`
+                            OR s.`start_time` <= sem.`beginn` AND s.`duration_time` = -1
+                        )
+                WHERE s.`Institut_id` IN (:institutes)
+                    AND sem.`semester_id` = :semester
+                    AND s.`status` NOT IN (:studygroups)
+                ORDER BY s.`VeranstaltungsNummer`, s.`Name`",
+            [
+                'institutes' => $institutes,
+                'semester' => $semester,
+                'studygroups' => studygroup_sem_types()
+            ]
+        );
     }
 
 }
