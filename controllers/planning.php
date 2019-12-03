@@ -44,7 +44,7 @@ class PlanningController extends AuthenticatedController {
         $this->institutes = Institute::getMyInstitutes();
         $this->selectedInstitute = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE != '' ?
             UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE :
-            'f01';
+            '';
     }
 
     public function index_action($show = 'semester')
@@ -125,7 +125,32 @@ class PlanningController extends AuthenticatedController {
                 ];
         }, $semesterStatus);
 
-        $locations = Location::findAll();
+        $myRooms = SimpleCollection::createFromArray(RoomManager::getUserRooms(User::findCurrent()));
+        $buildings = [];
+        foreach ($myRooms as $room) {
+            if ($room->properties->findOneBy('name', 'ignore_in_planning')->state != '1') {
+                if (!$buildings[$room->parent_id]) {
+                    $building = Building::find($room->parent_id);
+                    $buildings[$room->parent_id] = [
+                        'id' => $building->id,
+                        'text' => $building->name
+                    ];
+                }
+
+                $buildings[$room->parent_id]['children'][] = [
+                    'id' => $room->id,
+                    'text' => $room->name
+                ];
+            }
+        }
+
+        usort($buildings, function($a, $b) {
+            return strnatcasecmp($a['text'], $b['text']);
+        });
+
+        $selectedRoom = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_ROOM != '' ?
+            UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_ROOM :
+            '';
 
         $factory = $this->get_template_factory();
         $template = $factory->open('filter/sidebar');
@@ -137,7 +162,8 @@ class PlanningController extends AuthenticatedController {
                 'selectedSemester' => $this->selectedSemester,
                 'institutes' => $this->institutes,
                 'selectedInstitute' => $this->selectedInstitute,
-                'locations' => $locations,
+                'rooms' => $buildings,
+                'selectedRoom' => $selectedRoom,
                 'controller' => $this
             ]
         ));
