@@ -79,19 +79,30 @@ class PlanningController extends AuthenticatedController {
 
     }
 
-    public function rooms_action()
-    {
-        $this->rooms = [
-            Room::find('161e815b96a7dbe2cc8ee926f5ad4e4c'),
-            Room::find('f9b69d38ec7f15357c5eb3a0008a3263'),
-            Room::find('ef3215775fb17d57f0b8601021676129'),
-            Room::find('14e2a2233a97b2644ff21fdffc577310')
-        ];
-    }
-
     public function courses_action($semester, $institute)
     {
         $this->render_json($this->getCourses($semester, $institute));
+    }
+
+    public function store_selection($type, $value)
+    {
+        $field = '';
+
+        switch ($type) {
+            case 'semester':
+                $field = 'WHAKAMAHERE_SELECTED_SEMESTER';
+                break;
+            case 'institute':
+                $field = 'WHAKAMAHERE_SELECTED_INSTITUTE';
+                break;
+            case 'room':
+                $field = 'WHAKAMAHERE_SELECTED_ROOM';
+                break;
+        }
+
+        if ($field !== '') {
+            UserConfig::get(User::findCurrent()->id)->store($field, $value);
+        }
     }
 
     private function setupSidebar()

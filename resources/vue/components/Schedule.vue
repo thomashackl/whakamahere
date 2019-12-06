@@ -1,12 +1,13 @@
 <template>
     <full-calendar ref="schedule" :plugins="calendarPlugins" default-view="timeGridWeek" :locale="locale"
-                   droppable="true" :all-day-slot="false" :header="header" :weekends="weekends"
+                   droppable="true" :all-day-slot="false" :header="header" :weekends="weekends" :editable="true"
                    :column-header-format="columnHeaderFormat" week-number-calculation="ISO"
                    :min-time="minTime" :max-time="maxTime" :default-date="lectureStart"
                    @drop="dropCourse"></full-calendar>
 </template>
 
 <script>
+    import bus from 'jsassets/bus'
     import FullCalendar from '@fullcalendar/vue'
     import interactionPlugin, { ThirdPartyDraggable } from '@fullcalendar/interaction'
     import timeGridWeekPlugin from '@fullcalendar/timegrid'
@@ -45,15 +46,6 @@
 
             const container = document.querySelector('#whakamahere-unplanned-courses table.default tbody')
 
-            // Drag & Drop via dragula library
-            let drake = dragula({
-                containers: [ container ],
-                copy: false,
-                revertOnSpill: true,
-            })
-            drake.on('drag', function(el) {
-            })
-
             // Now connect dragula to fullcalendar
             new ThirdPartyDraggable(container, {
                 itemSelector: '.course',
@@ -77,13 +69,7 @@
         },
         methods: {
             dropCourse: function(el) {
-                for (let hour = 8 ; hour < 22 ; hour++) {
-                    const fullHour = hour < 10 ? '0' + hour : hour
-                    let rows = document.querySelectorAll('tr[data-time="' + fullHour + ':00:00"], tr[data-time="' + fullHour + ':30:00"]')
-                    for (let i = 0 ; i < rows.length ; i++) {
-                        rows[i].style.backgroundColor = null
-                    }
-                }
+                bus.$emit('drop-course', el.draggedEl)
             }
         }
     }
