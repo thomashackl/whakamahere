@@ -20,7 +20,7 @@
                 </tr>
             </tbody>
         </table>
-        <messagebox v-else message="Es sind keine Veranstaltungen vorhanden."/>
+        <studip-messagebox v-else message="Es sind keine Veranstaltungen vorhanden."/>
     </div>
 </template>
 

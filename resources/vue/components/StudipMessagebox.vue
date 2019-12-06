@@ -20,10 +20,13 @@
 
 <script>
     export default {
-        name: 'Messagebox',
+        name: 'studip-messagebox',
         props: {
             type: {
                 type: String,
+                validator(value) {
+                    return ['success', 'error', 'warning', 'info'].includes(value)
+                },
                 default: 'info'
             },
             message: {
