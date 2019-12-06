@@ -71,6 +71,20 @@ class ConfigEntries extends Migration {
             'description' =>
                 'Bis zu welcher Uhrzeit sollen Belegungen in der Raumauslastungsstatistik berücksichtigt werden?'
         ]);
+
+        // Find categories that should be considered for room occupation statistics.
+        $categories = SimpleCollection::createFromArray(
+            ResourceCategory::findBySQL("`name` IN (?)", [['Hörsaal', 'Übungsraum', 'Hörsäle', 'Übungsräume']])
+        );
+
+        Config::get()->create('WHAKAMAHERE_OCCUPATION_ROOM_CATEGORIES', [
+            'value' => studip_json_encode($categories->pluck('id')),
+            'type' => 'array',
+            'range' => 'global',
+            'section' => 'whakamahereplugin',
+            'description' =>
+                'Welche Raumkategorien sollen für die Raumauslastungsstatistik erfasst werden?'
+        ]);
     }
 
     /**
@@ -85,7 +99,8 @@ class ConfigEntries extends Migration {
                      'WHAKAMAHERE_PLANNING_END_HOUR',
                      'WHAKAMAHERE_OCCUPATION_DAYS',
                      'WHAKAMAHERE_OCCUPATION_START_HOUR',
-                     'WHAKAMAHERE_OCCUPATION_END_HOUR'
+                     'WHAKAMAHERE_OCCUPATION_END_HOUR',
+                     'WHAKAMAHERE_OCCUPATION_ROOM_CATEGORIES'
                  ] as $field) {
 
             Config::get()->delete($field);

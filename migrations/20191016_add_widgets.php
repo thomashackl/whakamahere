@@ -63,13 +63,34 @@ class AddWidgets extends Migration {
 
     /**
      * Migration DOWN: cleanup all created data.
+     * This is done directly by SQL as Widgets and their
+     * containers do not (yet) any methods for cleanup.
      */
     public function down()
     {
-        Widgets\Widget::deleteBySQL("`class` IN (:classes)",
-            ['classes' => array_column(self::$widgets, 'class')]);
+        $entries = DBManager::get()->fetchAll(
+            "SELECT DISTINCT w.`widget_id`, e.`element_id`, c.`container_id`
+             FROM `widgets` w
+	            JOIN `widget_elements` e USING (`widget_id`)
+                JOIN `widget_containers` c USING (`container_id`)
+             WHERE w.`class` IN (:classnames)",
+            ['classnames' => array_column(self::$widgets, 'class')]);
 
-        Widgets\Container::deleteBySQL("`range_type` = 'whakamahere'");
+        // Delete container elements containing plugin widgets.
+        DBManager::get()->execute(
+            "DELETE FROM `widget_elements` WHERE `element_id` IN (?)",
+            [array_unique(array_column($entries, 'element_id'))]
+        );
+        // Delete containers containing plugin widgets.
+        DBManager::get()->execute(
+            "DELETE FROM `widget_containers` WHERE `container_id` IN (?)",
+            [array_unique(array_column($entries, 'container_id'))]
+        );
+        // Delete widget entries.
+        DBManager::get()->execute(
+            "DELETE FROM `widgets` WHERE `widget_id` IN (?)",
+            [array_unique(array_column($entries, 'widget_id'))]
+        );
     }
 
 }

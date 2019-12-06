@@ -151,92 +151,117 @@ class StatisticsWidget extends Widgets\Widget {
 
     public function getRoomUsage(Widgets\Element $element, Widgets\Response $response)
     {
-        return json_encode(['totalUsage' => 0.784]);
-
-        $locations = Location::findAll();
-
         $semester = Semester::findOneByName('WiSe 19/20');
 
-        $start = new DateTime(date('Y-m-d 00:00:00', $semester->vorles_beginn));
-        $end = new DateTime(date('Y-m-d 23:59:59', $semester->vorles_ende));
+        $cache = StudipCacheFactory::getCache();
 
-        $oneDay = new DateInterval('P1D');
+        $totalUsage = 0;
+        //$totalUsage = $cache->read('WHAKAMAHERE_ROOM_OCCUPATION_' . $semester->id);
 
-        /*
-         * $start and $end are absolute dates, get weeks,
-         * respecting weekday selection setting.
-         */
-        $days = Config::get()->WHAKAMAHERE_OCCUPATION_DAYS;
+        if (!$totalUsage) {
 
-        // Move start up until we find a weekday that shall be used.
-        while (!in_array($start->format('w'), $days)) {
-            $start->add($oneDay);
-        }
+            $start = new DateTime(date('Y-m-d 00:00:00', $semester->vorles_beginn));
+            $end = new DateTime(date('Y-m-d 23:59:59', $semester->vorles_ende));
 
-        // ... Now the same for end time.
-        while (!in_array($end->format('w'), $days)) {
-            $end->sub($oneDay);
-        }
+            $oneDay = new DateInterval('P1D');
 
-        $weekdays = Config::get()->WHAKAMAHERE_OCCUPATION_DAYS;
-        $startHour = Config::get()->WHAKAMAHERE_OCCUPATION_START_HOUR + 2;
-        $endHour = Config::get()->WHAKAMAHERE_OCCUPATION_END_HOUR - 4;
+            /*
+             * $start and $end are absolute dates, get weeks,
+             * respecting weekday selection setting.
+             */
+            $days = Config::get()->WHAKAMAHERE_OCCUPATION_DAYS;
 
-        // Now iterate over days in timespan and build entries for fetching bookings.
-        $days = 0;
-        $times = [];
-        $current = $start;
-        while ($current <= $end) {
-            if (in_array($current->format('w'), $weekdays) && !SemesterHoliday::isHoliday($current->getTimestamp(), false)) {
-                $days++;
-
-                $beginTime = mktime($startHour, 0, 0, $current->format('n'), $current->format('j'), $current->format('Y'));
-                $endTime = mktime($endHour, 0, 0, $current->format('n'), $current->format('j'), $current->format('Y'));
-
-                $times[] = [
-                    'begin' => $beginTime,
-                    'end' => $endTime
-                ];
+            // Move start up until we find a weekday that shall be used.
+            while (!in_array($start->format('w'), $days)) {
+                $start->add($oneDay);
             }
-            $current->add($oneDay);
-        }
 
-        // Full time that is available in selected timespan and hours.
-        $theoretical = $days * ($endHour - $startHour) * 60;
-        /*
-         * Theoretical full time, added up across all rooms.
-         * E.g.: for 4 rooms, we have 4 * $theoretical at our disposal.
-         */
-        $fullTime = 0;
-        // Time that is occupied by bookings.
-        $bookedTime = 0;
+            // ... Now the same for end time.
+            while (!in_array($end->format('w'), $days)) {
+                $end->sub($oneDay);
+            }
 
-        foreach ($locations as $location) {
-            foreach ($location->buildings as $building) {
-                foreach ($building->rooms as $room) {
+            $weekdays = Config::get()->WHAKAMAHERE_OCCUPATION_DAYS;
+            $startHour = Config::get()->WHAKAMAHERE_OCCUPATION_START_HOUR;
+            $startHourInt = date('G', strtotime('today ' . $startHour));
+            $endHour = Config::get()->WHAKAMAHERE_OCCUPATION_END_HOUR;
+            $endHourInt = date('G', strtotime('today ' . $endHour));
 
-                    if (in_array($room->category->name, ['Hörsäle', 'Übungsräume'])) {
+            // Now iterate over days in timespan and build entries for fetching bookings.
+            $days = 0;
+            $times = [];
+            $current = $start;
+            while ($current <= $end) {
+                if (in_array($current->format('w'), $weekdays) &&
+                        !SemesterHoliday::isHoliday($current->getTimestamp(), false)) {
+                    $days++;
 
+                    $times[] = [
+                        'begin' => strtotime($current->format('Y-m-d ' . $startHour)),
+                        'end' => strtotime($current->format('Y-m-d ' . $endHour))
+                    ];
+                }
+                $current->add($oneDay);
+            }
+
+            // How many hours per day are considered for statistics?
+            $hoursPerDay = $endHourInt - $startHourInt;
+
+            // Full time (in minutes) that is available in selected timespan and hours.
+            $theoretical = 60 * $hoursPerDay * $days;
+
+            /*
+             * Theoretical full time, added up across all rooms.
+             * E.g.: for 4 rooms, we have 4 * $theoretical at our disposal.
+             */
+            $fullTime = 0;
+            // Time that is occupied by bookings.
+            $bookedTime = 0;
+
+            $categories = Config::get()->WHAKAMAHERE_OCCUPATION_ROOM_CATEGORIES;
+
+            $filled = [];
+            // Iterate over all rooms.
+            foreach (Room::findAll() as $room) {
+                /*
+                 * We check only rooms that have the right category
+                 * and are not ignored for planning.
+                 */
+                if (in_array($room->category_id, $categories) &&
+                        $room->properties->findOneBy('name', 'ignore_in_planning') != 1) {
+
+                    // Get all room bookings in selected timespan.
+                    $bookings = ResourceBooking::findByResourceAndTimeRanges($room, $times);
+
+                    // How many minutes is this room booked in the selected timespan?
+                    $minutes = 0;
+                    foreach ($bookings as $booking) {
+                        $minutes += ($booking->end - $booking->begin) / 60;
+                    }
+
+                    // We assume that there's a reason if a room isn't booked at all.
+                    if ($minutes > 0) {
+                        // Add theoretically available time to full time as we have another room to consider.
                         $fullTime += $theoretical;
 
-                        $bookings = ResourceBooking::findByResourceAndTimeRanges($room, $times);
-
-                        $minutes = 0;
-
-                        // Get booked minutes for room.
-                        foreach ($bookings as $booking) {
-                            $minutes += ($booking->end - $booking->begin) / 60;
-                        }
-
-                        // Now add up bookings time to total booked time.
                         $bookedTime += $minutes;
-
+                        $filled[$room->id] = $minutes / $theoretical;
                     }
+
                 }
             }
+
+            $totalUsage = $bookedTime / $fullTime;
+
+            //$cache->write('WHAKAMAHERE_ROOM_OCCUPATION_' . $semester->id, $totalUsage, 86400);
         }
 
-        return json_encode(['totalUsage' => $bookedTime / $fullTime]);
+        return json_encode([
+            'filled' => $filled,
+            'bookedTime' => $bookedTime,
+            'fullTime' => $fullTime,
+            'totalUsage' => $totalUsage
+        ]);
     }
 
 }
