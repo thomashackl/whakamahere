@@ -35,7 +35,7 @@
             },
             details: {
                 type: Array,
-                default: []
+                default: () => []
             }
         }
     }

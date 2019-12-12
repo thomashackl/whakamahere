@@ -11,7 +11,7 @@
                     <th>Dauer (Stunden)</th>
                 </tr>
             </thead>
-            <tbody class="container" v-dragula="courseList" drake="courselist">
+            <tbody class="container" v-dragula="courses" drake="courselist">
                 <tr v-for="course in courses" :id="course.id" class="course" :data-course-number="course.number"
                     :data-course-name="course.name" :data-course-duration="course.duration">
                     <td>{{ course.number }}</td>

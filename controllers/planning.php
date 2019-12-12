@@ -44,7 +44,7 @@ class PlanningController extends AuthenticatedController {
         $this->institutes = Institute::getMyInstitutes();
         $this->selectedInstitute = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE != '' ?
             UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE :
-            '';
+            'f01';
     }
 
     public function index_action($show = 'semester')

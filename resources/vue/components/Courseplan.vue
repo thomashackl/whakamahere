@@ -2,7 +2,7 @@
     <div>
         <schedule :min-time="minTime" :max-time="maxTime" :locale="locale"
                   :weekends="weekends" :lecture-start="lectureStart"></schedule>
-        <unplanned-course-list :courses="courseList"></unplanned-course-list>
+        <unplanned-courses-list :courses="courseList"></unplanned-courses-list>
     </div>
 </template>
 
