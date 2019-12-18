@@ -102,6 +102,7 @@ class StatisticsWidget extends Widgets\Widget {
         $version = $plugin->getVersion();
 
         PageLayout::addScript($plugin->getPluginURL() . '/assets/javascripts/statisticswidget.js?v=' . $version);
+        PageLayout::addStylesheet($plugin->getPluginURL() . '/assets/stylesheets/statisticswidget.css?v=' . $version);
 
         return $this
             ->getTemplate('statistics.php')
