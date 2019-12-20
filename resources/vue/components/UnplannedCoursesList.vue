@@ -30,7 +30,10 @@
     export default {
         name: 'UnplannedCoursesList',
         props: {
-            courses: Array
+            courses: {
+                type: Array,
+                default: () => []
+            }
         },
         created() {
             const service = this.$dragula.$service

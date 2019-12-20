@@ -1,19 +1,17 @@
 <template>
     <div>
-        <vue-element-loading :active="loading" spinner="bar-fade-scale" color="#28487C" size="75" duration="1.5"/>
-        <k-gauge v-if="!loading" title="Raumauslastung" :value="value" :min="min" :max="max"
-                 :format-function="formatPct"/>
+        <studip-loading-indicator :is-loading="loading" width="32" height="32"/>
+        <k-gauge title="Raumauslastung" :value="value" :min="min" :max="max"
+                 :format-function="formatPct" :color-steps="colors"/>
     </div>
 </template>
 
 <script>
-    import VueElementLoading from 'vue-element-loading'
     import KGauge from '@kagronick/kgauge-vue'
 
     export default {
         name: 'StatisticsGauge',
         components: {
-            VueElementLoading,
             KGauge
         },
         props: {
@@ -33,10 +31,15 @@
         data() {
             return {
                 value: 0,
-                loading: true
+                loading: false,
+                colors: [
+                    '#FF0000',
+                    '#62F416'
+                ]
             }
         },
         mounted() {
+            this.loading = true
             this.getValue()
         },
         methods: {
@@ -44,8 +47,8 @@
                 fetch(this.getValueUrl)
                     .then((response) => {
                         response.json().then((json) => {
-                            this.loading = false
                             this.value = json.totalUsage * 100
+                            this.loading = false
                         })
                     })
             }

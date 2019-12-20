@@ -1,8 +1,8 @@
 <template>
-    <full-calendar ref="schedule" :plugins="calendarPlugins" default-view="timeGridWeek" :locale="locale"
+    <full-calendar v-else ref="schedule" :plugins="calendarPlugins" default-view="timeGridWeek" :locale="locale"
                    droppable="true" :all-day-slot="false" :header="header" :weekends="weekends" :editable="true"
-                   :column-header-format="columnHeaderFormat" week-number-calculation="ISO"
-                   :min-time="minTime" :max-time="maxTime" :default-date="lectureStart" @drop="dropCourse"/>
+                   :column-header-format="columnHeaderFormat" week-number-calculation="ISO" :events="entries"
+                   :min-time="minTime" :max-time="maxTime" :default-date="lectureStart" @eventReceive="dropCourse"/>
 </template>
 
 <script>
@@ -21,7 +21,12 @@
             minTime: String,
             maxTime: String,
             weekends: Boolean,
-            lectureStart: String
+            lectureStart: String,
+            storeCourseUrl: String,
+            courses: {
+                type: Array,
+                default: () => []
+            }
         },
         data() {
             return {
@@ -35,6 +40,29 @@
                     weekday: 'long'
                 },
                 drag: null
+            }
+        },
+        computed: {
+            events: function() {
+                let entries = []
+
+                for (let i = 0 ; i < this.courses.length ; i++) {
+                    let title = this.courses[i].course_name;
+                    if (this.courses[i].course_number != '') {
+                        title = this.courses[i].course_number + ' ' + title
+                    }
+
+                    let date = new Date(this.lectureStart)
+                    date.setDate(date.getDate() + (this.courses[i].weekday - 1))
+
+                    options.push({
+                        id: this.courses[i].course_id,
+                        title: title,
+                        start: date + ' ' + this.courses[i].start,
+                        end: date + ' ' + this.courses[i].end
+                    })
+                }
+                return entries
             }
         },
         mounted() {
@@ -53,7 +81,22 @@
         },
         methods: {
             dropCourse: function(el) {
-                bus.$emit('drop-course', el.draggedEl)
+                var formData = new FormData()
+                formData.append('course', el.event.id)
+                formData.append('start', this.formatDate(el.event.start))
+                formData.append('end', this.formatDate(el.event.end))
+                fetch(this.storeCourseUrl, {
+                    method: 'post',
+                    body: formData
+                }).then((response) => {
+                    if (response.status == 200) {
+                        console.log('Date saved.')
+                        bus.$emit('drop-course', el.draggedEl)
+                    } else {
+                        console.log('Date could not be saved.')
+                        console.log(response)
+                    }
+                })
             },
             initDragAndDrop: function() {
                 const container = document.querySelector('#whakamahere-unplanned-courses table.default tbody')
@@ -78,6 +121,17 @@
                         }
                     }
                 })
+            },
+            formatDate: function(date) {
+                const options = {
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: false
+                }
+                return new Intl.DateTimeFormat('de-DE', options).format(date)
             }
         }
     }

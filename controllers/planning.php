@@ -44,7 +44,7 @@ class PlanningController extends AuthenticatedController {
         $this->institutes = Institute::getMyInstitutes();
         $this->selectedInstitute = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE != '' ?
             UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE :
-            'f01';
+            '';
     }
 
     public function index_action($show = 'semester')
@@ -73,15 +73,20 @@ class PlanningController extends AuthenticatedController {
         // Show weekends?
         $this->weekends = Config::get()->WHAKAMAHERE_PLANNING_SHOW_WEEKENDS ? 'true' : 'false';
 
-        $this->courses = $this->getCourses($this->selectedSemester, $this->selectedInstitute);
+        $this->unplanned_courses = $this->getUnplannedCourses($this->selectedSemester, $this->selectedInstitute);
 
         $this->setupSidebar();
 
     }
 
-    public function courses_action($semester, $institute)
+    public function unplanned_courses_action($semester, $institute)
     {
-        $this->render_json($this->getCourses($semester, $institute));
+        $this->render_json($this->getUnplannedCourses($semester, $institute));
+    }
+
+    public function planned_courses_action($semester, $institute)
+    {
+        $this->render_json($this->getPlannedCourses($semester, $institute));
     }
 
     public function store_selection($type, $value)
@@ -103,6 +108,33 @@ class PlanningController extends AuthenticatedController {
         if ($field !== '') {
             UserConfig::get(User::findCurrent()->id)->store($field, $value);
         }
+    }
+
+    /**
+     * Stores a course assignment to a time slot and (optionally) a room.
+     */
+    public function store_course_action()
+    {
+        $startDate = new DateTime(Request::get('start'));
+        $endDate = new DateTime(Request::get('end'));
+
+        if (Request::option('room', '') == '') {
+            $time = new WhakamahereCourseTime();
+            $time->course_id = Request::option('course');
+            $time->part_num = Request::get('part', 0);
+            $time->weekday = $startDate->format('N');
+            $time->start = $startDate->format('H:i');
+            $time->end = $endDate->format('H:i');
+            $time->mkdate = date('Y-m-d H:i:s');
+            $time->chdate = date('Y-m-d H:i:s');
+            if ($time->store()) {
+                $this->set_status(200, 'Time assignment saved.');
+            } else {
+                $this->set_status(500, 'Could not save time assignment.');
+            }
+        }
+
+        $this->render_nothing();
     }
 
     private function setupSidebar()
@@ -180,7 +212,7 @@ class PlanningController extends AuthenticatedController {
         ));
     }
 
-    private function getCourses($semester, $institute)
+    private function getUnplannedCourses($semester, $institute)
     {
         $sub = explode('+', $institute);
         if (count($sub) > 1) {
@@ -192,7 +224,7 @@ class PlanningController extends AuthenticatedController {
             $institutes = [$institute];
         }
         return DBManager::get()->fetchAll(
-            "SELECT s.`Seminar_id` AS id, s.`VeranstaltungsNummer` AS number, s.`Name` AS name, 2 AS duration
+            "SELECT DISTINCT s.`Seminar_id` AS id, s.`VeranstaltungsNummer` AS number, s.`Name` AS name, 2 AS duration
                 FROM `seminare` s
                     JOIN `semester_data` sem ON (
                             s.`start_time` + s.`duration_time` BETWEEN sem.`beginn` AND sem.`ende`
@@ -201,6 +233,7 @@ class PlanningController extends AuthenticatedController {
                 WHERE s.`Institut_id` IN (:institutes)
                     AND sem.`semester_id` = :semester
                     AND s.`status` NOT IN (:studygroups)
+                    AND s.`Seminar_id` NOT IN (SELECT `course_id` FROM `whakamahere_course_times`)
                 ORDER BY s.`VeranstaltungsNummer`, s.`Name`",
             [
                 'institutes' => $institutes,
@@ -208,6 +241,37 @@ class PlanningController extends AuthenticatedController {
                 'studygroups' => studygroup_sem_types()
             ]
         );
+    }
+
+    private function getPlannedCourses($semester, $institute)
+    {
+        $sub = explode('+', $institute);
+        if (count($sub) > 1) {
+            $institutes = DBManager::get()->fetchFirst(
+                "SELECT `Institut_id` FROM `Institute` WHERE `fakultaets_id` = :institute",
+                ['institute' => $sub[0]]
+            );
+        } else {
+            $institutes = [$institute];
+        }
+
+        $entries = WhakamahereCourseTime::findFiltered([
+            'semester' => $semester,
+            'institute' => $institutes
+        ]);
+
+        $courses = [];
+        foreach ($entries as $one) {
+            $courses[] = [
+                'course_id' => $one->course_id,
+                'course_name' => (string) $one->course->name,
+                'course_number' => $one->course->veranstaltungsnummer,
+                'weekday' => $one->weekday,
+                'start' => $one->start,
+                'end' => $one->end
+            ];
+        }
+        return $courses;
     }
 
 }
