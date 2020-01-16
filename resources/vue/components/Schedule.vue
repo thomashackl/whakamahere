@@ -1,7 +1,7 @@
 <template>
-    <full-calendar v-else ref="schedule" :plugins="calendarPlugins" default-view="timeGridWeek" :locale="locale"
+    <full-calendar ref="schedule" :plugins="calendarPlugins" default-view="timeGridWeek" :locale="locale"
                    droppable="true" :all-day-slot="false" :header="header" :weekends="weekends" :editable="true"
-                   :column-header-format="columnHeaderFormat" week-number-calculation="ISO" :events="entries"
+                   :column-header-format="columnHeaderFormat" week-number-calculation="ISO"
                    :min-time="minTime" :max-time="maxTime" :default-date="lectureStart" @eventReceive="dropCourse"/>
 </template>
 

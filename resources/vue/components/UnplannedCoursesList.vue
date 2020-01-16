@@ -1,8 +1,8 @@
 <template>
     <div id="whakamahere-unplanned-courses">
-        <table v-if="courses.length > 0" class="default">
+        <table v-if="courseList.length > 0" class="default">
             <caption>
-                {{ courses.length }} ungeplante Veranstaltung(en)
+                {{ courseList.length }} ungeplante Veranstaltung(en)
             </caption>
             <thead>
                 <tr>
@@ -12,7 +12,7 @@
                 </tr>
             </thead>
             <tbody class="container" v-dragula="courses" drake="courselist">
-                <tr v-for="course in courses" :id="course.id" class="course" :data-course-number="course.number"
+                <tr v-for="course in courseList" :id="course.id" class="course" :data-course-number="course.number"
                     :data-course-name="course.name" :data-course-duration="course.duration">
                     <td>{{ course.number }}</td>
                     <td>{{ course.name }}</td>
@@ -26,6 +26,8 @@
 
 <script>
     import bus from 'jsassets/bus'
+    import interactionPlugin from "@fullcalendar/interaction";
+    import timeGridWeekPlugin from "@fullcalendar/timegrid";
 
     export default {
         name: 'UnplannedCoursesList',
@@ -33,6 +35,11 @@
             courses: {
                 type: Array,
                 default: () => []
+            }
+        },
+        data() {
+            return {
+                courseList: this.courses
             }
         },
         created() {
@@ -46,9 +53,14 @@
         mounted() {
             // Catch event if course from list is dropped on calendar
             bus.$on('drop-course', (element) => {
-                this.courses = this.courses.filter(course => course.id !== element.id)
+                this.courseList = this.courseList.filter(course => course.id !== element.id)
             })
-        }
+        },
+        watch: {
+            courses: function(oldVal, newVal) {
+                this.courseList = this.courses
+            }
+        },
     }
 </script>
 

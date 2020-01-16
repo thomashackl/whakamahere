@@ -74,6 +74,7 @@ class PlanningController extends AuthenticatedController {
         $this->weekends = Config::get()->WHAKAMAHERE_PLANNING_SHOW_WEEKENDS ? 'true' : 'false';
 
         $this->unplanned_courses = $this->getUnplannedCourses($this->selectedSemester, $this->selectedInstitute);
+        $this->planned_courses = $this->getPlannedCourses($this->selectedSemester, $this->selectedInstitute);
 
         $this->setupSidebar();
 

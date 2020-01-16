@@ -63,7 +63,6 @@
                 const parent = this.referenceElement !== '' ?
                     document.querySelector(this.referenceElement) :
                     container.parentElement
-                console.log(parent.offsetWidth + ' x ' + parent.offsetHeight)
                 const padding = (parent.offsetHeight / 2 - this.height / 2)
                 container.style.paddingTop = padding + 'px'
                 container.style.width = parent.offsetWidth + 'px'
