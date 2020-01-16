@@ -1,6 +1,6 @@
 <template>
     <div>
-        <studip-loading-indicator :is-loading="loadingPlanned || loadingUnplanned" width="128" height="128"
+        <studip-loading-indicator :is-loading="loadingPlanned || loadingUnplanned" :width="128" :height="128"
                                   reference-element="#whakamahere-courseplan"/>
         <schedule :min-time="minTime" :max-time="maxTime" :locale="locale"
                   :weekends="weekends" :lecture-start="lectureStart"
