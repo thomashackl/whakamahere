@@ -84,8 +84,8 @@
                 } else {
                     this.unplannedCourseList = []
                     this.plannedCourseList = []
+                    bus.$emit('update-courses')
                 }
-                bus.$emit('update-courses')
             })
             // Catch event for changed institute in sidebar
             bus.$on('update-institute', (value) => {
@@ -94,11 +94,12 @@
                 if (value !== '') {
                     this.getUnplannedCourses(this.semester, value)
                     this.getPlannedCourses(this.semester, value)
+                    bus.$emit('update-courses')
                 } else {
                     this.unplannedCourseList = []
                     this.plannedCourseList = []
+                    bus.$emit('update-courses')
                 }
-                bus.$emit('update-courses')
             })
         },
         methods: {
@@ -108,6 +109,7 @@
                         response.json().then((json) => {
                                 this.unplannedCourseList = json
                                 this.loadingUnplanned = false;
+                                bus.$emit('update-unplanned-courses')
                             })
                     })
             },
@@ -117,8 +119,21 @@
                         response.json().then((json) => {
                             this.plannedCourseList = json
                             this.loadingPlanned = false;
+                            bus.$emit('update-planned-courses')
                         })
                     })
+            }
+        },
+        watch: {
+            loadingUnplanned: function(value) {
+                if (!value && !this.loadingPlanned) {
+                    bus.$emit('update-courses')
+                }
+            },
+            loadingPlanned: function(value) {
+                if (!value && !this.loadingUnplanned) {
+                    bus.$emit('update-courses')
+                }
             }
         }
     }

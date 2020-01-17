@@ -90,7 +90,6 @@
                     body: formData
                 }).then((response) => {
                     if (response.status == 200) {
-                        console.log('Date saved.')
                         bus.$emit('drop-course', el.draggedEl)
                     } else {
                         console.log('Date could not be saved.')

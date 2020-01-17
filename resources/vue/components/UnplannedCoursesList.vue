@@ -60,7 +60,7 @@
             courses: function(oldVal, newVal) {
                 this.courseList = this.courses
             }
-        },
+        }
     }
 </script>
 
