@@ -74,7 +74,9 @@
             const self = this
             bus.$on('update-courses', function() {
                 self.drag.destroy()
-                self.initDragAndDrop()
+                this.$nextTick(function() {
+                    self.initDragAndDrop()
+                })
             })
 
             this.initDragAndDrop()
