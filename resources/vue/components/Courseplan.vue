@@ -5,7 +5,7 @@
         <schedule :min-time="minTime" :max-time="maxTime" :locale="locale"
                   :weekends="weekends" :lecture-start="lectureStart"
                   :store-course-url="storeCourseUrl"
-                  :courses="plannedCourseList"></schedule>
+                  :courses="plannedCourseList" :institute="institute"></schedule>
         <unplanned-courses-list :courses="unplannedCourseList"></unplanned-courses-list>
     </div>
 </template>

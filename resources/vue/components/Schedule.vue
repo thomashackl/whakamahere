@@ -1,7 +1,7 @@
 <template>
     <full-calendar ref="schedule" :plugins="calendarPlugins" default-view="timeGridWeek" :locale="locale"
                    droppable="true" :all-day-slot="false" :header="header" :weekends="weekends" :editable="true"
-                   :column-header-format="columnHeaderFormat" week-number-calculation="ISO"
+                   :column-header-format="columnHeaderFormat" week-number-calculation="ISO" :events="events"
                    :min-time="minTime" :max-time="maxTime" :default-date="lectureStart" @eventReceive="dropCourse"/>
 </template>
 
@@ -52,16 +52,21 @@
                         title = this.courses[i].course_number + ' ' + title
                     }
 
-                    let date = new Date(this.lectureStart)
-                    date.setDate(date.getDate() + (this.courses[i].weekday - 1))
+                    let lStart = new Date(this.lectureStart)
+                    lStart.setDate(lStart.getDate() + (this.courses[i].weekday - 1))
 
-                    options.push({
+                    let month = ('0' + (lStart.getMonth() + 1)).slice(-2)
+                    let date = ('0' + lStart.getDate()).slice(-2)
+                    let day = lStart.getFullYear() + '-' + month + '-' + date
+
+                    entries.push({
                         id: this.courses[i].course_id,
                         title: title,
-                        start: date + ' ' + this.courses[i].start,
-                        end: date + ' ' + this.courses[i].end
+                        start: day + ' ' + this.courses[i].start,
+                        end: day + ' ' + this.courses[i].end
                     })
                 }
+
                 return entries
             }
         },
@@ -71,11 +76,10 @@
             const end = this.$el.querySelector('.fc-divider').getBoundingClientRect().top
             this.$refs.schedule.height = end - start + 25
 
-            const self = this
-            bus.$on('update-courses', function() {
-                self.drag.destroy()
-                this.$nextTick(function() {
-                    self.initDragAndDrop()
+            bus.$on('update-courses', (value) => {
+                this.drag.destroy()
+                this.$nextTick(() => {
+                    this.initDragAndDrop()
                 })
             })
 
@@ -133,6 +137,12 @@
                     hour12: false
                 }
                 return new Intl.DateTimeFormat('de-DE', options).format(date)
+            }
+        },
+        watch: {
+            events: function(val) {
+                console.log('Events changed:')
+                console.log(val)
             }
         }
     }

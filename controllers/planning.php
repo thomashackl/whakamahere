@@ -269,6 +269,7 @@ class PlanningController extends AuthenticatedController {
                 'course_number' => $one->course->veranstaltungsnummer,
                 'weekday' => $one->weekday,
                 'start' => $one->start,
+                'start' => $one->start,
                 'end' => $one->end
             ];
         }
