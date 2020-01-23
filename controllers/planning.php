@@ -231,6 +231,8 @@ class PlanningController extends AuthenticatedController {
                             s.`start_time` + s.`duration_time` BETWEEN sem.`beginn` AND sem.`ende`
                             OR s.`start_time` <= sem.`beginn` AND s.`duration_time` = -1
                         )
+                    JOIN `seminar_user` su ON (su.`Seminar_id` = s.`Seminar_id`)
+                    JOIN `auth_user_md5` a ON (a.`user_id` = su.`user_id`)
                 WHERE s.`Institut_id` IN (:institutes)
                     AND sem.`semester_id` = :semester
                     AND s.`status` NOT IN (:studygroups)

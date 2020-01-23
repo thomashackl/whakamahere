@@ -6,17 +6,15 @@
             </caption>
             <thead>
                 <tr>
-                    <th>Nummer</th>
                     <th>Name</th>
                     <th>Dauer (Stunden)</th>
                 </tr>
             </thead>
-            <tbody class="container" v-dragula="courses" drake="courselist">
+            <tbody class="container" v-dragula="courseList" drake="courselist">
                 <tr v-for="course in courseList" :id="course.id" class="course" :data-course-number="course.number"
                     :data-course-name="course.name" :data-course-duration="course.duration">
-                    <td>{{ course.number }}</td>
-                    <td>{{ course.name }}</td>
-                    <td>{{ course.duration }}</td>
+                    <td class="course-name">{{ course.number }} {{ course.name }}</td>
+                    <td class="course-duration">{{ course.duration }}</td>
                 </tr>
             </tbody>
         </table>
@@ -49,6 +47,9 @@
                     return false
                 }
             })
+            service.eventBus.$on('drag', (args) => {
+                bus.$emit('start-drag-course', args.el.dataset)
+            })
         },
         mounted() {
             // Catch event if course from list is dropped on calendar
@@ -57,7 +58,7 @@
             })
         },
         watch: {
-            courses: function(oldVal, newVal) {
+            courses: function(value) {
                 this.courseList = this.courses
             }
         }
@@ -66,7 +67,7 @@
 
 <style lang="scss" scoped>
     #whakamahere-unplanned-courses {
-        max-height: 200px;
+        background-color: #ffffff;
         overflow-y: scroll;
 
         table {
@@ -75,7 +76,31 @@
             }
             tr {
                 font-size: 0.9em;
+
+                &.course {
+                    cursor: move;
+                }
             }
+        }
+    }
+
+    .gu-mirror {
+        background-color: #28487c;
+        color: #ffffff;
+        display: inline-block !important;
+        font-size: 0.8em;
+        height: 100px !important;
+        max-height: 100px;
+        max-width: 200px;
+        width: 200px;
+
+        .course-name {
+            background-color: #3f72b4;
+            display: inline-block;
+            width: 100%;
+        }
+        .course-duration {
+            display: block;
         }
     }
 </style>
