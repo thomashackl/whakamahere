@@ -50,13 +50,22 @@
             service.eventBus.$on('drag', (args) => {
                 bus.$emit('start-drag-course', args.el.dataset)
             })
+            service.eventBus.$on('cancel', (args) => {
+                bus.$emit('cancel-drag-course', args.el.dataset)
+            })
         },
         mounted() {
             // Catch event if course from list is dropped on calendar
             bus.$on('drop-course', (element) => {
                 this.courseList = this.courseList.filter(course => course.id !== element.id)
             })
-        },
+
+            this.$el.style.maxHeight = (
+                document.getElementById('layout_content').offsetHeight -
+                document.getElementsByClassName('fc')[0].offsetHeight -
+                45
+            ) + 'px'
+         },
         watch: {
             courses: function(value) {
                 this.courseList = this.courses

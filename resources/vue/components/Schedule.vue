@@ -40,7 +40,8 @@
                 columnHeaderFormat: {
                     weekday: 'long'
                 },
-                drag: null
+                drag: null,
+                slots: []
             }
         },
         computed: {
@@ -74,7 +75,7 @@
                     })
                 }
 
-                return entries
+                return entries.concat(this.slots)
             }
         },
         mounted() {
@@ -83,16 +84,15 @@
             const end = this.$el.querySelector('.fc-divider').getBoundingClientRect().top
             this.$refs.schedule.height = end - start
             document.getElementsByClassName('fc')[0].style.maxHeight = (end - start) + 'px'
-            console.log(end - start)
 
             // Re-initialize drag & drop after courses changed
             bus.$on('update-courses', (value) => {
                 this.drag.destroy()
 
                 /*
-                 * We need to do this in the next tick, as only then the HTML
-                 * elements will have been rendered.
-                 */
+                  * We need to do this in the next tick, as only then the HTML
+                  * elements will have been rendered.
+                  */
                 this.$nextTick(() => {
                     this.initDragAndDrop()
                 })
@@ -103,10 +103,16 @@
                 this.$nextTick(() => {
                     document.getElementsByClassName('gu-mirror')[0].style.width =
                         document.getElementsByClassName('fc-day-header')[0].offsetWidth + 'px'
+                    this.markAvailableSlots()
                 })
+            })
+            // Unmark slots on drag cancel event
+            bus.$on('cancel-drag-course', (data) => {
+                this.unmarkAvailableSlots()
             })
 
             this.initDragAndDrop()
+
         },
         methods: {
             // When a course is dropped, we store the time assignment to database.
@@ -126,6 +132,7 @@
                         console.log(response)
                     }
                 })
+                this.unmarkAvailableSlots()
             },
             // Initialize the drag & drop functionality with Dragula and FullCalendar.
             initDragAndDrop: function() {
@@ -154,7 +161,26 @@
             },
             // Mark slots where a course can or cannot be dropped.
             markAvailableSlots: function(info) {
-                console.log('Event dragging started...')
+                // The virtual begin of our semester view - place dates there.
+                let lStart = new Date(this.lectureStart)
+
+                let month = ('0' + (lStart.getMonth() + 1)).slice(-2)
+
+                for (let weekday = 0 ; weekday < 5 ; weekday++) {
+                    let date = ('0' + (lStart.getDate() + weekday)).slice(-2)
+                    let day = lStart.getFullYear() + '-' + month + '-' + date
+
+                    for (let hour = 8; hour < 22; hour += 2) {
+                        this.slots.push({
+                            start: day + ' ' + ('0' + hour).slice(-2) + ':00',
+                            end: day + ' ' + ('0' + (hour + 2)).slice(-2) + ':00',
+                            rendering: 'background'
+                        })
+                    }
+                }
+            },
+            unmarkAvailableSlots: function() {
+                this.slots = []
             },
             // Format a given date object according to German locale.
             formatDate: function(date) {
