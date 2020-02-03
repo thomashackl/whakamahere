@@ -27,18 +27,8 @@ class WhakamaherePropertyRequest extends SimpleORMap
     protected static function configure($config = [])
     {
         $config['db_table'] = 'whakamahere_requests';
-        $config['belongs_to']['course'] = [
-            'class_name' => 'Course',
-            'foreign_key' => 'course_id',
-            'assoc_foreign_key' => 'seminar_id'
-        ];
-        $config['has_many']['property_requests'] = [
-            'class_name' => 'WhakamaherePropertyRequest',
-            'foreign_key' => 'request_id',
-            'assoc_foreign_key' => 'request_id'
-        ];
-        $config['has_many']['slots'] = [
-            'class_name' => 'WhakamahereCourseSlot',
+        $config['belongs_to']['request'] = [
+            'class_name' => 'WhakamaherePlanningRequest',
             'foreign_key' => 'request_id',
             'assoc_foreign_key' => 'request_id'
         ];

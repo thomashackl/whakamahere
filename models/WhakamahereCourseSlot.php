@@ -34,6 +34,11 @@ class WhakamahereCourseSlot extends SimpleORMap
             'foreign_key' => 'user_id',
             'assoc_foreign_key' => 'user_id'
         ];
+        $config['belongs_to']['request'] = [
+            'class_name' => 'WhakamaherePlanningRequest',
+            'foreign_key' => 'request_id',
+            'assoc_foreign_key' => 'request_id'
+        ];
 
         parent::configure($config);
     }
