@@ -17,7 +17,7 @@
  * @property int request_id database column
  * @property string course_id database column
  * @property string room_id database column
- * @property int twoweek database column
+ * @property int cycle database column
  * @property int startweek database column
  * @property string comment database column
  * @property string internal_comment database column
@@ -39,12 +39,16 @@ class WhakamaherePlanningRequest extends SimpleORMap
         $config['has_many']['property_requests'] = [
             'class_name' => 'WhakamaherePropertyRequest',
             'foreign_key' => 'request_id',
-            'assoc_foreign_key' => 'request_id'
+            'assoc_foreign_key' => 'request_id',
+            'on_store' => 'store',
+            'on_delete' => 'delete'
         ];
         $config['has_many']['slots'] = [
             'class_name' => 'WhakamahereCourseSlot',
             'foreign_key' => 'request_id',
-            'assoc_foreign_key' => 'request_id'
+            'assoc_foreign_key' => 'request_id',
+            'on_store' => 'store',
+            'on_delete' => 'delete'
         ];
 
         parent::configure($config);

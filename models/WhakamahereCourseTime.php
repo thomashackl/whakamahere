@@ -15,7 +15,7 @@
  *
  * @property int time_id database column
  * @property string course_id database column
- * @property int part_num database column
+ * @property int slot_id database column
  * @property int weekday database column
  * @property time start database column
  * @property time end database column

@@ -26,7 +26,7 @@ class WhakamaherePropertyRequest extends SimpleORMap
 
     protected static function configure($config = [])
     {
-        $config['db_table'] = 'whakamahere_requests';
+        $config['db_table'] = 'whakamahere_property_requests';
         $config['belongs_to']['request'] = [
             'class_name' => 'WhakamaherePlanningRequest',
             'foreign_key' => 'request_id',

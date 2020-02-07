@@ -23,7 +23,6 @@
             maxTime: String,
             weekends: Boolean,
             lectureStart: String,
-            storeCourseUrl: String,
             courses: {
                 type: Array,
                 default: () => []
@@ -117,21 +116,7 @@
         methods: {
             // When a course is dropped, we store the time assignment to database.
             dropCourse: function(el) {
-                var formData = new FormData()
-                formData.append('course', el.event.id)
-                formData.append('start', this.formatDate(el.event.start))
-                formData.append('end', this.formatDate(el.event.end))
-                fetch(this.storeCourseUrl, {
-                    method: 'post',
-                    body: formData
-                }).then((response) => {
-                    if (response.status == 200) {
-                        bus.$emit('drop-course', el.draggedEl)
-                    } else {
-                        console.log('Date could not be saved.')
-                        console.log(response)
-                    }
-                })
+                bus.$emit('save-course', el)
                 this.unmarkAvailableSlots()
             },
             // Initialize the drag & drop functionality with Dragula and FullCalendar.
@@ -153,7 +138,7 @@
                             start: '10:00',
                             end: '12:00',
                             duration: {
-                                hours: eventEl.dataset.courseDuration
+                                minutes: eventEl.dataset.courseDuration
                             }
                         }
                     }
@@ -181,18 +166,6 @@
             },
             unmarkAvailableSlots: function() {
                 this.slots = []
-            },
-            // Format a given date object according to German locale.
-            formatDate: function(date) {
-                const options = {
-                    year: 'numeric',
-                    month: 'numeric',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    hour12: false
-                }
-                return new Intl.DateTimeFormat('de-DE', options).format(date)
             }
         }
     }

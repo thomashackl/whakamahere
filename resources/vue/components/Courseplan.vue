@@ -4,9 +4,8 @@
                                   reference-element="#whakamahere-courseplan"/>
         <schedule :min-time="minTime" :max-time="maxTime" :locale="locale"
                   :weekends="weekends" :lecture-start="lectureStart"
-                  :store-course-url="storeCourseUrl"
                   :courses="plannedCourseList" :institute="institute"></schedule>
-        <unplanned-courses-list :courses="unplannedCourseList"></unplanned-courses-list>
+        <unplanned-courses-list :courses="unplannedCourseList" :lectureStart="lectureStart"></unplanned-courses-list>
     </div>
 </template>
 
@@ -101,6 +100,11 @@
                     bus.$emit('update-courses')
                 }
             })
+
+            bus.$on('save-course', (course) => {
+                this.saveCourse(course)
+            })
+
         },
         methods: {
             async getUnplannedCourses(semester, institute) {
@@ -122,6 +126,43 @@
                             bus.$emit('update-planned-courses')
                         })
                     })
+            },
+            saveCourse(data) {
+                let formData = new FormData()
+                if (data.draggedEl) {
+                    formData.append('course', data.draggedEl.dataset.courseId)
+                    formData.append('slot', data.draggedEl.dataset.slotId)
+                    formData.append('start', this.formatDate(data.event.start))
+                    formData.append('end', this.formatDate(data.event.end))
+                } else {
+                    formData.append('course', data.courseId)
+                    formData.append('slot', data.slotId)
+                    formData.append('start', this.formatDate(data.start))
+                    formData.append('end', this.formatDate(data.end))
+                }
+                fetch(this.storeCourseUrl, {
+                    method: 'post',
+                    body: formData
+                }).then((response) => {
+                    if (response.status == 200) {
+                        bus.$emit('course-saved', data)
+                    } else {
+                        console.log('Date could not be saved.')
+                        console.log(response)
+                    }
+                })
+            },
+            // Format a given date object according to German locale.
+            formatDate: function(date) {
+                const options = {
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: false
+                }
+                return new Intl.DateTimeFormat('de-DE', options).format(date)
             }
         },
         watch: {

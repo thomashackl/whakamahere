@@ -28,7 +28,7 @@ class Requests extends Migration {
             `request_id` INT NOT NULL AUTO_INCREMENT,
             `course_id` VARCHAR(32) NOT NULL REFERENCES `seminare`.`Seminar_id`,
             `room_id` VARCHAR(32) NULL REFERENCES `resources`.`id`,
-            `twoweek` BOOLEAN NOT NULL DEFAULT false,
+            `cycle` TINYINT UNSIGNED NOT NULL DEFAULT 1,
             `startweek` TINYINT UNSIGNED NOT NULL DEFAULT 0,
             `comment` TEXT NOT NULL DEFAULT '',
             `internal_comment` TEXT NOT NULL DEFAULT '', 
@@ -56,7 +56,7 @@ class Requests extends Migration {
         (
             `slot_id` INT NOT NULL AUTO_INCREMENT,
             `request_id` VARCHAR(32) NOT NULL REFERENCES `whakamahere_requests`.`request_id`,
-            `length` SMALLINT NOT NULL,
+            `duration` SMALLINT NOT NULL,
             `user_id` VARCHAR(32) NULL REFERENCES `auth_user_md5`.`user_id`,
             `weekday` TINYINT NOT NULL,
             `time` TIME NOT NULL,
@@ -65,6 +65,12 @@ class Requests extends Migration {
             PRIMARY KEY (`slot_id`),
             INDEX request_id (`request_id`)
         ) ENGINE InnoDB ROW_FORMAT=DYNAMIC");
+
+        // Rename column and add foreign key constraint.
+        DBManager::get()->execute("ALTER TABLE `whakamahere_course_times`
+            CHANGE `part_num` `slot_id` INT(11) NOT NULL,
+            ADD FOREIGN KEY (`slot_id`) REFERENCES `whakamahere_course_slots` (`slot_id`),
+            DROP INDEX `course_part`");
     }
 
     /**
@@ -75,6 +81,11 @@ class Requests extends Migration {
         DBManager::get()->execute("DROP TABLE IF EXISTS `whakamahere_requests`");
         DBManager::get()->execute("DROP TABLE IF EXISTS `whakamahere_property_requests`");
         DBManager::get()->execute("DROP TABLE IF EXISTS `whakamahere_course_slots`");
+        DBManager::get()->execute("ALTER TABLE `whakamahere_course_times`
+            CHANGE `slot_id` `part_num` INT(11) NOT NULL DEFAULT 0,
+            DROP FOREIGN KEY `whakamahere_course_times_ibfk_1`,
+            DROP INDEX `slot_id`,
+            ADD INDEX `course_part` (`course_id`, `part_num`)");
     }
 
 }

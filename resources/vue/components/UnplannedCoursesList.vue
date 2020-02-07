@@ -4,17 +4,37 @@
             <caption>
                 {{ courseList.length }} ungeplante Veranstaltung(en)
             </caption>
+            <colgroup>
+                <col/>
+                <col width="100"/>
+                <col width="200"/>
+                <col width="100"/>
+                <col width="20"/>
+            </colgroup>
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Dauer (Stunden)</th>
+                    <th>Dauer (Minuten)</th>
+                    <th>Dozent</th>
+                    <th>Wunschzeit</th>
+                    <th>Aktionen</th>
                 </tr>
             </thead>
             <tbody class="container" v-dragula="courseList" drake="courselist">
-                <tr v-for="course in courseList" :id="course.id" class="course" :data-course-number="course.number"
-                    :data-course-name="course.name" :data-course-duration="course.duration">
-                    <td class="course-name">{{ course.number }} {{ course.name }}</td>
+                <tr v-for="course in courseList" :id="course.course_id + '-' + course.slot_id"
+                    class="course" :data-course-number="course.course_number"
+                    :data-course-id="course.course_id" :data-slot-id="course.slot_id"
+                    :data-course-name="course.course_name" :data-course-duration="course.duration">
+                    <td class="course-name">{{ course.course_number }} {{ course.course_name }}</td>
                     <td class="course-duration">{{ course.duration }}</td>
+                    <td class="course-lecturer">{{ course.lecturer }}</td>
+                    <td class="course-preftime">{{ getWeekday(course.weekday) }} {{ course.time.slice(0, 5) }}</td>
+                    <td class="course-actions">
+                        <studip-icon shape="check-circle" @click="acceptPreference"
+                                     :data-course-id="course.course_id" :data-slot-id="course.slot_id"
+                                     :data-weekday="course.weekday" :data-time="course.time"
+                                     :data-duration="course.duration"/>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -33,6 +53,10 @@
             courses: {
                 type: Array,
                 default: () => []
+            },
+            lectureStart: {
+                type: String,
+                default: ''
             }
         },
         data() {
@@ -56,7 +80,7 @@
         },
         mounted() {
             // Catch event if course from list is dropped on calendar
-            bus.$on('drop-course', (element) => {
+            bus.$on('course-saved', (element) => {
                 this.courseList = this.courseList.filter(course => course.id !== element.id)
             })
 
@@ -69,6 +93,33 @@
         watch: {
             courses: function(value) {
                 this.courseList = this.courses
+            }
+        },
+        methods: {
+            // Calculates a weekday name out of the given weekday number (1 is Monday)
+            getWeekday: function(number) {
+                // Starting with today...
+                let today = new Date()
+                let date = new Date()
+                // ... calculate back to last Sunday...
+                date.setDate(date.getDate() - today.getDay())
+                // ... and add given days
+                date.setDate(date.getDate() + parseInt(number))
+                return date.toLocaleString('de-DE', { weekday: 'short' })
+            },
+            acceptPreference: function(event) {
+                let start = new Date(this.lectureStart + ' ' + event.target.dataset.time);
+                start.setDate(start.getDate() - start.getDay())
+                start.setDate(start.getDate() + parseInt(event.target.dataset.weekday))
+                let end = new Date(start.getTime() + parseInt(event.target.dataset.duration) * 60000)
+                let data = {
+                    id: event.target.dataset.courseId + '-' + event.target.dataset.slotId,
+                    courseId: event.target.dataset.courseId,
+                    slotId: event.target.dataset.slotId,
+                    start: start,
+                    end: end
+                }
+                bus.$emit('save-course', data)
             }
         }
     }
