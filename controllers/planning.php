@@ -132,9 +132,6 @@ class PlanningController extends AuthenticatedController {
             $time->end = $endDate->format('H:i');
             $time->mkdate = date('Y-m-d H:i:s');
             $time->chdate = date('Y-m-d H:i:s');
-            $log = fopen('/Users/thomashackl/Downloads/whaka.log', 'w');
-            fwrite($log, print_r($time, 1));
-            fclose($log);
             if ($time->store()) {
                 $this->set_status(200, 'Time assignment saved.');
             } else {

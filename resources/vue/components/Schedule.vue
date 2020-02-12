@@ -105,6 +105,7 @@
                     this.markAvailableSlots()
                 })
             })
+
             // Unmark slots on drag cancel event
             bus.$on('cancel-drag-course', (data) => {
                 this.unmarkAvailableSlots()
@@ -138,7 +139,7 @@
                             start: '10:00',
                             end: '12:00',
                             duration: {
-                                minutes: eventEl.dataset.courseDuration
+                                minutes: eventEl.dataset.duration
                             }
                         }
                     }

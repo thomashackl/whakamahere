@@ -70,6 +70,7 @@ class Requests extends Migration {
         DBManager::get()->execute("ALTER TABLE `whakamahere_course_times`
             CHANGE `part_num` `slot_id` INT(11) NOT NULL,
             ADD FOREIGN KEY (`slot_id`) REFERENCES `whakamahere_course_slots` (`slot_id`),
+            ADD UNIQUE INDEX `course_slot` (`course_id`, `slot_id`),
             DROP INDEX `course_part`");
     }
 
@@ -85,6 +86,7 @@ class Requests extends Migration {
             CHANGE `slot_id` `part_num` INT(11) NOT NULL DEFAULT 0,
             DROP FOREIGN KEY `whakamahere_course_times_ibfk_1`,
             DROP INDEX `slot_id`,
+            DROP INDEX `course_slot`,    
             ADD INDEX `course_part` (`course_id`, `part_num`)");
     }
 

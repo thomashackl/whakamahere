@@ -129,23 +129,35 @@
             },
             saveCourse(data) {
                 let formData = new FormData()
+                let course = null
                 if (data.draggedEl) {
                     formData.append('course', data.draggedEl.dataset.courseId)
                     formData.append('slot', data.draggedEl.dataset.slotId)
                     formData.append('start', this.formatDate(data.event.start))
                     formData.append('end', this.formatDate(data.event.end))
                 } else {
-                    formData.append('course', data.courseId)
-                    formData.append('slot', data.slotId)
+                    formData.append('course', data.course_id)
+                    formData.append('slot', data.slot_id)
                     formData.append('start', this.formatDate(data.start))
                     formData.append('end', this.formatDate(data.end))
+                    course = {
+                        course_id: data.course_id,
+                        course_number: data.course_number,
+                        course_name: data.course_name,
+                        weekday: data.start.getDay(),
+                        start: ('0' + data.start.getHours()).slice(-2) + ':' + ('0' + data.start.getMinutes()).slice(-2) + ':00',
+                        end: ('0' + data.end.getHours()).slice(-2) + ':' + ('0' + data.end.getMinutes()).slice(-2) + ':00'
+                    }
                 }
                 fetch(this.storeCourseUrl, {
                     method: 'post',
                     body: formData
                 }).then((response) => {
                     if (response.status == 200) {
-                        bus.$emit('course-saved', data)
+                        if (course != null) {
+                            this._data.plannedCourseList.push(course)
+                        }
+                        bus.$emit('course-saved', course)
                     } else {
                         console.log('Date could not be saved.')
                         console.log(response)
@@ -175,7 +187,7 @@
                 if (!value && !this.loadingUnplanned) {
                     bus.$emit('update-courses')
                 }
-            }
+            },
         }
     }
 </script>

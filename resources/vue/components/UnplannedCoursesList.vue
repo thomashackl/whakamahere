@@ -22,18 +22,17 @@
             </thead>
             <tbody class="container" v-dragula="courseList" drake="courselist">
                 <tr v-for="course in courseList" :id="course.course_id + '-' + course.slot_id"
-                    class="course" :data-course-number="course.course_number"
-                    :data-course-id="course.course_id" :data-slot-id="course.slot_id"
-                    :data-course-name="course.course_name" :data-course-duration="course.duration">
+                    class="course"  :data-course-id="course.course_id" :data-slot-id="course.slot_id"
+                    :data-course-number="course.course_number" :data-course-name="course.course_name"
+                    :data-weekday="course.weekday" :data-time="course.time" :data-duration="course.duration">
                     <td class="course-name">{{ course.course_number }} {{ course.course_name }}</td>
                     <td class="course-duration">{{ course.duration }}</td>
                     <td class="course-lecturer">{{ course.lecturer }}</td>
                     <td class="course-preftime">{{ getWeekday(course.weekday) }} {{ course.time.slice(0, 5) }}</td>
                     <td class="course-actions">
-                        <studip-icon shape="check-circle" @click="acceptPreference"
-                                     :data-course-id="course.course_id" :data-slot-id="course.slot_id"
-                                     :data-weekday="course.weekday" :data-time="course.time"
-                                     :data-duration="course.duration"/>
+                        <a href="#" @click="acceptPreference">
+                            <studip-icon shape="check-circle"/>
+                        </a>
                     </td>
                 </tr>
             </tbody>
@@ -108,14 +107,19 @@
                 return date.toLocaleString('de-DE', { weekday: 'short' })
             },
             acceptPreference: function(event) {
-                let start = new Date(this.lectureStart + ' ' + event.target.dataset.time);
+                const dataEl = event.currentTarget.parentNode.parentNode
+                let start = new Date(this.lectureStart + ' ' + dataEl.dataset.time);
                 start.setDate(start.getDate() - start.getDay())
-                start.setDate(start.getDate() + parseInt(event.target.dataset.weekday))
-                let end = new Date(start.getTime() + parseInt(event.target.dataset.duration) * 60000)
+                start.setDate(start.getDate() + parseInt(dataEl.dataset.weekday))
+                let end = new Date(start.getTime() + parseInt(dataEl.dataset.duration) * 60000)
+
                 let data = {
-                    id: event.target.dataset.courseId + '-' + event.target.dataset.slotId,
-                    courseId: event.target.dataset.courseId,
-                    slotId: event.target.dataset.slotId,
+                    id: dataEl.dataset.courseId + '-' + dataEl.dataset.slotId,
+                    course_id: dataEl.dataset.courseId,
+                    slot_id: dataEl.dataset.slotId,
+                    course_number: dataEl.dataset.courseNumber,
+                    course_name: dataEl.dataset.courseName,
+                    weekday: start.getDay(),
                     start: start,
                     end: end
                 }
@@ -139,6 +143,12 @@
 
                 &.course {
                     cursor: move;
+
+                    .course-actions {
+                        img, svg {
+                            cursor: pointer;
+                        }
+                    }
                 }
             }
         }
