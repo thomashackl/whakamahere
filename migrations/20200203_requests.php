@@ -27,6 +27,8 @@ class Requests extends Migration {
         (
             `request_id` INT NOT NULL AUTO_INCREMENT,
             `course_id` VARCHAR(32) NOT NULL REFERENCES `seminare`.`Seminar_id`,
+            `semester_id` VARCHAR(32) NOT NULL REFERENCES `semester_data`.`semester_id`,
+            `institute_id` VARCHAR(32) NOT NULL REFERENCES `Institute`.`Institut_id`,
             `room_id` VARCHAR(32) NULL REFERENCES `resources`.`id`,
             `cycle` TINYINT UNSIGNED NOT NULL DEFAULT 1,
             `startweek` TINYINT UNSIGNED NOT NULL DEFAULT 0,
@@ -35,7 +37,9 @@ class Requests extends Migration {
             `mkdate` DATETIME NOT NULL,
             `chdate` DATETIME NOT NULL,
             PRIMARY KEY (`request_id`),
-            UNIQUE INDEX course_id (`course_id`)
+            UNIQUE INDEX course_semester (`course_id`, `semester_id`),
+            INDEX course_id (`course_id`),
+            INDEX institute_id (`institute_id`)
         ) ENGINE InnoDB ROW_FORMAT=DYNAMIC");
 
         // Property requests:
@@ -48,7 +52,8 @@ class Requests extends Migration {
             `mkdate` DATETIME NOT NULL,
             `chdate` DATETIME NOT NULL,
             PRIMARY KEY (`property_request_id`),
-            INDEX request_id (`request_id`)
+            INDEX request_id (`request_id`),
+            INDEX property_id (`property_id`)
         ) ENGINE InnoDB ROW_FORMAT=DYNAMIC");
 
         // Course slots:
@@ -63,7 +68,8 @@ class Requests extends Migration {
             `mkdate` DATETIME NOT NULL,
             `chdate` DATETIME NOT NULL,
             PRIMARY KEY (`slot_id`),
-            INDEX request_id (`request_id`)
+            INDEX request_id (`request_id`),
+            INDEX user_id (`user_id`)
         ) ENGINE InnoDB ROW_FORMAT=DYNAMIC");
 
         // Rename column and add foreign key constraint.

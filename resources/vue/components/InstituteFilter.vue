@@ -3,7 +3,7 @@
         <label for="institute">
             Einrichtung
         </label>
-        <select2 v-model="selected" :options="myInstitutes" :id="'institute'" :name="'institute'"
+        <select2 v-model="selected" :options="myInstitutes" id="institute" name="institute"
                  @change="onChange($event)"></select2>
     </section>
 </template>

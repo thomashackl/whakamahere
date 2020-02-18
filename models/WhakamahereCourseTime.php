@@ -59,19 +59,25 @@ class WhakamahereCourseTime extends SimpleORMap
         $params = [];
 
         foreach ($filter as $type => $one) {
-            switch ($type) {
-                case 'semester':
-                    $joins[] = "JOIN `semester_data` sem ON (
-                        s.`start_time` + s.`duration_time` BETWEEN sem.`beginn` AND sem.`ende`)";
-                    $where[] = "AND sem.`semester_id` IN (:semesters)";
-                    $params['semesters'] = is_array($one) ? $one : [ $one ];
-                    break;
-                case 'institute':
-                    $where[] = "AND s.`Institut_id` IN (:institutes)";
-                    $params['institutes'] = is_array($one) ? $one : [ $one ];
-                    break;
-                case 'room':
-                    break;
+            if ($one) {
+                switch ($type) {
+                    case 'semester':
+                        $joins[] = "JOIN `whakamahere_requests` r USING (`course_id`)";
+                        $where[] = "AND r.`semester_id` = :semester";
+                        $params['semester'] = $one;
+                        break;
+                    case 'institute':
+                        $where[] = "AND s.`Institut_id` IN (:institutes)";
+                        $params['institutes'] = is_array($one) ? $one : [$one];
+                        break;
+                    case 'lecturer':
+                        $joins[] = "JOIN `whakamahere_course_slots` cs ON (t.`slot_id` = cs.`slot_id`)";
+                        $where[] = "AND cs.`user_id` = :lecturer";
+                        $params['lecturer'] = $one;
+                        break;
+                    case 'room':
+                        break;
+                }
             }
         }
 

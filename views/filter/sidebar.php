@@ -3,6 +3,9 @@
                      :selected-semester="'<?= $selectedSemester ?>'"
                      :institutes='<?= studip_json_encode($institutes) ?>'
                      :selected-institute="'<?= $selectedInstitute ?>'"
+                     :lecturers='<?= studip_json_encode($lecturers) ?>'
+                     :selected-lecturer="'<?= $selectedLecturer ?>'"
+                     get-lecturers-url="<?= $controller->link_for('planning/lecturers') ?>"
                      :rooms='<?= studip_json_encode($rooms) ?>'
                      :selected-room="'<?= $selectedRoom ?>'"></sidebar-filters>
 </div>

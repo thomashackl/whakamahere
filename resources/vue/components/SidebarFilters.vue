@@ -1,8 +1,11 @@
 <template>
     <form class="default">
-        <semester-filter :semesters="semesters" :selected-semester="selectedSemester"></semester-filter>
-        <institute-filter :institutes="institutes" :selected-institute="selectedInstitute"></institute-filter>
-        <room-filter :rooms="rooms" :selected-room="selectedRoom"></room-filter>
+        <semester-filter :semesters="semesters" :selected-semester="selectedSemester"/>
+        <institute-filter :institutes="institutes" :selected-institute="selectedInstitute"/>
+        <lecturer-filter :lecturers="lecturers" :selected-lecturer="selectedLecturer"
+                         :get-lecturers-url="getLecturersUrl" :semester="selectedSemester"
+                         :institute="selectedInstitute"/>
+        <room-filter :rooms="rooms" :selected-room="selectedRoom"/>
     </form>
 </template>
 
@@ -10,12 +13,42 @@
     export default {
         name: 'SidebarFilters',
         props: {
-            semesters: Array,
-            selectedSemester: String,
-            institutes: Array,
-            selectedInstitute: String,
-            rooms: Array,
-            selectedRoom: String
+            semesters: {
+                type: Array,
+                default: () => []
+            },
+            selectedSemester: {
+                type: String,
+                default: ''
+            },
+            institutes: {
+                type: Array,
+                default: () => []
+            },
+            selectedInstitute: {
+                type: String,
+                default: ''
+            },
+            lecturers: {
+                type: Array,
+                default: () => []
+            },
+            selectedLecturer: {
+                type: String,
+                default: ''
+            },
+            getLecturersUrl: {
+                type: String,
+                default: ''
+            },
+            rooms: {
+                type: Array,
+                default: () => []
+            },
+            selectedRoom: {
+                type: String,
+                default: ''
+            }
         }
     }
 </script>

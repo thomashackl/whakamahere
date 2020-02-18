@@ -43,37 +43,42 @@ class WhakamahereCourseSlot extends SimpleORMap
         parent::configure($config);
     }
 
-    public static function findUnplannedBySemester($semester_id, $institute_id = '')
+    public static function findUnplanned($filter = [])
     {
         SimpleORMap::expireTableScheme();
         $sql = "SELECT cs.*
             FROM `whakamahere_course_slots` cs
                 JOIN `whakamahere_requests` r ON (r.`request_id` = cs.`request_id`)
                 JOIN `seminare` s ON (s.`Seminar_id` = r.`course_id`)
-                JOIN `semester_data` sem ON (sem.`beginn` = s.`start_time`)
-            WHERE sem.`semester_id` = :semester
+            WHERE r.`semester_id` = :semester
                 AND NOT EXISTS (
                     SELECT `slot_id` FROM `whakamahere_course_times` WHERE `slot_id` = cs.`slot_id`
                 )";
         $params = [
-            'semester' => $semester_id
+            'semester' => $filter['semester']
         ];
 
-        if ($institute_id !== '') {
+        if ($filter['institute'] != '') {
 
             // Our institute_id is like '<id>+sub', so we need to get sub institutes, too
-            $sub = explode('+', $institute_id);
+            $sub = explode('+', $filter['institute']);
             if (count($sub) > 1) {
                 $institutes = DBManager::get()->fetchFirst(
                     "SELECT `Institut_id` FROM `Institute` WHERE `fakultaets_id` = :institute",
                     ['institute' => $sub[0]]
                 );
             } else {
-                $institutes = [$institute_id];
+                $institutes = [$filter['institute']];
             }
 
             $sql .= " AND s.`Institut_id` IN (:institutes)";
             $params['institutes'] = $institutes;
+        }
+
+        if ($filter['lecturer'] != '') {
+
+            $sql .= " AND cs.`user_id` = :lecturer";
+            $params['lecturer'] = $filter['lecturer'];
         }
 
         if (Config::get()->IMPORTANT_SEMNUMBER) {

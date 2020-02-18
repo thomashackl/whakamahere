@@ -20,7 +20,7 @@
             },
             fullPage: {
                 type: Boolean,
-                default: true
+                default: false
             },
             width: {
                 type: Number,
@@ -42,10 +42,11 @@
         },
         watch: {
             isLoading(val) {
+                console.log('Parent class is ' + this.parentClass)
                 let container = document.querySelector('.' + this.parentClass)
                 if (val) {
                     this.setDimension(container)
-                    container.style.display = 'inline-block'
+                    container.style.display = 'block'
                 } else {
                     container.style.display = 'none'
                 }
@@ -55,7 +56,7 @@
             if (this.isLoading) {
                 let container = document.querySelector('.' + this.parentClass)
                 this.setDimension(container)
-                container.style.display = 'inline-block'
+                container.style.display = 'block'
             }
         },
         methods: {
@@ -63,10 +64,10 @@
                 const parent = this.referenceElement !== '' ?
                     document.querySelector(this.referenceElement) :
                     container.parentElement
-                const padding = (parent.offsetHeight / 2 - this.height / 2)
+                const padding = (parent.clientHeight / 2 - this.height / 2)
                 container.style.paddingTop = padding + 'px'
-                container.style.width = parent.offsetWidth + 'px'
-                container.style.height = (parent.offsetHeight - padding) + 'px'
+                container.style.width = parent.clientWidth + 'px'
+                container.style.height = (parent.clientHeight) + 'px'
             }
         }
     }

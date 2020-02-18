@@ -16,6 +16,8 @@
  *
  * @property int request_id database column
  * @property string course_id database column
+ * @property string semester_id database column
+ * @property string institute_id database column
  * @property string room_id database column
  * @property int cycle database column
  * @property int startweek database column
@@ -36,6 +38,11 @@ class WhakamaherePlanningRequest extends SimpleORMap
             'foreign_key' => 'course_id',
             'assoc_foreign_key' => 'seminar_id'
         ];
+        $config['belongs_to']['semester'] = [
+            'class_name' => 'Semester',
+            'foreign_key' => 'semester_id',
+            'assoc_foreign_key' => 'semester_id'
+        ];
         $config['has_many']['property_requests'] = [
             'class_name' => 'WhakamaherePropertyRequest',
             'foreign_key' => 'request_id',
@@ -52,6 +59,39 @@ class WhakamaherePlanningRequest extends SimpleORMap
         ];
 
         parent::configure($config);
+    }
+
+    public static function findLecturers($filter)
+    {
+        $sql = "SELECT DISTINCT a.*
+            FROM `auth_user_md5` a
+                JOIN `whakamahere_course_slots` s USING (`user_id`)
+                JOIN `whakamahere_requests` r USING (`request_id`)";
+        $where = " WHERE r.`semester_id` = :semester";
+        $params = [
+            'semester' => $filter['semester']
+        ];
+
+        if ($filter['institute'] != '') {
+
+            // Our institute_id is like '<id>+sub', so we need to get sub institutes, too
+            $sub = explode('+', $filter['institute']);
+            if (count($sub) > 1) {
+                $institutes = DBManager::get()->fetchFirst(
+                    "SELECT `Institut_id` FROM `Institute` WHERE `fakultaets_id` = :institute",
+                    ['institute' => $sub[0]]
+                );
+            } else {
+                $institutes = [$filter['institute']];
+            }
+
+            $where .= " AND r.`institute_id` IN (:institutes)";
+            $params['institutes'] = $institutes;
+        }
+
+        $sql .= $where . " ORDER BY a.`Nachname`, a.`Vorname`, a.`username`";
+
+        return DBManager::get()->fetchAll($sql, $params, 'User::buildExisting');
     }
 
 }

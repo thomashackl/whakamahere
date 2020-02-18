@@ -1,7 +1,7 @@
 <template>
     <select :name="name" :id="id" :required="required" :disabled="disabled">
         <template v-for="option in options" >
-            <optgroup v-if="option.children.length > 0" :label="option.text" :key="option.id">
+            <optgroup v-if="option.children != null && option.children.length > 0" :label="option.text" :key="option.id">
                 <option v-for="child in option.children" :value="child.id" :key="child.id">
                     {{ child.text }}
                 </option>
@@ -69,7 +69,7 @@
                     ...this.settings,
                     data: val
                 })
-                this.setvalue(this.value)
+                this.setValue(this.value)
             },
             setValue(val) {
                 if (val instanceof Array) {

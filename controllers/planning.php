@@ -45,6 +45,11 @@ class PlanningController extends AuthenticatedController {
         $this->selectedInstitute = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE != '' ?
             UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE :
             '';
+
+        $this->selectedLecturer = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_LECTURER != '' ?
+            UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_LECTURER :
+            '';
+
     }
 
     public function index_action($show = 'semester')
@@ -73,25 +78,63 @@ class PlanningController extends AuthenticatedController {
         // Show weekends?
         $this->weekends = Config::get()->WHAKAMAHERE_PLANNING_SHOW_WEEKENDS ? 'true' : 'false';
 
-        if ($this->selectedInstitute != '') {
-            $this->unplanned_courses = $this->getUnplannedCourses($this->selectedSemester, $this->selectedInstitute);
-        } else {
-            $this->unplanned_courses = [];
+        $filter = [
+            'semester' => $this->selectedSemester
+        ];
+
+        if ($this->selectedLecturer != '') {
+            $filter['lecturer'] = $this->selectedLecturer;
         }
-        $this->planned_courses = $this->getPlannedCourses($this->selectedSemester, $this->selectedInstitute);
+
+        if ($this->selectedInstitute != '') {
+
+            $filter['institute'] = $this->selectedInstitute;
+            $this->unplanned_courses = $this->getUnplannedCourses($filter);
+
+        } else {
+
+            $this->unplanned_courses = [];
+
+        }
+
+        $this->planned_courses = $this->getPlannedCourses($filter);
+
+        $this->lecturers = $this->getLecturers($filter);
 
         $this->setupSidebar();
 
     }
 
-    public function unplanned_courses_action($semester, $institute)
+    public function planned_courses_action()
     {
-        $this->render_json($this->getUnplannedCourses($semester, $institute));
+        $filter = [
+            'semester' => Request::option('semester'),
+            'institute' => Request::get('institute'),
+            'lecturer' => Request::get('lecturer')
+        ];
+
+        $this->render_json($this->getPlannedCourses($filter));
     }
 
-    public function planned_courses_action($semester, $institute)
+    public function unplanned_courses_action()
     {
-        $this->render_json($this->getPlannedCourses($semester, $institute));
+        $filter = [
+            'semester' => Request::option('semester'),
+            'institute' => Request::get('institute'),
+            'lecturer' => Request::get('lecturer')
+        ];
+
+        $this->render_json($this->getUnplannedCourses($filter));
+    }
+
+    public function lecturers_action()
+    {
+        $filter = [
+            'semester' => Request::option('semester'),
+            'institute' => Request::get('institute')
+        ];
+
+        $this->render_json($this->getLecturers($filter));
     }
 
     public function store_selection($type, $value)
@@ -104,6 +147,9 @@ class PlanningController extends AuthenticatedController {
                 break;
             case 'institute':
                 $field = 'WHAKAMAHERE_SELECTED_INSTITUTE';
+                break;
+            case 'lecturer':
+                $field = 'WHAKAMAHERE_SELECTED_LECTURER';
                 break;
             case 'room':
                 $field = 'WHAKAMAHERE_SELECTED_ROOM';
@@ -221,14 +267,15 @@ class PlanningController extends AuthenticatedController {
         ));
     }
 
-    private function getUnplannedCourses($semester, $institute)
+    private function getUnplannedCourses($filter)
     {
         $courses = [];
 
-        $slots = WhakamahereCourseSlot::findUnplannedBySemester($semester, $institute);
+        $slots = WhakamahereCourseSlot::findUnplanned($filter);
 
         foreach ($slots as $slot) {
             $courses[] = [
+                'id' => $slot->request->course->id . '-' . $slot->id,
                 'course_id' => $slot->request->course->id,
                 'course_name' => (string) $slot->request->course->name,
                 'course_number' => $slot->request->course->veranstaltungsnummer,
@@ -243,21 +290,22 @@ class PlanningController extends AuthenticatedController {
         return $courses;
     }
 
-    private function getPlannedCourses($semester, $institute)
+    private function getPlannedCourses($filter)
     {
-        $sub = explode('+', $institute);
+        $sub = explode('+', $filter['institute']);
         if (count($sub) > 1) {
             $institutes = DBManager::get()->fetchFirst(
                 "SELECT `Institut_id` FROM `Institute` WHERE `fakultaets_id` = :institute",
                 ['institute' => $sub[0]]
             );
         } else {
-            $institutes = [$institute];
+            $institutes = [$filter['institute']];
         }
 
         $entries = WhakamahereCourseTime::findFiltered([
-            'semester' => $semester,
-            'institute' => $institutes
+            'semester' => $filter['semester'],
+            'institute' => $institutes,
+            'lecturer' => $filter['lecturer']
         ]);
 
         $courses = [];
@@ -272,6 +320,20 @@ class PlanningController extends AuthenticatedController {
             ];
         }
         return $courses;
+    }
+
+    private function getLecturers($filter)
+    {
+        $lecturers = [];
+
+        foreach (WhakamaherePlanningRequest::findLecturers($filter) as $one) {
+            $lecturers[] = [
+                'user_id' => $one->id,
+                'name' => $one->getFullname('full_rev')
+            ];
+        }
+
+        return $lecturers;
     }
 
 }

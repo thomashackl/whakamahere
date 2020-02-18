@@ -62,6 +62,10 @@
             institute: {
                 type: String,
                 default: ''
+            },
+            lecturer: {
+                type: String,
+                default: ''
             }
         },
         data() {
@@ -69,17 +73,22 @@
                 plannedCourseList: this.plannedCourses,
                 unplannedCourseList: this.unplannedCourses,
                 loadingPlanned: false,
-                loadingUnplanned: false
+                loadingUnplanned: false,
+                theSemester: this.semester,
+                theInstitute: this.institute,
+                theLecturer: this.lecturer
             }
         },
         mounted() {
             // Catch event for changed semester in sidebar
             bus.$on('update-semester', (element) => {
-                this.loadingPlanned = true;
-                this.loadingUnplanned = true;
+                this.theSemester = element.value
+                this.loadingPlanned = true
+                this.loadingUnplanned = true
                 if (element.value !== '') {
-                    this.getUnplannedCourses(element.value, this.institute)
-                    this.getPlannedCourses(element.value, this.institute)
+                    this.getUnplannedCourses()
+                    this.getPlannedCourses()
+                    bus.$emit('update-courses')
                 } else {
                     this.unplannedCourseList = []
                     this.plannedCourseList = []
@@ -88,17 +97,27 @@
             })
             // Catch event for changed institute in sidebar
             bus.$on('update-institute', (value) => {
-                this.loadingPlanned = true;
-                this.loadingUnplanned = true;
+                this.theInstitute = value
+                this.loadingPlanned = true
+                this.loadingUnplanned = true
                 if (value !== '') {
-                    this.getUnplannedCourses(this.semester, value)
-                    this.getPlannedCourses(this.semester, value)
+                    this.getUnplannedCourses()
+                    this.getPlannedCourses()
                     bus.$emit('update-courses')
                 } else {
                     this.unplannedCourseList = []
                     this.plannedCourseList = []
                     bus.$emit('update-courses')
                 }
+            })
+            // Catch event for changed lecturer in sidebar
+            bus.$on('update-lecturer', (value) => {
+                this.theLecturer = value
+                this.loadingPlanned = true;
+                this.loadingUnplanned = true;
+                this.getUnplannedCourses()
+                this.getPlannedCourses()
+                bus.$emit('update-courses')
             })
 
             bus.$on('save-course', (course) => {
@@ -107,24 +126,36 @@
 
         },
         methods: {
-            async getUnplannedCourses(semester, institute) {
-                fetch(this.getUnplannedCoursesUrl + '/' + semester + '/' + institute)
-                    .then((response) => {
-                        response.json().then((json) => {
-                                this.unplannedCourseList = json
-                                this.loadingUnplanned = false;
-                                bus.$emit('update-unplanned-courses')
-                            })
-                    })
+            async getUnplannedCourses() {
+                const data = {
+                    semester: this.theSemester,
+                    institute: this.theInstitute,
+                    lecturer: this.theLecturer
+                }
+                const params = new URLSearchParams(data).toString()
+                const response = await fetch(this.getUnplannedCoursesUrl + '?' + params, {
+                    method: 'get'
+                })
+                const json = await response.json()
+                this.unplannedCourseList = json
+                this.loadingUnplanned = false;
+                bus.$emit('update-unplanned-courses')
             },
-            async getPlannedCourses(semester, institute) {
-                fetch(this.getPlannedCoursesUrl + '/' + semester + '/' + institute)
-                    .then((response) => {
-                        response.json().then((json) => {
-                            this.plannedCourseList = json
-                            this.loadingPlanned = false;
-                            bus.$emit('update-planned-courses')
-                        })
+            async getPlannedCourses() {
+                const data = {
+                    semester: this.theSemester,
+                    institute: this.theInstitute,
+                    lecturer: this.theLecturer
+                }
+                const params = new URLSearchParams(data).toString()
+                const response = await fetch(this.getPlannedCoursesUrl + '?' + params, {
+                    method: 'get'
+                })
+                response.json()
+                    .then((json) => {
+                        this.plannedCourseList = json
+                        this.loadingPlanned = false;
+                        bus.$emit('update-planned-courses')
                     })
             },
             saveCourse(data) {
@@ -141,9 +172,11 @@
                     formData.append('start', this.formatDate(data.start))
                     formData.append('end', this.formatDate(data.end))
                     course = {
+                        id: data.course_id + '-' + data.slot_id,
                         course_id: data.course_id,
                         course_number: data.course_number,
                         course_name: data.course_name,
+                        lecturer: data.lecturer,
                         weekday: data.start.getDay(),
                         start: ('0' + data.start.getHours()).slice(-2) + ':' + ('0' + data.start.getMinutes()).slice(-2) + ':00',
                         end: ('0' + data.end.getHours()).slice(-2) + ':' + ('0' + data.end.getMinutes()).slice(-2) + ':00'

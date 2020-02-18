@@ -6,7 +6,7 @@
                 :store-course-url="'<?= $controller->link_for('planning/store_course') ?>'"
                 :unplanned-courses='<?= studip_json_encode($unplanned_courses) ?>'
                 :planned-courses='<?= studip_json_encode($planned_courses) ?>'
-                :semester="'<?= $selectedSemester ?>'" :institute="'<?= $selectedInstitute ?>'"></courseplan>
+                :semester="'<?= $selectedSemester ?>'" :institute="'<?= $selectedInstitute ?>'"/>
 </div>
 <script>
     new Vue({
