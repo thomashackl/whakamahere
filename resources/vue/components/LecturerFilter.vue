@@ -42,7 +42,22 @@
                 selected: this.selectedLecturer,
                 theSemester: this.semester,
                 theInstitute: this.institute,
+                lecturerList: this.lecturers,
                 loading: false
+            }
+        },
+        computed: {
+            theLecturers() {
+                let all = [{
+                    id: '',
+                    text: '-- alle --'
+                }]
+
+                if (this.lecturerList != null) {
+                    return all.concat(this.lecturerList)
+                } else {
+                    return all
+                }
             }
         },
         mounted() {
@@ -54,26 +69,6 @@
                 this.theInstitute = institute
                 this.getLecturers()
             })
-        },
-        computed: {
-            theLecturers: function() {
-                let options = [{
-                    id: '',
-                    text: '-- alle --'
-                }]
-
-                if (this.lecturers != null) {
-                    for (let i = 0 ; i < this.lecturers.length ; i++) {
-                        options.push({
-                            id: this.lecturers[i].user_id,
-                            text: this.lecturers[i].name
-                        })
-                    }
-                }
-
-
-                return options
-            }
         },
         methods: {
             onChange(value) {
@@ -90,7 +85,7 @@
                     method: 'get'
                 })
                 const json = await response.json()
-                this.lecturers = json
+                this.lecturerList = json
                 this.loading = false
             }
         }

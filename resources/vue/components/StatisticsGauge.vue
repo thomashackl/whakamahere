@@ -1,7 +1,6 @@
 <template>
     <div>
-        <studip-loading-indicator :is-loading="loading" :width="32" :height="32"
-                                  reference-element="#whakamahere-statistics"/>
+        <studip-loading-indicator :is-loading="loading" :width="32" :height="32"/>
         <k-gauge title="Raumauslastung" :value="value" :min="min" :max="max"
                  :format-function="formatPct" :color-steps="colors"/>
     </div>

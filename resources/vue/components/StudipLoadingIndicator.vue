@@ -1,5 +1,5 @@
 <template>
-    <div :class="parentClass">
+    <div class="vld-parent">
         <loading :active="isLoading" :can-cancel="false" :is-full-page="fullPage" loader="dots"
                  :width="width" :height="height" color="#fff"/>
     </div>
@@ -35,39 +35,27 @@
                 default: ''
             }
         },
-        data() {
-            return {
-                parentClass: 'vld-parent'
-            }
-        },
-        watch: {
-            isLoading(val) {
-                console.log('Parent class is ' + this.parentClass)
-                let container = document.querySelector('.' + this.parentClass)
-                if (val) {
-                    this.setDimension(container)
-                    container.style.display = 'block'
-                } else {
-                    container.style.display = 'none'
-                }
-            }
-        },
         mounted() {
             if (this.isLoading) {
-                let container = document.querySelector('.' + this.parentClass)
-                this.setDimension(container)
-                container.style.display = 'block'
+                this.setDimensions()
             }
         },
         methods: {
-            setDimension: function(container) {
-                const parent = this.referenceElement !== '' ?
+            setDimensions() {
+                const parent = this.referenceElement != '' ?
                     document.querySelector(this.referenceElement) :
-                    container.parentElement
-                const padding = (parent.clientHeight / 2 - this.height / 2)
-                container.style.paddingTop = padding + 'px'
-                container.style.width = parent.clientWidth + 'px'
-                container.style.height = (parent.clientHeight) + 'px'
+                    this.$el.parentNode
+                this.$el.style.display = this.isLoading ? 'block' : 'none'
+                this.$el.style.height = parent.offsetHeight + 'px'
+                this.$el.style.left = parent.offsetLeft + 'px'
+                this.$el.style.paddingTop = ((parent.offsetHeight - this.height) / 2) + 'px'
+                this.$el.style.top = parent.offsetTop + 'px'
+                this.$el.style.width = parent.offsetWidth + 'px'
+            }
+        },
+        watch: {
+            isLoading: function(value) {
+                this.setDimensions()
             }
         }
     }
@@ -76,9 +64,9 @@
 <style lang="scss">
     .vld-parent {
         background-color: rgba(40, 72, 124, 0.5);
-        display: none;
         margin: 0;
-        padding: 0;
+        padding-left: auto;
+        padding-right: auto;
         position: absolute;
         text-align: center;
         z-index: 999;
