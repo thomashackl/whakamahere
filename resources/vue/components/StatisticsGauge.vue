@@ -44,13 +44,10 @@
         },
         methods: {
             async getValue() {
-                fetch(this.getValueUrl)
-                    .then((response) => {
-                        response.json().then((json) => {
-                            this.value = json.totalUsage * 100
-                            this.loading = false
-                        })
-                    })
+                const response = await fetch(this.getValueUrl)
+                const json = await response.json()
+                this.value = json.totalUsage * 100
+                //this.loading = false
             }
         }
     }

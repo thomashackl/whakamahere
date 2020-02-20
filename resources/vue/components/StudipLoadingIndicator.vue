@@ -48,9 +48,12 @@
                 this.$el.style.display = this.isLoading ? 'block' : 'none'
                 this.$el.style.height = parent.offsetHeight + 'px'
                 this.$el.style.left = parent.offsetLeft + 'px'
-                this.$el.style.paddingTop = ((parent.offsetHeight - this.height) / 2) + 'px'
                 this.$el.style.top = parent.offsetTop + 'px'
                 this.$el.style.width = parent.offsetWidth + 'px'
+
+                let svg = this.$el.querySelector('svg')
+                svg.style.marginLeft = ((parent.offsetWidth - this.width) / 2) + 'px'
+                svg.style.marginTop = ((parent.offsetHeight - this.height) / 2) + 'px'
             }
         },
         watch: {
@@ -65,10 +68,7 @@
     .vld-parent {
         background-color: rgba(40, 72, 124, 0.5);
         margin: 0;
-        padding-left: auto;
-        padding-right: auto;
         position: absolute;
-        text-align: center;
         z-index: 999;
     }
 </style>
