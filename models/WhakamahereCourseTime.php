@@ -89,4 +89,13 @@ class WhakamahereCourseTime extends SimpleORMap
         return DBManager::get()->fetchAll($query, $params, 'WhakamahereCourseTime::buildExisting');
     }
 
+    public static function findByUserAndSemester($user_id, $semester_id)
+    {
+        return self::findBySQL("JOIN `whakamahere_course_slots` USING (`slot_id`)
+            JOIN `whakamahere_requests` USING (`request_id`)
+            WHERE `whakamahere_course_slots`.`user_id` = :user
+                AND `whakamahere_requests`.`semester_id` = :semester",
+            ['user' => $user_id, 'semester' => $semester_id]);
+    }
+
 }

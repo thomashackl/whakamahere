@@ -3,6 +3,11 @@
         <table v-if="courseList.length > 0" class="default">
             <caption>
                 {{ courseList.length }} ungeplante Veranstaltung(en)
+                <span class="actions">
+                    <a href="#" @click="acceptAllTimePreferences">
+                        <studip-icon shape="check-circle"/>
+                    </a>
+                </span>
             </caption>
             <colgroup>
                 <col/>
@@ -30,14 +35,14 @@
                     <td class="course-lecturer">{{ course.lecturer }}</td>
                     <td class="course-preftime">{{ getWeekday(course.weekday) }} {{ course.time.slice(0, 5) }}</td>
                     <td class="course-actions">
-                        <a href="#" @click="acceptPreference">
+                        <a href="#" @click="acceptTimePreference($event)" v-if="course.time != ''">
                             <studip-icon shape="check-circle"/>
                         </a>
                     </td>
                 </tr>
             </tbody>
         </table>
-        <studip-messagebox v-else message="Es sind keine Veranstaltungen vorhanden."/>
+        <studip-messagebox v-else message="Es sind keine ungeplanten Veranstaltungen vorhanden."/>
     </div>
 </template>
 
@@ -106,8 +111,10 @@
                 date.setDate(date.getDate() + parseInt(number))
                 return date.toLocaleString('de-DE', { weekday: 'short' })
             },
-            acceptPreference: function(event) {
-                const dataEl = event.currentTarget.parentNode.parentNode
+            acceptTimePreference: function(event, dataEl) {
+                if (dataEl == null) {
+                    dataEl = event.currentTarget.parentNode.parentNode
+                }
                 let start = new Date(this.lectureStart + ' ' + dataEl.dataset.time);
                 start.setDate(start.getDate() - start.getDay())
                 start.setDate(start.getDate() + parseInt(dataEl.dataset.weekday))
@@ -124,6 +131,12 @@
                     end: end
                 }
                 bus.$emit('save-course', data)
+            },
+            acceptAllTimePreferences: function(event) {
+                const unplanned = document.querySelectorAll('#whakamahere-unplanned-courses tr.course')
+                for (let i = 0 ; i < unplanned.length ; i++) {
+                    this.acceptTimePreference(event, unplanned[i])
+                }
             }
         }
     }
