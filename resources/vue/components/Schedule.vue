@@ -179,10 +179,15 @@
 
                 let month = ('0' + (lStart.getMonth() + 1)).slice(-2)
 
+                if (info.event != null) {
+                    var lecturerId = info.event.extendedProps.lecturerId
+                } else {
+                    var lecturerId = info.lecturerId
+                }
+
                 // Check availability info for slot lecturer.
-                if (info.event.extendedProps.lecturerId != '') {
-                    const response = await fetch(this.getSlotAvailabilityUrl + '/' +
-                        info.event.extendedProps.lecturerId)
+                if (lecturerId != '') {
+                    const response = await fetch(this.getSlotAvailabilityUrl + '/' + lecturerId)
                     var occupied = await response.json()
                 }
 
@@ -201,17 +206,17 @@
                     }
                 }*/
 
-                for (let i = 0 ; i < occupied.length ; i++) {
-                    let date = ('0' + (lStart.getDate() + (occupied[i].weekday - 1))).slice(-2)
+                occupied.map((one) => {
+                    let date = ('0' + (lStart.getDate() + (one.weekday - 1))).slice(-2)
                     let day = lStart.getFullYear() + '-' + month + '-' + date
 
                     this.slots.push({
-                        start: day + ' ' + occupied[i].start,
-                        end: day + ' ' + occupied[i].end,
+                        start: day + ' ' + one.start,
+                        end: day + ' ' + one.end,
                         rendering: 'background',
                         color: '#ff0000'
                     })
-                }
+                })
             },
             unmarkAvailableSlots: function() {
                 this.slots = []

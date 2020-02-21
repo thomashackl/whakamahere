@@ -29,7 +29,8 @@
                 <tr v-for="course in courseList" :id="course.course_id + '-' + course.slot_id"
                     class="course"  :data-course-id="course.course_id" :data-slot-id="course.slot_id"
                     :data-course-number="course.course_number" :data-course-name="course.course_name"
-                    :data-weekday="course.weekday" :data-time="course.time" :data-duration="course.duration">
+                    :data-weekday="course.weekday" :data-time="course.time" :data-duration="course.duration"
+                    :data-lecturer-id="course.lecturer_id" :data-lecturer="course.lecturer">
                     <td class="course-name">{{ course.course_number }} {{ course.course_name }}</td>
                     <td class="course-duration">{{ course.duration }}</td>
                     <td class="course-lecturer">{{ course.lecturer }}</td>
