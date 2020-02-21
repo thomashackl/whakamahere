@@ -48,16 +48,21 @@
         },
         computed: {
             theLecturers() {
-                let all = [{
+                let entries = [{
                     id: '',
                     text: '-- alle --'
                 }]
 
                 if (this.lecturerList != null) {
-                    return all.concat(this.lecturerList)
-                } else {
-                    return all
+                    this.lecturerList.map((lecturer) => {
+                        entries.push({
+                            id: lecturer.user_id,
+                            text: lecturer.name
+                        })
+                    })
                 }
+
+                return entries
             }
         },
         mounted() {
