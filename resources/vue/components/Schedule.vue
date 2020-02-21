@@ -18,14 +18,33 @@
             FullCalendar
         },
         props: {
-            locale: String,
-            minTime: String,
-            maxTime: String,
-            weekends: Boolean,
-            lectureStart: String,
+            locale: {
+                type: String,
+                default: 'de-de'
+            },
+            minTime: {
+                type: String,
+                default: ''
+            },
+            maxTime: {
+                type: String,
+                default: ''
+            },
+            weekends: {
+                type: Boolean,
+                default: false
+            },
+            lectureStart: {
+                type: String,
+                default: ''
+            },
             courses: {
                 type: Array,
                 default: () => []
+            },
+            getSlotAvailabilityUrl: {
+                type: String,
+                default: ''
             }
         },
         data() {
@@ -67,10 +86,18 @@
                     let day = lStart.getFullYear() + '-' + month + '-' + date
 
                     entries.push({
-                        id: this.courses[i].course_id,
-                        title: title,
+                        id: this.courses[i].course_id + '-' + this.courses[i].slot_id,
+                        title: title + '\n' + this.courses[i].lecturer,
                         start: day + ' ' + this.courses[i].start,
-                        end: day + ' ' + this.courses[i].end
+                        end: day + ' ' + this.courses[i].end,
+                        url: this.courses[i].url,
+                        courseId: this.courses[i].course_id,
+                        slotId: this.courses[i].slot_id,
+                        slotWeekday: this.courses[i].weekday,
+                        slotStartTime: this.courses[i].start,
+                        slotEndTime: this.courses[i].end,
+                        lecturerId: this.courses[i].lecturer_id,
+                        lecturerName: this.courses[i].lecturer
                     })
                 }
 
@@ -102,7 +129,7 @@
                 this.$nextTick(() => {
                     document.getElementsByClassName('gu-mirror')[0].style.width =
                         document.getElementsByClassName('fc-day-header')[0].offsetWidth + 'px'
-                    this.markAvailableSlots()
+                    this.markAvailableSlots(data)
                 })
             })
 
@@ -146,23 +173,44 @@
                 })
             },
             // Mark slots where a course can or cannot be dropped.
-            markAvailableSlots: function(info) {
+            async markAvailableSlots(info) {
                 // The virtual begin of our semester view - place dates there.
                 let lStart = new Date(this.lectureStart)
 
                 let month = ('0' + (lStart.getMonth() + 1)).slice(-2)
 
-                for (let weekday = 0 ; weekday < 5 ; weekday++) {
+                // Check availability info for slot lecturer.
+                if (info.event.extendedProps.lecturerId != '') {
+                    const response = await fetch(this.getSlotAvailabilityUrl + '/' +
+                        info.event.extendedProps.lecturerId)
+                    var occupied = await response.json()
+                }
+
+                /*for (let weekday = 0 ; weekday < 5 ; weekday++) {
                     let date = ('0' + (lStart.getDate() + weekday)).slice(-2)
                     let day = lStart.getFullYear() + '-' + month + '-' + date
 
                     for (let hour = 8; hour < 22; hour += 2) {
+
+                        let isOccupied = false
                         this.slots.push({
                             start: day + ' ' + ('0' + hour).slice(-2) + ':00',
                             end: day + ' ' + ('0' + (hour + 2)).slice(-2) + ':00',
                             rendering: 'background'
                         })
                     }
+                }*/
+
+                for (let i = 0 ; i < occupied.length ; i++) {
+                    let date = ('0' + (lStart.getDate() + (occupied[i].weekday - 1))).slice(-2)
+                    let day = lStart.getFullYear() + '-' + month + '-' + date
+
+                    this.slots.push({
+                        start: day + ' ' + occupied[i].start,
+                        end: day + ' ' + occupied[i].end,
+                        rendering: 'background',
+                        color: '#ff0000'
+                    })
                 }
             },
             unmarkAvailableSlots: function() {

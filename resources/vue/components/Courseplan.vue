@@ -4,7 +4,8 @@
                                   reference-element="#whakamahere-courseplan"/>
         <schedule :min-time="minTime" :max-time="maxTime" :locale="locale"
                   :weekends="weekends" :lecture-start="lectureStart"
-                  :courses="plannedCourseList" :institute="institute"></schedule>
+                  :courses="plannedCourseList" :institute="institute"
+                  :get-slot-availability-url="getSlotAvailabilityUrl"></schedule>
         <unplanned-courses-list :courses="unplannedCourseList" :lectureStart="lectureStart"></unplanned-courses-list>
     </div>
 </template>
@@ -44,6 +45,10 @@
                 default: ''
             },
             storeCourseUrl: {
+                type: String,
+                default: ''
+            },
+            getSlotAvailabilityUrl: {
                 type: String,
                 default: ''
             },

@@ -189,7 +189,17 @@ class PlanningController extends AuthenticatedController {
     }
 
     public function slot_availability_action($lecturer) {
+        $occupied = [];
 
+        foreach (WhakamahereCourseTime::findByUserAndSemester($lecturer, $this->selectedSemester) as $one) {
+            $occupied[] = [
+                'weekday' => $one->weekday,
+                'start' => $one->start,
+                'end' => $one->end
+            ];
+        }
+
+        $this->render_json($occupied);
     }
 
     private function setupSidebar()
@@ -275,11 +285,13 @@ class PlanningController extends AuthenticatedController {
 
         foreach ($slots as $slot) {
             $courses[] = [
-                'id' => $slot->request->course->id . '-' . $slot->id,
-                'course_id' => $slot->request->course->id,
+                'id' => $slot->request->course_id . '-' . $slot->id,
+                'course_id' => $slot->request->course_id,
                 'course_name' => (string) $slot->request->course->name,
                 'course_number' => $slot->request->course->veranstaltungsnummer,
+                'url' => URLHelper::getLink('dispatch.php/course/overview?cid=' . $slot->request->course_id),
                 'slot_id' => $slot->id,
+                'lecturer_id' => $slot->user_id,
                 'lecturer' => $slot->user_id ? $slot->user->getFullname() : 'N. N.',
                 'duration' => $slot->duration,
                 'weekday' => $slot->weekday,
@@ -310,10 +322,19 @@ class PlanningController extends AuthenticatedController {
 
         $courses = [];
         foreach ($entries as $one) {
+            $start = new DateTime('1970-01-01 ' . $one->start);
+            $end = new DateTime('1970-01-01 ' . $one->end);
+            $interval = $end->diff($start);
+
             $courses[] = [
+                'id' => $one->course_id . '-' . $one->slot_id,
                 'course_id' => $one->course_id,
                 'course_name' => (string) $one->course->name,
                 'course_number' => $one->course->veranstaltungsnummer,
+                'url' => URLHelper::getLink('dispatch.php/course/overview?cid=' . $one->course_id),
+                'slot_id' => $one->slot_id,
+                'lecturer_id' => $one->slot->user_id,
+                'lecturer' => $one->slot->user_id ? $one->slot->user->getFullname() : 'N. N.',
                 'weekday' => $one->weekday,
                 'start' => $one->start,
                 'end' => $one->end
