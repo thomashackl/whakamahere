@@ -66,18 +66,18 @@
             }
         },
         mounted() {
-            bus.$on('update-semester', (semester) => {
+            bus.$on('updated-semester', (semester) => {
                 this.theSemester = semester.value
                 this.getLecturers()
             })
-            bus.$on('update-institute', (institute) => {
+            bus.$on('updated-institute', (institute) => {
                 this.theInstitute = institute
                 this.getLecturers()
             })
         },
         methods: {
             onChange(value) {
-                bus.$emit('update-lecturer', value)
+                bus.$emit('updated-lecturer', value)
             },
             async getLecturers() {
                 this.loading = true

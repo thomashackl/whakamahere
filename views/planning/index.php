@@ -5,6 +5,7 @@
                 :get-planned-courses-url="'<?= $controller->link_for('planning/planned_courses') ?>'"
                 :store-course-url="'<?= $controller->link_for('planning/store_course') ?>'"
                 :get-slot-availability-url="'<?= $controller->link_for('planning/slot_availability') ?>'"
+                :unplan-slot-url="'<?= $controller->link_for('planning/unplan') ?>'"
                 :unplanned-courses='<?= studip_json_encode($unplanned_courses) ?>'
                 :planned-courses='<?= studip_json_encode($planned_courses) ?>'
                 :semester="'<?= $selectedSemester ?>'" :institute="'<?= $selectedInstitute ?>'"/>

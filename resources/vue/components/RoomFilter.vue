@@ -23,7 +23,7 @@
         },
         methods: {
             onChange: function(value) {
-                bus.$emit('update-room', value)
+                bus.$emit('updated-room', value)
             }
         },
         computed: {

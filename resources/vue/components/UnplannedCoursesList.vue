@@ -84,11 +84,6 @@
             })
         },
         mounted() {
-            // Catch event if course from list is dropped on calendar
-            bus.$on('course-saved', (element) => {
-                this.courseList = this.courseList.filter(course => course.id !== element.id)
-            })
-
             this.$el.style.maxHeight = (
                 document.getElementById('layout_content').offsetHeight -
                 document.getElementsByClassName('fc')[0].offsetHeight -
@@ -127,6 +122,9 @@
                     slot_id: dataEl.dataset.slotId,
                     course_number: dataEl.dataset.courseNumber,
                     course_name: dataEl.dataset.courseName,
+                    lecturer: dataEl.dataset.lecturer,
+                    lecturer_id: dataEl.dataset.lecturerId,
+                    pinned: false,
                     weekday: start.getDay(),
                     start: start,
                     end: end

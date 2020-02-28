@@ -27,7 +27,7 @@
         },
         methods: {
             onChange: function(event) {
-                bus.$emit('update-semester', event.target)
+                bus.$emit('updated-semester', event.target)
             }
         }
     }

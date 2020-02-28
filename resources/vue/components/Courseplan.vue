@@ -5,7 +5,8 @@
         <schedule :min-time="minTime" :max-time="maxTime" :locale="locale"
                   :weekends="weekends" :lecture-start="lectureStart"
                   :courses="plannedCourseList" :institute="institute"
-                  :get-slot-availability-url="getSlotAvailabilityUrl"></schedule>
+                  :get-slot-availability-url="getSlotAvailabilityUrl"
+                  :unplan-slot-url="unplanSlotUrl"></schedule>
         <unplanned-courses-list :courses="unplannedCourseList" :lectureStart="lectureStart"></unplanned-courses-list>
     </div>
 </template>
@@ -52,6 +53,10 @@
                 type: String,
                 default: ''
             },
+            unplanSlotUrl: {
+                type: String,
+                default: ''
+            },
             plannedCourses: {
                 type: Array,
                 default: () => []
@@ -86,43 +91,56 @@
         },
         mounted() {
             // Catch event for changed semester in sidebar
-            bus.$on('update-semester', (element) => {
+            bus.$on('updated-semester', (element) => {
                 this.theSemester = element.value
                 this.loadingPlanned = true
                 this.loadingUnplanned = true
                 if (element.value !== '') {
                     this.getUnplannedCourses()
                     this.getPlannedCourses()
-                    bus.$emit('update-courses')
+                    bus.$emit('updated-courses')
                 } else {
                     this.unplannedCourseList = []
                     this.plannedCourseList = []
-                    bus.$emit('update-courses')
+                    bus.$emit('updated-courses')
                 }
             })
             // Catch event for changed institute in sidebar
-            bus.$on('update-institute', (value) => {
+            bus.$on('updated-institute', (value) => {
                 this.theInstitute = value
                 this.loadingPlanned = true
                 this.loadingUnplanned = true
                 if (value !== '') {
                     this.getUnplannedCourses()
                     this.getPlannedCourses()
-                    bus.$emit('update-courses')
+                    bus.$emit('updated-courses')
                 } else {
                     this.unplannedCourseList = []
                     this.plannedCourseList = []
-                    bus.$emit('update-courses')
+                    bus.$emit('updated-courses')
                 }
             })
             // Catch event for changed lecturer in sidebar
-            bus.$on('update-lecturer', (value) => {
+            bus.$on('updated-lecturer', (value) => {
                 this.theLecturer = value
-                this.loadingPlanned = true;
                 this.loadingUnplanned = true;
+                this.loadingPlanned = true;
                 this.getUnplannedCourses()
                 this.getPlannedCourses()
-                bus.$emit('update-courses')
+                bus.$emit('updated-courses')
+            })
+
+            // Catch event for unplanning an already planned course
+            bus.$on('remove-planned-course', (slotId) => {
+                this.plannedCourseList = this.plannedCourseList.filter(course => course.slot_id !== slotId)
+                bus.$emit('updated-planned-courses')
+            })
+
+            // Catch event for adding a new course to unplanned list
+            bus.$on('add-unplanned-course', (event) => {
+                this.loadingUnplanned = true;
+                this.getUnplannedCourses()
+                bus.$emit('updated-unplanned-courses')
             })
 
             bus.$on('save-course', (course) => {
@@ -144,7 +162,7 @@
                 const json = await response.json()
                 this.unplannedCourseList = json
                 this.loadingUnplanned = false;
-                bus.$emit('update-unplanned-courses')
+                bus.$emit('updated-unplanned-courses')
             },
             async getPlannedCourses() {
                 const data = {
@@ -160,42 +178,52 @@
                     .then((json) => {
                         this.plannedCourseList = json
                         this.loadingPlanned = false;
-                        bus.$emit('update-planned-courses')
+                        bus.$emit('updated-planned-courses')
                     })
             },
             saveCourse(data) {
                 let formData = new FormData()
                 let course = null
-                if (data.draggedEl) {
+                if (data.draggedEl != null) {
                     formData.append('course', data.draggedEl.dataset.courseId)
                     formData.append('slot', data.draggedEl.dataset.slotId)
                     formData.append('start', this.formatDate(data.event.start))
                     formData.append('end', this.formatDate(data.event.end))
+                    course = {
+                        id: data.draggedEl.dataset.courseId + '-' + data.draggedEl.dataset.slotId,
+                        course_id: data.draggedEl.dataset.courseId,
+                        slot_id: data.draggedEl.dataset.slotId,
+                        course_number: data.draggedEl.dataset.courseNumber,
+                        course_name: data.draggedEl.dataset.courseName,
+                        lecturer: data.draggedEl.dataset.lecturer,
+                        lecturer_id: data.draggedEl.dataset.lecturerId,
+                        pinned: data.draggedEl.dataset.pinned,
+                        weekday: data.event.start.getDay(),
+                        start: ('0' + data.event.start.getHours()).slice(-2) + ':' +
+                            ('0' + data.event.start.getMinutes()).slice(-2) + ':00',
+                        end: ('0' + data.event.end.getHours()).slice(-2) + ':' +
+                            ('0' + data.event.end.getMinutes()).slice(-2) + ':00'
+                    }
+                    data.event.remove()
                 } else {
                     formData.append('course', data.course_id)
                     formData.append('slot', data.slot_id)
                     formData.append('start', this.formatDate(data.start))
                     formData.append('end', this.formatDate(data.end))
-                    course = {
-                        id: data.course_id + '-' + data.slot_id,
-                        course_id: data.course_id,
-                        course_number: data.course_number,
-                        course_name: data.course_name,
-                        lecturer: data.lecturer,
-                        weekday: data.start.getDay(),
-                        start: ('0' + data.start.getHours()).slice(-2) + ':' + ('0' + data.start.getMinutes()).slice(-2) + ':00',
-                        end: ('0' + data.end.getHours()).slice(-2) + ':' + ('0' + data.end.getMinutes()).slice(-2) + ':00'
-                    }
+                    course = data
                 }
                 fetch(this.storeCourseUrl, {
                     method: 'post',
                     body: formData
                 }).then((response) => {
-                    if (response.status == 200) {
-                        if (course != null) {
+                    if (response.ok) {
+                        if (data.draggedEl != null) {
                             this._data.plannedCourseList.push(course)
+                            this._data.unplannedCourseList =
+                                this._data.unplannedCourseList.filter((one) => one.slot_id != course.slot_id)
                         }
-                        bus.$emit('course-saved', course)
+
+                        bus.$emit('course-saved', course == null ? data.event : course)
                     } else {
                         console.log('Date could not be saved.')
                         console.log(response)
@@ -218,12 +246,12 @@
         watch: {
             loadingUnplanned: function(value) {
                 if (!value && !this.loadingPlanned) {
-                    bus.$emit('update-courses')
+                    bus.$emit('updated-courses')
                 }
             },
             loadingPlanned: function(value) {
                 if (!value && !this.loadingUnplanned) {
-                    bus.$emit('update-courses')
+                    bus.$emit('updated-courses')
                 }
             },
         }

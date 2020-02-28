@@ -3,7 +3,8 @@
                    droppable="true" :all-day-slot="false" :header="header" :weekends="weekends" :editable="true"
                    :column-header-format="columnHeaderFormat" week-number-calculation="ISO" :events="events"
                    :min-time="minTime" :max-time="maxTime" :default-date="lectureStart"
-                   @eventReceive="dropCourse" @eventDragStart="markAvailableSlots"/>
+                   @eventReceive="dropCourse" @eventDragStart="markAvailableSlots" @eventDragStop="dropCourse"
+                   :eventRender="renderEvent"/>
 </template>
 
 <script>
@@ -45,6 +46,10 @@
             getSlotAvailabilityUrl: {
                 type: String,
                 default: ''
+            },
+            unplanSlotUrl: {
+                type: String,
+                default: ''
             }
         },
         data() {
@@ -58,8 +63,7 @@
                 columnHeaderFormat: {
                     weekday: 'long'
                 },
-                drag: null,
-                slots: []
+                drag: null
             }
         },
         computed: {
@@ -86,13 +90,14 @@
                     let day = lStart.getFullYear() + '-' + month + '-' + date
 
                     entries.push({
+                        source: 'database',
                         id: this.courses[i].course_id + '-' + this.courses[i].slot_id,
                         title: title + '\n' + this.courses[i].lecturer,
                         start: day + ' ' + this.courses[i].start,
                         end: day + ' ' + this.courses[i].end,
-                        url: this.courses[i].url,
                         courseId: this.courses[i].course_id,
                         slotId: this.courses[i].slot_id,
+                        editable: this.courses[i].pinned == 1 ? false : true,
                         slotWeekday: this.courses[i].weekday,
                         slotStartTime: this.courses[i].start,
                         slotEndTime: this.courses[i].end,
@@ -101,7 +106,7 @@
                     })
                 }
 
-                return entries.concat(this.slots)
+                return entries
             }
         },
         mounted() {
@@ -112,7 +117,7 @@
             document.getElementsByClassName('fc')[0].style.maxHeight = (end - start) + 'px'
 
             // Re-initialize drag & drop after courses changed
-            bus.$on('update-courses', (value) => {
+            bus.$on('updated-courses', (value) => {
                 this.drag.destroy()
 
                 /*
@@ -139,7 +144,6 @@
             })
 
             this.initDragAndDrop()
-
         },
         methods: {
             // When a course is dropped, we store the time assignment to database.
@@ -206,20 +210,72 @@
                     }
                 }*/
 
+                let slots = []
                 occupied.map((one) => {
                     let date = ('0' + (lStart.getDate() + (one.weekday - 1))).slice(-2)
                     let day = lStart.getFullYear() + '-' + month + '-' + date
 
-                    this.slots.push({
+                    slots.push({
                         start: day + ' ' + one.start,
                         end: day + ' ' + one.end,
                         rendering: 'background',
                         color: '#ff0000'
                     })
                 })
+
+                let source = {
+                    id: 'availability',
+                    events: slots
+                }
+
+                this.$refs.schedule.getApi().addEventSource(source)
             },
             unmarkAvailableSlots: function() {
-                this.slots = []
+                const source = this.$refs.schedule.getApi().getEventSourceById('availability')
+                if (source != null) {
+                    source.remove()
+                }
+            },
+            async unplan(event) {
+                fetch(this.unplanSlotUrl + '/' + event.extendedProps.slotId)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw response
+                        }
+                        bus.$emit('remove-planned-course', event.extendedProps.slotId)
+                        bus.$emit('add-unplanned-course', event)
+                    })
+                    .catch(error => {
+                        console.log(error)
+                    })
+            },
+            pin: function(event) {
+                event.editable = false
+            },
+            renderEvent: function(info) {
+                if (info.event.rendering != 'background' &&
+                        info.el.querySelector('.whakamahere-event-actions') == null) {
+                    let actions = document.createElement('span')
+                    actions.classList.add('whakamahere-event-actions')
+
+                    let remove = document.createElement('img')
+                    remove.setAttribute('src', STUDIP.ASSETS_URL + 'images/icons/white/decline.svg')
+                    remove.setAttribute('width', '16')
+                    remove.addEventListener('click', (event) => {
+                        this.unplan(info.event)
+                    })
+                    actions.appendChild(remove)
+
+                    let pin = document.createElement('img')
+                    pin.setAttribute('src', STUDIP.ASSETS_URL + 'images/icons/white/exclaim.svg')
+                    pin.setAttribute('width', '16')
+                    pin.addEventListener('click', (event) => {
+                        this.pin(info.event)
+                    })
+                    actions.appendChild(pin)
+
+                    info.el.querySelector('.fc-time').appendChild(actions)
+                }
             }
         }
     }
@@ -240,6 +296,10 @@
 
             .fc-time {
                 background-color: #3f72b4;
+
+                .whakamahere-event-actions {
+                    float: right;
+                }
             }
         }
     }

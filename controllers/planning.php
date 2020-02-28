@@ -170,13 +170,17 @@ class PlanningController extends AuthenticatedController {
         $endDate = new DateTime(Request::get('end'));
 
         if (Request::option('room', '') == '') {
-            $time = new WhakamahereCourseTime();
-            $time->course_id = Request::option('course');
-            $time->slot_id = Request::int('slot');
+            if (Request::int('time_id', 0) != 0) {
+                $time = WhakamahereCourseTime::find(Request::int('time_id'));
+            } else {
+                $time = new WhakamahereCourseTime();
+                $time->course_id = Request::option('course');
+                $time->slot_id = Request::int('slot');
+                $time->mkdate = date('Y-m-d H:i:s');
+            }
             $time->weekday = $startDate->format('N');
             $time->start = $startDate->format('H:i');
             $time->end = $endDate->format('H:i');
-            $time->mkdate = date('Y-m-d H:i:s');
             $time->chdate = date('Y-m-d H:i:s');
             if ($time->store()) {
                 $this->set_status(200, 'Time assignment saved.');
@@ -188,7 +192,8 @@ class PlanningController extends AuthenticatedController {
         $this->render_nothing();
     }
 
-    public function slot_availability_action($lecturer) {
+    public function slot_availability_action($lecturer)
+    {
         $occupied = [];
 
         foreach (WhakamahereCourseTime::findByUserAndSemester($lecturer, $this->selectedSemester) as $one) {
@@ -200,6 +205,23 @@ class PlanningController extends AuthenticatedController {
         }
 
         $this->render_json($occupied);
+    }
+
+    public function unplan_action($slot_id)
+    {
+        $planned = WhakamahereCourseTime::findOneBySlot_id($slot_id);
+
+        if ($planned) {
+            if ($planned->delete()) {
+                $this->set_status(200, 'Time assignment removed.');
+            } else {
+                $this->set_status(500, 'Could not remove time assignment.');
+            }
+        } else {
+            $this->set_status(404, 'Time assignment not found.');
+        }
+
+        $this->render_nothing();
     }
 
     private function setupSidebar()
@@ -328,13 +350,14 @@ class PlanningController extends AuthenticatedController {
 
             $courses[] = [
                 'id' => $one->course_id . '-' . $one->slot_id,
+                'time_id' => $one->id,
                 'course_id' => $one->course_id,
                 'course_name' => (string) $one->course->name,
                 'course_number' => $one->course->veranstaltungsnummer,
-                'url' => URLHelper::getLink('dispatch.php/course/overview?cid=' . $one->course_id),
                 'slot_id' => $one->slot_id,
                 'lecturer_id' => $one->slot->user_id,
                 'lecturer' => $one->slot->user_id ? $one->slot->user->getFullname() : 'N. N.',
+                'pinned' => $one->pinned,
                 'weekday' => $one->weekday,
                 'start' => $one->start,
                 'end' => $one->end

@@ -52,7 +52,7 @@
         },
         methods: {
             onChange: function(value) {
-                bus.$emit('update-institute', value)
+                bus.$emit('updated-institute', value)
             }
         }
     }

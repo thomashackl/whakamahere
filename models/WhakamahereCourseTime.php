@@ -19,6 +19,7 @@
  * @property int weekday database column
  * @property time start database column
  * @property time end database column
+ * @property int pinned database column
  * @property string mkdate database column
  * @property string chdate database column
  */
@@ -99,7 +100,8 @@ class WhakamahereCourseTime extends SimpleORMap
         return self::findBySQL("JOIN `whakamahere_course_slots` USING (`slot_id`)
             JOIN `whakamahere_requests` USING (`request_id`)
             WHERE `whakamahere_course_slots`.`user_id` = :user
-                AND `whakamahere_requests`.`semester_id` = :semester",
+                AND `whakamahere_requests`.`semester_id` = :semester
+            ORDER BY `weekday`, `start`, `end`",
             ['user' => $user_id, 'semester' => $semester_id]);
     }
 

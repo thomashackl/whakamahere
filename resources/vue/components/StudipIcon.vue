@@ -6,7 +6,7 @@
 
 <script>
     export default {
-        name: 'studip-icon',
+        name: 'StudipIcon',
         props: {
             shape: String,
             role: {
