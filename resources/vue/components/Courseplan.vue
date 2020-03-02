@@ -211,19 +211,19 @@
                     formData.append('start', this.formatDate(data.start))
                     formData.append('end', this.formatDate(data.end))
                     course = data
+                    course.start = ('0' + course.start.getHours()).slice(-2) + ':' +
+                        ('0' + course.start.getMinutes()).slice(-2) + ':00'
+                    course.end = ('0' + course.end.getHours()).slice(-2) + ':' +
+                        ('0' + course.end.getMinutes()).slice(-2) + ':00'
                 }
                 fetch(this.storeCourseUrl, {
                     method: 'post',
                     body: formData
                 }).then((response) => {
                     if (response.ok) {
-                        if (data.draggedEl != null) {
-                            this._data.plannedCourseList.push(course)
-                            this._data.unplannedCourseList =
-                                this._data.unplannedCourseList.filter((one) => one.slot_id != course.slot_id)
-                        }
-
-                        bus.$emit('course-saved', course == null ? data.event : course)
+                        this._data.plannedCourseList.push(course)
+                        this._data.unplannedCourseList =
+                            this._data.unplannedCourseList.filter((one) => one.slot_id != course.slot_id)
                     } else {
                         console.log('Date could not be saved.')
                         console.log(response)
