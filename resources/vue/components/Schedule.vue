@@ -195,21 +195,6 @@
                     var occupied = await response.json()
                 }
 
-                /*for (let weekday = 0 ; weekday < 5 ; weekday++) {
-                    let date = ('0' + (lStart.getDate() + weekday)).slice(-2)
-                    let day = lStart.getFullYear() + '-' + month + '-' + date
-
-                    for (let hour = 8; hour < 22; hour += 2) {
-
-                        let isOccupied = false
-                        this.slots.push({
-                            start: day + ' ' + ('0' + hour).slice(-2) + ':00',
-                            end: day + ' ' + ('0' + (hour + 2)).slice(-2) + ':00',
-                            rendering: 'background'
-                        })
-                    }
-                }*/
-
                 let slots = []
                 occupied.map((one) => {
                     let date = ('0' + (lStart.getDate() + (one.weekday - 1))).slice(-2)
@@ -219,7 +204,7 @@
                         start: day + ' ' + one.start,
                         end: day + ' ' + one.end,
                         rendering: 'background',
-                        color: '#ff0000'
+                        color: one.free ? '#90ee90' : '#ff0000'
                     })
                 })
 

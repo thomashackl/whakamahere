@@ -192,19 +192,74 @@ class PlanningController extends AuthenticatedController {
         $this->render_nothing();
     }
 
+    /**
+     * Gets availability for time slots in a week. At the moment only lecturer availability is checked.
+     * @param string $lecturer
+     */
     public function slot_availability_action($lecturer)
     {
-        $occupied = [];
+        $slots = [];
 
-        foreach (WhakamahereCourseTime::findByUserAndSemester($lecturer, $this->selectedSemester) as $one) {
-            $occupied[] = [
-                'weekday' => $one->weekday,
-                'start' => $one->start,
-                'end' => $one->end
-            ];
+        $start = DateTime::createFromFormat('H:i', Config::get()->WHAKAMAHERE_PLANNING_START_HOUR);
+        $end = DateTime::createFromFormat('H:i', Config::get()->WHAKAMAHERE_PLANNING_END_HOUR);
+
+        $occupied = WhakamahereCourseTime::findByUserAndSemester($lecturer, $this->selectedSemester);
+
+        // Iterate over weekdays
+        $endDay = Config::get()->WHAKAMAHERE_PLANNING_SHOW_WEEKENDS ? 7 : 5;
+        for ($weekday = 1 ; $weekday <= $endDay ; $weekday++) {
+            $thisDay = array_filter($occupied, function($value) use ($weekday) {
+                return $value->weekday == $weekday;
+            });
+
+            if (count($thisDay) == 0) {
+
+                $slots[] = [
+                    'weekday' => $weekday,
+                    'start' => $start->format('H:i'),
+                    'end' => $end->format('H:i'),
+                    'free' => true
+                ];
+
+            } else {
+
+                $currentStart = $start;
+
+                while ($current = array_shift($thisDay)) {
+
+                    if ($current->start != $currentStart->format('H:i:s')) {
+                        $slots[] = [
+                            'weekday' => $weekday,
+                            'start' => $currentStart->format('H:i'),
+                            'end' => $current->start,
+                            'free' => true
+                        ];
+                    }
+
+                    $slots[] = [
+                        'weekday' => (int) $current->weekday,
+                        'start' => $current->start,
+                        'end' => $current->end,
+                        'free' => false
+                    ];
+
+                    $currentStart = DateTime::createFromFormat('H:i:s', $current->end);
+
+                }
+
+                if ($currentStart != $end) {
+                    $slots[] = [
+                        'weekday' => $weekday,
+                        'start' => $currentStart->format('H:i'),
+                        'end' => $end->format('H:i'),
+                        'free' => true
+                    ];
+                }
+
+            }
         }
 
-        $this->render_json($occupied);
+        $this->render_json($slots);
     }
 
     public function unplan_action($slot_id)
