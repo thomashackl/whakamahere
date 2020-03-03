@@ -52,6 +52,12 @@ class PlanningController extends AuthenticatedController {
 
     }
 
+    /**
+     * Default action which loads current settings and courses.
+     *
+     * @param string $show 'semester' or 'week' view?
+     * @throws Exception
+     */
     public function index_action($show = 'semester')
     {
         // Navigation handling.
@@ -105,6 +111,9 @@ class PlanningController extends AuthenticatedController {
 
     }
 
+    /**
+     * Get planned courses for given settings.
+     */
     public function planned_courses_action()
     {
         $filter = [
@@ -116,6 +125,9 @@ class PlanningController extends AuthenticatedController {
         $this->render_json($this->getPlannedCourses($filter));
     }
 
+    /**
+     * Get unplanned courses for given settings.
+     */
     public function unplanned_courses_action()
     {
         $filter = [
@@ -127,6 +139,9 @@ class PlanningController extends AuthenticatedController {
         $this->render_json($this->getUnplannedCourses($filter));
     }
 
+    /**
+     * Get lecturers for given settings.
+     */
     public function lecturers_action()
     {
         $filter = [
@@ -137,6 +152,9 @@ class PlanningController extends AuthenticatedController {
         $this->render_json($this->getLecturers($filter));
     }
 
+    /**
+     * Stores selection in filters to user preferences in database.
+     */
     public function store_selection($type, $value)
     {
         $field = '';
@@ -262,6 +280,11 @@ class PlanningController extends AuthenticatedController {
         $this->render_json($slots);
     }
 
+    /**
+     * Remove an already planned course from schedule.
+     *
+     * @param int $slot_id the slot to remove
+     */
     public function unplan_action($slot_id)
     {
         $planned = WhakamahereCourseTime::findOneBySlot_id($slot_id);
@@ -279,6 +302,9 @@ class PlanningController extends AuthenticatedController {
         $this->render_nothing();
     }
 
+    /**
+     * Create sidebar entries.
+     */
     private function setupSidebar()
     {
         $sidebar = Sidebar::get();
@@ -354,6 +380,12 @@ class PlanningController extends AuthenticatedController {
         ));
     }
 
+    /**
+     * Helper function for getting unplanned course(slot)s
+     *
+     * @param array $filter filter to apply, like semester, institute, lecturer etc.
+     * @return array
+     */
     private function getUnplannedCourses($filter)
     {
         $courses = [];
@@ -379,6 +411,12 @@ class PlanningController extends AuthenticatedController {
         return $courses;
     }
 
+    /**
+     * Helper function for getting planned course(slot)s
+     *
+     * @param array $filter filter to apply, like semester, institute, lecturer etc.
+     * @return array
+     */
     private function getPlannedCourses($filter)
     {
         $sub = explode('+', $filter['institute']);
@@ -421,6 +459,12 @@ class PlanningController extends AuthenticatedController {
         return $courses;
     }
 
+    /**
+     * Helper function for getting lecturers
+     *
+     * @param array $filter filter to apply, like semester, institute, lecturer etc.
+     * @return array
+     */
     private function getLecturers($filter)
     {
         $lecturers = [];
