@@ -7,7 +7,8 @@
                      :selected-lecturer="'<?= $selectedLecturer ?>'"
                      get-lecturers-url="<?= $controller->link_for('planning/lecturers') ?>"
                      :rooms='<?= studip_json_encode($rooms) ?>'
-                     :selected-room="'<?= $selectedRoom ?>'"></sidebar-filters>
+                     :selected-room="'<?= $selectedRoom ?>'"
+                     store-selection-url="<?= $controller->link_for('filter/store_selection') ?>"></sidebar-filters>
 </div>
 <script>
     new Vue({

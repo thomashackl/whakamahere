@@ -49,4 +49,39 @@ class FilterController extends AuthenticatedController {
         $this->relocate('planning');
     }
 
+    /**
+     * Stores selection in filters to user preferences in database.
+     */
+    public function store_selection_action()
+    {
+        $field = '';
+
+        switch (Request::option('type')) {
+            case 'semester':
+                $field = 'WHAKAMAHERE_SELECTED_SEMESTER';
+                break;
+            case 'institute':
+                $field = 'WHAKAMAHERE_SELECTED_INSTITUTE';
+                break;
+            case 'lecturer':
+                $field = 'WHAKAMAHERE_SELECTED_LECTURER';
+                break;
+            case 'room':
+                $field = 'WHAKAMAHERE_SELECTED_ROOM';
+                break;
+        }
+
+        if ($field !== '') {
+            if (UserConfig::get(User::findCurrent()->id)->store($field, Request::get('value'))) {
+                $this->set_status(200, 'Selection saved.');
+            } else {
+                $this->set_status(500, 'Could not save selection.');
+            }
+        } else {
+            $this->set_status(404, 'Could not save selection: unknown field.');
+        }
+
+        $this->render_nothing();
+    }
+
 }

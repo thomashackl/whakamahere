@@ -10,6 +10,8 @@
 </template>
 
 <script>
+    import bus from 'jsassets/bus'
+
     export default {
         name: 'SidebarFilters',
         props: {
@@ -48,6 +50,34 @@
             selectedRoom: {
                 type: String,
                 default: ''
+            },
+            storeSelectionUrl: {
+                type: String,
+                default: ''
+            }
+        },
+        mounted() {
+            bus.$on('updated-semester', (semester) => this.storeSelection('semester', semester.value))
+            bus.$on('updated-institute', (institute) => this.storeSelection('institute', institute))
+            bus.$on('updated-lecturer', (lecturer) => this.storeSelection('lecturer', lecturer))
+            bus.$on('updated-room', (room) => this.storeSelection('lecturer', room))
+        },
+        methods: {
+            storeSelection: function(type, value) {
+                let formData = new FormData()
+                formData.append('type', type)
+                formData.append('value', value)
+                fetch(this.storeSelectionUrl, {
+                    method: 'post',
+                    body: formData
+                }).then((response) => {
+                    if (!response.ok) {
+                        throw response
+                    }
+                }).catch((error) => {
+                    alert('Es ist ein Fehler aufgetreten. Die Auswahl konnte nicht gespeichert werden.')
+                    console.log(error)
+                })
             }
         }
     }
@@ -55,8 +85,12 @@
 
 <style lang="scss">
     form.default {
-        label:not(.undecorated) {
-            margin-bottom: 0;
+        section:not(.contentbox) {
+            padding-top: 0;
+
+            label:not(.undecorated) {
+                margin-bottom: 0;
+            }
         }
     }
 </style>

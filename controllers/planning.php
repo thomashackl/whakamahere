@@ -153,33 +153,6 @@ class PlanningController extends AuthenticatedController {
     }
 
     /**
-     * Stores selection in filters to user preferences in database.
-     */
-    public function store_selection($type, $value)
-    {
-        $field = '';
-
-        switch ($type) {
-            case 'semester':
-                $field = 'WHAKAMAHERE_SELECTED_SEMESTER';
-                break;
-            case 'institute':
-                $field = 'WHAKAMAHERE_SELECTED_INSTITUTE';
-                break;
-            case 'lecturer':
-                $field = 'WHAKAMAHERE_SELECTED_LECTURER';
-                break;
-            case 'room':
-                $field = 'WHAKAMAHERE_SELECTED_ROOM';
-                break;
-        }
-
-        if ($field !== '') {
-            UserConfig::get(User::findCurrent()->id)->store($field, $value);
-        }
-    }
-
-    /**
      * Stores a course assignment to a time slot and (optionally) a room.
      */
     public function store_course_action()
@@ -373,6 +346,8 @@ class PlanningController extends AuthenticatedController {
                 'selectedSemester' => $this->selectedSemester,
                 'institutes' => $this->institutes,
                 'selectedInstitute' => $this->selectedInstitute,
+                'lecturers' => $this->lecturers,
+                'selectedLecturer' => $this->selectedLecturer,
                 'rooms' => $buildings,
                 'selectedRoom' => $selectedRoom,
                 'controller' => $this
@@ -439,7 +414,6 @@ class PlanningController extends AuthenticatedController {
         foreach ($entries as $one) {
             $start = new DateTime('1970-01-01 ' . $one->start);
             $end = new DateTime('1970-01-01 ' . $one->end);
-            $interval = $end->diff($start);
 
             $courses[] = [
                 'id' => $one->course_id . '-' . $one->slot_id,
