@@ -111,16 +111,16 @@ class PlanningController extends AuthenticatedController {
 
             $filter['institute'] = $this->selectedInstitute;
             $this->unplanned_courses = $this->getUnplannedCourses($filter);
+            $this->planned_courses = $this->getPlannedCourses($filter);
+            $this->lecturers = $this->getLecturers($filter);
 
         } else {
 
             $this->unplanned_courses = [];
+            $this->planned_courses = [];
+            $this->lecturers = [];
 
         }
-
-        $this->planned_courses = $this->getPlannedCourses($filter);
-
-        $this->lecturers = $this->getLecturers($filter);
 
         $this->setupSidebar();
 

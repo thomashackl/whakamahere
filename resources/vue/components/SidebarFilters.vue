@@ -1,12 +1,12 @@
 <template>
     <form class="default">
-        <semester-filter :semesters="semesters" :selected-semester="selectedSemester"/>
-        <institute-filter :institutes="institutes" :selected-institute="selectedInstitute"/>
-        <lecturer-filter :lecturers="lecturers" :selected-lecturer="selectedLecturer"
-                         :get-lecturers-url="getLecturersUrl" :semester="selectedSemester"
-                         :institute="selectedInstitute"/>
-        <room-filter :rooms="rooms" :selected-room="selectedRoom"/>
-        <seats-filter :min-seats="minSeats" :max-seats="maxSeats"/>
+        <semester-filter :semesters="semesters" :selected-semester="theSemester"/>
+        <institute-filter v-if="theSemester != ''" :institutes="institutes" :selected-institute="theInstitute"/>
+        <lecturer-filter v-if="theInstitute != ''" :lecturers="lecturers" :selected-lecturer="theLecturer"
+                         :get-lecturers-url="getLecturersUrl" :semester="theSemester"
+                         :institute="theInstitute"/>
+        <room-filter v-if="theInstitute != ''" :rooms="rooms" :selected-room="theRoom"/>
+        <seats-filter v-if="theInstitute != ''" :min-seats="theMinSeats" :max-seats="theMaxSeats"/>
     </form>
 </template>
 
@@ -65,12 +65,39 @@
                 default: ''
             }
         },
+        data() {
+            return {
+                theSemester: this.selectedSemester,
+                theInstitute: this.selectedInstitute,
+                theLecturer: this.selectedLecturer,
+                theRoom: this.selectedRoom,
+                theMinSeats: this.minSeats,
+                theMaxSeats: this.maxSeats
+            }
+        },
         mounted() {
-            bus.$on('updated-semester', (semester) => this.storeSelection('semester', semester.value))
-            bus.$on('updated-institute', (institute) => this.storeSelection('institute', institute))
-            bus.$on('updated-lecturer', (lecturer) => this.storeSelection('lecturer', lecturer))
-            bus.$on('updated-room', (room) => this.storeSelection('lecturer', room))
-            bus.$on('updated-seats', (seats) => this.storeSelection('seats', seats))
+            bus.$on('updated-semester', (semester) => {
+                this.storeSelection('semester', semester.value)
+                this.theSemester = semester.value
+            })
+            bus.$on('updated-institute', (institute) => {
+                this.storeSelection('institute', institute)
+                this.theInstitute = institute
+            })
+            bus.$on('updated-lecturer', (lecturer) => {
+                this.storeSelection('lecturer', lecturer)
+                this.theLecturer = lecturer
+            })
+            bus.$on('updated-room', (room) => {
+                this.storeSelection('room', room)
+                this.theRoom
+            })
+            bus.$on('updated-seats', (seats) => {
+                this.storeSelection('seats', seats)
+                const value = JSON.parse(seats)
+                this.theMinSeats = value.min
+                this.theMaxSeats = value.max
+            })
         },
         methods: {
             storeSelection: function(type, value) {

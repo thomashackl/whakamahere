@@ -118,9 +118,9 @@
             // Catch event for changed institute in sidebar
             bus.$on('updated-institute', (value) => {
                 this.theInstitute = value
-                this.loadingPlanned = true
-                this.loadingUnplanned = true
                 if (value !== '') {
+                    this.loadingPlanned = true
+                    this.loadingUnplanned = true
                     this.getUnplannedCourses()
                     this.getPlannedCourses()
                     bus.$emit('updated-courses')
@@ -171,38 +171,48 @@
         },
         methods: {
             async getUnplannedCourses() {
-                let formData = new FormData()
-                formData.append('semester', this.theSemester)
-                formData.append('institute', this.theInstitute)
-                formData.append('lecturer', this.theLecturer)
-                formData.append('seats', JSON.stringify({min: this.theMinSeats, max: this.theMaxSeats}))
-                const response = await fetch(this.getUnplannedCoursesUrl, {
-                    method: 'post',
-                    body: formData
-                })
-                response.json()
-                    .then((json) => {
-                        this.unplannedCourseList = json
-                        this.loadingUnplanned = false;
-                        bus.$emit('updated-unplanned-courses')
+                if (this.theInstitute != '') {
+                    let formData = new FormData()
+                    formData.append('semester', this.theSemester)
+                    formData.append('institute', this.theInstitute)
+                    formData.append('lecturer', this.theLecturer)
+                    formData.append('seats', JSON.stringify({min: this.theMinSeats, max: this.theMaxSeats}))
+                    const response = await fetch(this.getUnplannedCoursesUrl, {
+                        method: 'post',
+                        body: formData
                     })
+                    response.json()
+                        .then((json) => {
+                            this.unplannedCourseList = json
+                            this.loadingUnplanned = false;
+                            bus.$emit('updated-unplanned-courses')
+                        })
+                } else {
+                    this.unplannedCourseList = []
+                    this.loadingUnplanned = false;
+                }
             },
             async getPlannedCourses() {
-                let formData = new FormData()
-                formData.append('semester', this.theSemester)
-                formData.append('institute', this.theInstitute)
-                formData.append('lecturer', this.theLecturer)
-                formData.append('seats', JSON.stringify({min: this.theMinSeats, max: this.theMaxSeats}))
-                const response = await fetch(this.getPlannedCoursesUrl, {
-                    method: 'post',
-                    body: formData
-                })
-                response.json()
-                    .then((json) => {
-                        this.plannedCourseList = json
-                        this.loadingPlanned = false;
-                        bus.$emit('updated-planned-courses')
+                if (this.theInstitute != '') {
+                    let formData = new FormData()
+                    formData.append('semester', this.theSemester)
+                    formData.append('institute', this.theInstitute)
+                    formData.append('lecturer', this.theLecturer)
+                    formData.append('seats', JSON.stringify({min: this.theMinSeats, max: this.theMaxSeats}))
+                    const response = await fetch(this.getPlannedCoursesUrl, {
+                        method: 'post',
+                        body: formData
                     })
+                    response.json()
+                        .then((json) => {
+                            this.plannedCourseList = json
+                            this.loadingPlanned = false;
+                            bus.$emit('updated-planned-courses')
+                        })
+                } else {
+                    this.plannedCourseList = []
+                    this.loadingUnplanned = false;
+                }
             },
             saveCourse(data) {
                 let formData = new FormData()
