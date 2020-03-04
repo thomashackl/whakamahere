@@ -42,13 +42,9 @@ class PlanningController extends AuthenticatedController {
             Semester::findNext()->id;
 
         $this->institutes = Institute::getMyInstitutes();
-        $this->selectedInstitute = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE != '' ?
-            UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE :
-            '';
+        $this->selectedInstitute = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE;
 
-        $this->selectedLecturer = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_LECTURER != '' ?
-            UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_LECTURER :
-            '';
+        $this->selectedLecturer = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_LECTURER;
 
     }
 
@@ -450,11 +446,22 @@ class PlanningController extends AuthenticatedController {
     {
         $lecturers = [];
 
+        // Keep track if the currently set lecturer ID is still part of the result.
+        $lecturerFound = false;
+
         foreach (WhakamaherePlanningRequest::findLecturers($filter) as $one) {
             $lecturers[] = [
                 'user_id' => $one->id,
                 'name' => $one->getFullname('full_rev')
             ];
+
+            if ($this->selectedLecturer == $one->id) {
+                $lecturerFound = true;
+            }
+        }
+
+        if (!$lecturerFound) {
+            $this->selectedLecturer = '';
         }
 
         return $lecturers;
