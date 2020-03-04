@@ -6,6 +6,7 @@
                          :get-lecturers-url="getLecturersUrl" :semester="selectedSemester"
                          :institute="selectedInstitute"/>
         <room-filter :rooms="rooms" :selected-room="selectedRoom"/>
+        <seats-filter :min-seats="minSeats" :max-seats="maxSeats"/>
     </form>
 </template>
 
@@ -51,6 +52,14 @@
                 type: String,
                 default: ''
             },
+            minSeats: {
+                type: Number,
+                default: 0
+            },
+            maxSeats: {
+                type: Number,
+                default: 0
+            },
             storeSelectionUrl: {
                 type: String,
                 default: ''
@@ -61,6 +70,7 @@
             bus.$on('updated-institute', (institute) => this.storeSelection('institute', institute))
             bus.$on('updated-lecturer', (lecturer) => this.storeSelection('lecturer', lecturer))
             bus.$on('updated-room', (room) => this.storeSelection('lecturer', room))
+            bus.$on('updated-seats', (seats) => this.storeSelection('seats', seats))
         },
         methods: {
             storeSelection: function(type, value) {
@@ -86,7 +96,7 @@
 <style lang="scss">
     form.default {
         section:not(.contentbox) {
-            padding-top: 0;
+            padding-top: 0.5em;
 
             label:not(.undecorated) {
                 margin-bottom: 0;

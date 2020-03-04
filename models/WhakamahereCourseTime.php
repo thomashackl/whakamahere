@@ -73,8 +73,18 @@ class WhakamahereCourseTime extends SimpleORMap
                         $params['semester'] = $one;
                         break;
                     case 'institute':
+                        $sub = explode('+', $one);
+                        if (count($sub) > 1) {
+                            $institutes = DBManager::get()->fetchFirst(
+                                "SELECT `Institut_id` FROM `Institute` WHERE `fakultaets_id` = :institute",
+                                ['institute' => $sub[0]]
+                            );
+                        } else {
+                            $institutes = [$one];
+                        }
+
                         $where[] = "AND s.`Institut_id` IN (:institutes)";
-                        $params['institutes'] = is_array($one) ? $one : [$one];
+                        $params['institutes'] = $institutes;
                         break;
                     case 'lecturer':
                         $joins[] = "JOIN `whakamahere_course_slots` cs ON (t.`slot_id` = cs.`slot_id`)";
@@ -82,6 +92,19 @@ class WhakamahereCourseTime extends SimpleORMap
                         $params['lecturer'] = $one;
                         break;
                     case 'room':
+                        break;
+                    case 'seats':
+                        if ($filter['seats']['min'] && $filter['seats']['max']) {
+                            $where[] = " AND s.`admission_turnout` BETWEEN :min AND :max";
+                            $params['min'] = $one['min'];
+                            $params['max'] = $one['max'];
+                        } else if ($filter['seats']['min']) {
+                            $where[] = " AND s.`admission_turnout` >= :min";
+                            $params['min'] = $one['min'];
+                        } else if ($filter['seats']['max']) {
+                            $where[] = " AND s.`admission_turnout` <= :max";
+                            $params['max'] = $one['max'];
+                        }
                         break;
                 }
             }

@@ -76,6 +76,14 @@
             lecturer: {
                 type: String,
                 default: ''
+            },
+            minSeats: {
+                type: Number,
+                default: 0
+            },
+            maxSeats: {
+                type: Number,
+                default: 0
             }
         },
         data() {
@@ -86,7 +94,9 @@
                 loadingUnplanned: false,
                 theSemester: this.semester,
                 theInstitute: this.institute,
-                theLecturer: this.lecturer
+                theLecturer: this.lecturer,
+                theMinSeats: this.minSeats,
+                theMaxSeats: this.maxSeats
             }
         },
         mounted() {
@@ -129,6 +139,17 @@
                 this.getPlannedCourses()
                 bus.$emit('updated-courses')
             })
+            // Catch event for changed seats limits in sidebar
+            bus.$on('updated-seats', (value) => {
+                const seats = JSON.parse(value)
+                this.theMinSeats = seats.min
+                this.theMaxSeats = seats.max
+                this.loadingUnplanned = true;
+                this.loadingPlanned = true;
+                this.getUnplannedCourses()
+                this.getPlannedCourses()
+                bus.$emit('updated-courses')
+            })
 
             // Catch event for unplanning an already planned course
             bus.$on('remove-planned-course', (slotId) => {
@@ -150,29 +171,31 @@
         },
         methods: {
             async getUnplannedCourses() {
-                const data = {
-                    semester: this.theSemester,
-                    institute: this.theInstitute,
-                    lecturer: this.theLecturer
-                }
-                const params = new URLSearchParams(data).toString()
-                const response = await fetch(this.getUnplannedCoursesUrl + '?' + params, {
-                    method: 'get'
+                let formData = new FormData()
+                formData.append('semester', this.theSemester)
+                formData.append('institute', this.theInstitute)
+                formData.append('lecturer', this.theLecturer)
+                formData.append('seats', JSON.stringify({min: this.theMinSeats, max: this.theMaxSeats}))
+                const response = await fetch(this.getUnplannedCoursesUrl, {
+                    method: 'post',
+                    body: formData
                 })
-                const json = await response.json()
-                this.unplannedCourseList = json
-                this.loadingUnplanned = false;
-                bus.$emit('updated-unplanned-courses')
+                response.json()
+                    .then((json) => {
+                        this.unplannedCourseList = json
+                        this.loadingUnplanned = false;
+                        bus.$emit('updated-unplanned-courses')
+                    })
             },
             async getPlannedCourses() {
-                const data = {
-                    semester: this.theSemester,
-                    institute: this.theInstitute,
-                    lecturer: this.theLecturer
-                }
-                const params = new URLSearchParams(data).toString()
-                const response = await fetch(this.getPlannedCoursesUrl + '?' + params, {
-                    method: 'get'
+                let formData = new FormData()
+                formData.append('semester', this.theSemester)
+                formData.append('institute', this.theInstitute)
+                formData.append('lecturer', this.theLecturer)
+                formData.append('seats', JSON.stringify({min: this.theMinSeats, max: this.theMaxSeats}))
+                const response = await fetch(this.getPlannedCoursesUrl, {
+                    method: 'post',
+                    body: formData
                 })
                 response.json()
                     .then((json) => {

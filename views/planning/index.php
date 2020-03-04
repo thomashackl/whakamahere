@@ -8,7 +8,8 @@
                 :unplan-slot-url="'<?= $controller->link_for('planning/unplan') ?>'"
                 :unplanned-courses='<?= studip_json_encode($unplanned_courses) ?>'
                 :planned-courses='<?= studip_json_encode($planned_courses) ?>'
-                :semester="'<?= $selectedSemester ?>'" :institute="'<?= $selectedInstitute ?>'"/>
+                :semester="'<?= $selectedSemester ?>'" :institute="'<?= $selectedInstitute ?>'"
+                :lecturer="'<?= $selectedLecturer ?>'" :min-seats="<?= $minSeats ?>" :max-seats="<?= $maxSeats ?>"/>
 </div>
 <script>
     new Vue({

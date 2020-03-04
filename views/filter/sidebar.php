@@ -8,6 +8,7 @@
                      get-lecturers-url="<?= $controller->link_for('planning/lecturers') ?>"
                      :rooms='<?= studip_json_encode($rooms) ?>'
                      :selected-room="'<?= $selectedRoom ?>'"
+                     :min-seats="<?= $minSeats ?>" :max-seats="<?= $maxSeats ?>"
                      store-selection-url="<?= $controller->link_for('filter/store_selection') ?>"></sidebar-filters>
 </div>
 <script>

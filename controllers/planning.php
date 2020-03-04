@@ -92,6 +92,25 @@ class PlanningController extends AuthenticatedController {
             $filter['lecturer'] = $this->selectedLecturer;
         }
 
+        $seats = studip_json_decode(UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_MINMAX_SEATS);
+        $this->minSeats = $seats['min'] ?: 0;
+        $this->maxSeats = $seats['max'] ?: 0;
+
+        if ($seats) {
+
+            if ($this->minSeats != '' || $this->maxSeats != '') {
+                $filter['seats'] = [];
+
+                if ($this->minSeats != '') {
+                    $filter['seats']['min'] = $this->minSeats;
+                }
+                if ($this->maxSeats != '') {
+                    $filter['seats']['max'] = $this->maxSeats;
+                }
+            }
+
+        }
+
         if ($this->selectedInstitute != '') {
 
             $filter['institute'] = $this->selectedInstitute;
@@ -119,7 +138,8 @@ class PlanningController extends AuthenticatedController {
         $filter = [
             'semester' => Request::option('semester'),
             'institute' => Request::get('institute'),
-            'lecturer' => Request::get('lecturer')
+            'lecturer' => Request::get('lecturer'),
+            'seats' => studip_json_decode(Request::get('seats'))
         ];
 
         $this->render_json($this->getPlannedCourses($filter));
@@ -133,7 +153,8 @@ class PlanningController extends AuthenticatedController {
         $filter = [
             'semester' => Request::option('semester'),
             'institute' => Request::get('institute'),
-            'lecturer' => Request::get('lecturer')
+            'lecturer' => Request::get('lecturer'),
+            'seats' => studip_json_decode(Request::get('seats'))
         ];
 
         $this->render_json($this->getUnplannedCourses($filter));
@@ -146,7 +167,8 @@ class PlanningController extends AuthenticatedController {
     {
         $filter = [
             'semester' => Request::option('semester'),
-            'institute' => Request::get('institute')
+            'institute' => Request::get('institute'),
+            'seats' => studip_json_decode(Request::get('seats'))
         ];
 
         $this->render_json($this->getLecturers($filter));
@@ -350,6 +372,8 @@ class PlanningController extends AuthenticatedController {
                 'selectedLecturer' => $this->selectedLecturer,
                 'rooms' => $buildings,
                 'selectedRoom' => $selectedRoom,
+                'minSeats' => $this->minSeats,
+                'maxSeats' => $this->maxSeats,
                 'controller' => $this
             ]
         ));
@@ -394,27 +418,10 @@ class PlanningController extends AuthenticatedController {
      */
     private function getPlannedCourses($filter)
     {
-        $sub = explode('+', $filter['institute']);
-        if (count($sub) > 1) {
-            $institutes = DBManager::get()->fetchFirst(
-                "SELECT `Institut_id` FROM `Institute` WHERE `fakultaets_id` = :institute",
-                ['institute' => $sub[0]]
-            );
-        } else {
-            $institutes = [$filter['institute']];
-        }
-
-        $entries = WhakamahereCourseTime::findFiltered([
-            'semester' => $filter['semester'],
-            'institute' => $institutes,
-            'lecturer' => $filter['lecturer']
-        ]);
+        $entries = WhakamahereCourseTime::findFiltered($filter);
 
         $courses = [];
         foreach ($entries as $one) {
-            $start = new DateTime('1970-01-01 ' . $one->start);
-            $end = new DateTime('1970-01-01 ' . $one->end);
-
             $courses[] = [
                 'id' => $one->course_id . '-' . $one->slot_id,
                 'time_id' => $one->id,
@@ -436,7 +443,7 @@ class PlanningController extends AuthenticatedController {
     /**
      * Helper function for getting lecturers
      *
-     * @param array $filter filter to apply, like semester, institute, lecturer etc.
+     * @param array $filter filter to apply, like semester, institute etc.
      * @return array
      */
     private function getLecturers($filter)

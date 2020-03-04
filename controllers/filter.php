@@ -59,23 +59,40 @@ class FilterController extends AuthenticatedController {
         switch (Request::option('type')) {
             case 'semester':
                 $field = 'WHAKAMAHERE_SELECTED_SEMESTER';
+                $value = Request::get('value');
                 break;
             case 'institute':
                 $field = 'WHAKAMAHERE_SELECTED_INSTITUTE';
+                $value = Request::get('value');
                 break;
             case 'lecturer':
                 $field = 'WHAKAMAHERE_SELECTED_LECTURER';
+                $value = Request::get('value');
                 break;
             case 'room':
                 $field = 'WHAKAMAHERE_SELECTED_ROOM';
+                $value = Request::get('value');
+                break;
+            case 'seats':
+                $field = 'WHAKAMAHERE_MINMAX_SEATS';
+                $decoded = studip_json_decode(Request::get('value'));
+                if ($decoded['min'] || $decoded['max']) {
+                    $value = Request::get('value');
+                } else {
+                    $value = null;
+                }
                 break;
         }
 
         if ($field !== '') {
-            if (UserConfig::get(User::findCurrent()->id)->store($field, Request::get('value'))) {
-                $this->set_status(200, 'Selection saved.');
+            if (UserConfig::get(User::findCurrent()->id)->$field != $value) {
+                if (UserConfig::get(User::findCurrent()->id)->store($field, $value)) {
+                    $this->set_status(200, 'Selection saved.');
+                } else {
+                    $this->set_status(500, 'Could not save selection.');
+                }
             } else {
-                $this->set_status(500, 'Could not save selection.');
+                $this->set_status(200, 'No changes to save in selection.');
             }
         } else {
             $this->set_status(404, 'Could not save selection: unknown field.');

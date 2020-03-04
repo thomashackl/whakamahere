@@ -76,9 +76,28 @@ class WhakamahereCourseSlot extends SimpleORMap
         }
 
         if ($filter['lecturer'] != '') {
-
             $sql .= " AND cs.`user_id` = :lecturer";
             $params['lecturer'] = $filter['lecturer'];
+        }
+
+        if (is_array($filter['seats'])) {
+            if ($filter['seats']['min'] && $filter['seats']['max']) {
+
+                $sql .= " AND s.`admission_turnout` BETWEEN :min AND :max";
+                $params['min'] = $filter['seats']['min'];
+                $params['max'] = $filter['seats']['max'];
+
+            } else if ($filter['seats']['min']) {
+
+                $sql .= " AND s.`admission_turnout` >= :min";
+                $params['min'] = $filter['seats']['min'];
+
+            } else if ($filter['seats']['max']) {
+
+                $sql .= " AND s.`admission_turnout` <= :max";
+                $params['max'] = $filter['seats']['max'];
+
+            }
         }
 
         if (Config::get()->IMPORTANT_SEMNUMBER) {
