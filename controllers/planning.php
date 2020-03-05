@@ -80,14 +80,17 @@ class PlanningController extends AuthenticatedController {
         // Show weekends?
         $this->weekends = Config::get()->WHAKAMAHERE_PLANNING_SHOW_WEEKENDS ? 'true' : 'false';
 
+        // A semester must always be set.
         $filter = [
             'semester' => $this->selectedSemester
         ];
 
+        // Lecturer filter.
         if ($this->selectedLecturer != '') {
             $filter['lecturer'] = $this->selectedLecturer;
         }
 
+        // Seats filter.
         $seats = studip_json_decode(UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_MINMAX_SEATS);
         $this->minSeats = $seats['min'] ?: 0;
         $this->maxSeats = $seats['max'] ?: 0;
@@ -107,20 +110,14 @@ class PlanningController extends AuthenticatedController {
 
         }
 
+        // Institute filter.
         if ($this->selectedInstitute != '') {
-
             $filter['institute'] = $this->selectedInstitute;
-            $this->unplanned_courses = $this->getUnplannedCourses($filter);
-            $this->planned_courses = $this->getPlannedCourses($filter);
-            $this->lecturers = $this->getLecturers($filter);
-
-        } else {
-
-            $this->unplanned_courses = [];
-            $this->planned_courses = [];
-            $this->lecturers = [];
-
         }
+
+        $this->planned_courses = $this->getPlannedCourses($filter);
+        $this->unplanned_courses = $this->getUnplannedCourses($filter);
+        $this->lecturers = $this->getLecturers($filter);
 
         $this->setupSidebar();
 
@@ -131,12 +128,17 @@ class PlanningController extends AuthenticatedController {
      */
     public function planned_courses_action()
     {
-        $filter = [
-            'semester' => Request::option('semester'),
-            'institute' => Request::get('institute'),
-            'lecturer' => Request::get('lecturer'),
-            'seats' => studip_json_decode(Request::get('seats'))
-        ];
+        $filter = array_filter([
+            'semester' => Request::option('semester', null),
+            'institute' => Request::get('institute'. null),
+            'lecturer' => Request::option('lecturer', null),
+            'seats' => studip_json_decode(Request::get('seats'), null)
+        ]);
+
+        $log = fopen('/Users/thomashackl/Downloads/whaka.log', 'a');
+        fwrite($log, "Planned courses:\n");
+        fwrite($log, print_r($filter, 1) . "\n");
+        fclose($log);
 
         $this->render_json($this->getPlannedCourses($filter));
     }
@@ -146,12 +148,18 @@ class PlanningController extends AuthenticatedController {
      */
     public function unplanned_courses_action()
     {
-        $filter = [
-            'semester' => Request::option('semester'),
-            'institute' => Request::get('institute'),
-            'lecturer' => Request::get('lecturer'),
-            'seats' => studip_json_decode(Request::get('seats'))
-        ];
+        // TODO: Set only options that are set.
+        $filter = array_filter([
+            'semester' => Request::option('semester', null),
+            'institute' => Request::get('institute'. null),
+            'lecturer' => Request::option('lecturer', null),
+            'seats' => studip_json_decode(Request::get('seats'), null)
+        ]);
+
+        $log = fopen('/Users/thomashackl/Downloads/whaka.log', 'a');
+        fwrite($log, "Unplanned courses:\n");
+        fwrite($log, print_r($filter, 1) . "\n");
+        fclose($log);
 
         $this->render_json($this->getUnplannedCourses($filter));
     }
@@ -385,22 +393,30 @@ class PlanningController extends AuthenticatedController {
     {
         $courses = [];
 
-        $slots = WhakamahereCourseSlot::findUnplanned($filter);
+        /*
+         * Semester is always set, so we check if anything else is selected.
+         * Without other filter criteria, we don't load any courses and lecturers.
+         */
+        if (count($filter) > 1) {
 
-        foreach ($slots as $slot) {
-            $courses[] = [
-                'id' => $slot->request->course_id . '-' . $slot->id,
-                'course_id' => $slot->request->course_id,
-                'course_name' => (string) $slot->request->course->name,
-                'course_number' => $slot->request->course->veranstaltungsnummer,
-                'url' => URLHelper::getLink('dispatch.php/course/overview?cid=' . $slot->request->course_id),
-                'slot_id' => $slot->id,
-                'lecturer_id' => $slot->user_id,
-                'lecturer' => $slot->user_id ? $slot->user->getFullname() : 'N. N.',
-                'duration' => $slot->duration,
-                'weekday' => $slot->weekday,
-                'time' => $slot->time
-            ];
+            $slots = WhakamahereCourseSlot::findUnplanned($filter);
+
+            foreach ($slots as $slot) {
+                $courses[] = [
+                    'id' => $slot->request->course_id . '-' . $slot->id,
+                    'course_id' => $slot->request->course_id,
+                    'course_name' => (string)$slot->request->course->name,
+                    'course_number' => $slot->request->course->veranstaltungsnummer,
+                    'url' => URLHelper::getLink('dispatch.php/course/overview?cid=' . $slot->request->course_id),
+                    'slot_id' => $slot->id,
+                    'lecturer_id' => $slot->user_id,
+                    'lecturer' => $slot->user_id ? $slot->user->getFullname() : 'N. N.',
+                    'duration' => $slot->duration,
+                    'weekday' => $slot->weekday,
+                    'time' => $slot->time
+                ];
+            }
+
         }
 
         return $courses;
@@ -414,24 +430,32 @@ class PlanningController extends AuthenticatedController {
      */
     private function getPlannedCourses($filter)
     {
-        $entries = WhakamahereCourseTime::findFiltered($filter);
-
         $courses = [];
-        foreach ($entries as $one) {
-            $courses[] = [
-                'id' => $one->course_id . '-' . $one->slot_id,
-                'time_id' => $one->id,
-                'course_id' => $one->course_id,
-                'course_name' => (string) $one->course->name,
-                'course_number' => $one->course->veranstaltungsnummer,
-                'slot_id' => $one->slot_id,
-                'lecturer_id' => $one->slot->user_id,
-                'lecturer' => $one->slot->user_id ? $one->slot->user->getFullname() : 'N. N.',
-                'pinned' => $one->pinned,
-                'weekday' => $one->weekday,
-                'start' => $one->start,
-                'end' => $one->end
-            ];
+
+        /*
+         * Semester is always set, so we check if anything else is selected.
+         * Without other filter criteria, we don't load any courses and lecturers.
+         */
+        if (count($filter) > 1) {
+
+            $entries = WhakamahereCourseTime::findFiltered($filter);
+            foreach ($entries as $one) {
+                $courses[] = [
+                    'id' => $one->course_id . '-' . $one->slot_id,
+                    'time_id' => $one->id,
+                    'course_id' => $one->course_id,
+                    'course_name' => (string)$one->course->name,
+                    'course_number' => $one->course->veranstaltungsnummer,
+                    'slot_id' => $one->slot_id,
+                    'lecturer_id' => $one->slot->user_id,
+                    'lecturer' => $one->slot->user_id ? $one->slot->user->getFullname() : 'N. N.',
+                    'pinned' => $one->pinned,
+                    'weekday' => $one->weekday,
+                    'start' => $one->start,
+                    'end' => $one->end
+                ];
+            }
+
         }
         return $courses;
     }

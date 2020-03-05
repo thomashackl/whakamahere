@@ -81,17 +81,24 @@
             },
             async getLecturers() {
                 this.loading = true
-                const data = {
-                    semester: this.theSemester,
-                    institute: this.theInstitute
+                this.lecturerList = []
+                this.selected = ''
+                let formData = new FormData()
+                formData.append('semester', this.theSemester)
+
+                if (this.theInstitute != '') {
+                    formData.append('institute', this.theInstitute)
                 }
-                const params = new URLSearchParams(data).toString()
-                const response = await fetch(this.getLecturersUrl + '?' + params, {
-                    method: 'get'
+
+                fetch(this.getLecturersUrl, {
+                    method: 'post',
+                    body: formData
+                }).then((response) => {
+                    response.json().then((json) => {
+                        this.lecturerList = json
+                        this.loading = false
+                    })
                 })
-                const json = await response.json()
-                this.lecturerList = json
-                this.loading = false
             }
         }
     }
