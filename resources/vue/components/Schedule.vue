@@ -12,6 +12,8 @@
     import FullCalendar from '@fullcalendar/vue'
     import interactionPlugin, { ThirdPartyDraggable } from '@fullcalendar/interaction'
     import timeGridWeekPlugin from '@fullcalendar/timegrid'
+    import { VueContext } from 'vue-context'
+    var ContextClass = Vue.extend(VueContext)
 
     export default {
         name: 'Schedule',
@@ -102,7 +104,8 @@
                         slotStartTime: this.courses[i].start,
                         slotEndTime: this.courses[i].end,
                         lecturerId: this.courses[i].lecturer_id,
-                        lecturerName: this.courses[i].lecturer
+                        lecturerName: this.courses[i].lecturer,
+                        turnout: this.courses[i].turnout
                     })
                 }
 
@@ -233,34 +236,94 @@
                     .catch(error => {
                         console.log(error)
                     })
+                return false
             },
             pin: function(event) {
                 event.editable = false
+                return false
             },
             renderEvent: function(info) {
-                if (info.event.rendering != 'background' &&
-                        info.el.querySelector('.whakamahere-event-actions') == null) {
-                    let actions = document.createElement('span')
-                    actions.classList.add('whakamahere-event-actions')
-
-                    let remove = document.createElement('img')
-                    remove.setAttribute('src', STUDIP.ASSETS_URL + 'images/icons/white/decline.svg')
-                    remove.setAttribute('width', '16')
-                    remove.addEventListener('click', (event) => {
-                        this.unplan(info.event)
-                    })
-                    actions.appendChild(remove)
-
-                    let pin = document.createElement('img')
-                    pin.setAttribute('src', STUDIP.ASSETS_URL + 'images/icons/white/exclaim.svg')
-                    pin.setAttribute('width', '16')
-                    pin.addEventListener('click', (event) => {
-                        this.pin(info.event)
-                    })
-                    actions.appendChild(pin)
-
-                    info.el.querySelector('.fc-time').appendChild(actions)
+                if (info.event.rendering != 'background') {
+                    info.el.addEventListener('contextmenu', (event) => {
+                        event.preventDefault()
+                        this.showContextMenu(event, info.event)
+                    }, true)
                 }
+            },
+            showContextMenu(event, calendarEvent) {
+                // Remove other open menus
+                const oldMenu = document.querySelector('#whakamahere-context-menu')
+                if (oldMenu != null) {
+                    oldMenu.remove()
+                }
+
+                // The context menu itself
+                let contextMenu = document.createElement('nav')
+                contextMenu.id = 'whakamahere-context-menu'
+
+                // Header with a title and a close icon
+                let menuHeader = document.createElement('header')
+                let closeAction = document.createElement('a')
+                closeAction.addEventListener('click', () => {
+                    contextMenu.remove()
+                })
+                menuHeader.appendChild(document.createTextNode('Aktionen'))
+                let closeIcon = document.createElement('img')
+                closeIcon.setAttribute('src', STUDIP.ASSETS_URL + 'images/icons/blue/decline.svg')
+                closeAction.appendChild(closeIcon)
+                menuHeader.appendChild(closeAction)
+                contextMenu.appendChild(menuHeader)
+
+                // Define available menu items
+                let menuItems = document.createElement('ul')
+                const items = [
+                    {
+                        icon: 'room-request',
+                        label: 'Raum auswählen',
+                        click: null
+                    },
+                    {
+                        icon: 'trash',
+                        label: 'Aus der Planung entfernen',
+                        click: (clickEvent) => {
+                            clickEvent.preventDefault()
+                            this.unplan(calendarEvent)
+                            contextMenu.remove()
+                        }
+                    },
+                    {
+                        icon: 'place',
+                        label: 'Fixieren',
+                        click: (clickEvent) => {
+                            clickEvent.preventDefault()
+                            this.pin(calendarEvent)
+                            contextMenu.remove()
+                        }
+                    }
+                ]
+
+                // Build given menu items as HTML elements.
+                for (let i = 0; i < items.length; i++) {
+                    let entry = document.createElement('li')
+                    let anchor = document.createElement('a')
+                    anchor.href = ''
+                    if (items[i].click != null) {
+                        anchor.addEventListener('click', items[i].click)
+                    }
+                    let icon = document.createElement('img')
+                    icon.width = 16
+                    icon.height = 16
+                    icon.src = STUDIP.ASSETS_URL + 'images/icons/blue/' + items[i].icon + '.svg'
+                    anchor.appendChild(icon)
+                    anchor.appendChild(document.createTextNode(items[i].label))
+                    entry.appendChild(anchor)
+                    menuItems.appendChild(entry)
+                }
+                // Adjust position so that the menu appears under the cursor.
+                contextMenu.style.left = event.clientX + 'px'
+                contextMenu.style.top = event.clientY + 'px'
+                contextMenu.appendChild(menuItems)
+                document.querySelector('#courseplan').appendChild(contextMenu)
             }
         }
     }
@@ -281,9 +344,39 @@
 
             .fc-time {
                 background-color: #3f72b4;
+            }
+        }
+    }
 
-                .whakamahere-event-actions {
-                    float: right;
+    #whakamahere-context-menu {
+
+        background-color: #ffffff;
+        border: 1px solid #000000;
+        margin: 0;
+        position: absolute;
+        z-index: 999;
+
+        header {
+            background-color: #d3dbe5;
+            border-bottom: 1px solid #000000;
+            padding: 3px;
+            padding-left: 5px;
+
+            img {
+                float: right;
+            }
+        }
+
+        ul {
+            margin: 0;
+            padding: 0;
+
+            li {
+                list-style-type: none;
+                padding: 5px;
+
+                &:hover {
+                    color: #ff0000;
                 }
             }
         }

@@ -45,12 +45,11 @@ class WhakamahereCourseSlot extends SimpleORMap
 
     public static function findUnplanned($filter = [])
     {
-        SimpleORMap::expireTableScheme();
-        $sql = "SELECT cs.*
+        $select = "SELECT cs.*
             FROM `whakamahere_course_slots` cs
                 JOIN `whakamahere_requests` r ON (r.`request_id` = cs.`request_id`)
-                JOIN `seminare` s ON (s.`Seminar_id` = r.`course_id`)
-            WHERE r.`semester_id` = :semester
+                JOIN `seminare` s ON (s.`Seminar_id` = r.`course_id`)";
+        $where = "WHERE r.`semester_id` = :semester
                 AND NOT EXISTS (
                     SELECT `slot_id` FROM `whakamahere_course_times` WHERE `slot_id` = cs.`slot_id`
                 )";
@@ -71,42 +70,47 @@ class WhakamahereCourseSlot extends SimpleORMap
                 $institutes = [$filter['institute']];
             }
 
-            $sql .= " AND s.`Institut_id` IN (:institutes)";
+            $where .= " AND s.`Institut_id` IN (:institutes)";
             $params['institutes'] = $institutes;
         }
 
         if ($filter['lecturer'] != '') {
-            $sql .= " AND cs.`user_id` = :lecturer";
+            $where .= " AND cs.`user_id` = :lecturer";
             $params['lecturer'] = $filter['lecturer'];
         }
 
         if (is_array($filter['seats'])) {
+
+            $select .= " JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = r.`request_id`)";
+            $where .= " AND pr.`property_id` = :seats";
+            $params['seats'] = WhakamaherePlanningRequest::getSeatsPropertyId();
+
             if ($filter['seats']['min'] && $filter['seats']['max']) {
 
-                $sql .= " AND s.`admission_turnout` BETWEEN :min AND :max";
+                $where .= " AND pr.`value` BETWEEN :min AND :max";
                 $params['min'] = $filter['seats']['min'];
                 $params['max'] = $filter['seats']['max'];
 
             } else if ($filter['seats']['min']) {
 
-                $sql .= " AND s.`admission_turnout` >= :min";
+                $where .= " AND pr.`value` >= :min";
                 $params['min'] = $filter['seats']['min'];
 
             } else if ($filter['seats']['max']) {
 
-                $sql .= " AND s.`admission_turnout` <= :max";
+                $where .= " AND pr.`value` <= :max";
                 $params['max'] = $filter['seats']['max'];
 
             }
         }
 
         if (Config::get()->IMPORTANT_SEMNUMBER) {
-            $sql .= " ORDER BY s.`VeranstaltungsNummer`, s.`Name`";
+            $order = " ORDER BY s.`VeranstaltungsNummer`, s.`Name`";
         } else {
-            $sql .= " ORDER BY s.`Name`";
+            $order = " ORDER BY s.`Name`";
         }
 
-        return DBManager::get()->fetchAll($sql, $params, 'WhakamahereCourseSlot::buildExisting');
+        return DBManager::get()->fetchAll($select.$where.$order, $params, 'WhakamahereCourseSlot::buildExisting');
 
     }
 

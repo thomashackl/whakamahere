@@ -11,7 +11,8 @@
             </caption>
             <colgroup>
                 <col/>
-                <col width="100"/>
+                <col width="120"/>
+                <col width="120"/>
                 <col width="200"/>
                 <col width="100"/>
                 <col width="20"/>
@@ -19,7 +20,8 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Dauer (Minuten)</th>
+                    <th># Teiln.</th>
+                    <th>Dauer (Min.)</th>
                     <th>Dozent</th>
                     <th>Wunschzeit</th>
                     <th>Aktionen</th>
@@ -29,9 +31,11 @@
                 <tr v-for="course in courseList" :id="course.course_id + '-' + course.slot_id"
                     class="course"  :data-course-id="course.course_id" :data-slot-id="course.slot_id"
                     :data-course-number="course.course_number" :data-course-name="course.course_name"
-                    :data-weekday="course.weekday" :data-time="course.time" :data-duration="course.duration"
-                    :data-lecturer-id="course.lecturer_id" :data-lecturer="course.lecturer">
+                    :data-turnout="course.turnout" :data-weekday="course.weekday" :data-time="course.time"
+                    :data-duration="course.duration" :data-lecturer-id="course.lecturer_id"
+                    :data-lecturer="course.lecturer">
                     <td class="course-name">{{ course.course_number }} {{ course.course_name }}</td>
+                    <td class="course-turnout">{{ course.turnout }}</td>
                     <td class="course-duration">{{ course.duration }}</td>
                     <td class="course-lecturer">{{ course.lecturer }}</td>
                     <td class="course-preftime">{{ getWeekday(course.weekday) }} {{ course.time.slice(0, 5) }}</td>
@@ -85,9 +89,13 @@
         },
         mounted() {
             this.$el.style.maxHeight = (
-                document.getElementById('layout_content').offsetHeight -
-                document.getElementsByClassName('fc')[0].offsetHeight -
-                45
+                window.innerHeight -
+                document.getElementById('barBottomContainer').offsetHeight -
+                document.getElementById('flex-header').offsetHeight -
+                document.querySelector('nav.secondary-navigation').offsetHeight -
+                document.getElementById('page_title_container').offsetHeight -
+                document.querySelector('.fc').offsetHeight -
+                25
             ) + 'px'
          },
         watch: {
@@ -122,6 +130,7 @@
                     slot_id: dataEl.dataset.slotId,
                     course_number: dataEl.dataset.courseNumber,
                     course_name: dataEl.dataset.courseName,
+                    turnout: dataEl.dataset.turnout,
                     lecturer: dataEl.dataset.lecturer,
                     lecturer_id: dataEl.dataset.lecturerId,
                     pinned: false,

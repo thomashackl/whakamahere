@@ -94,4 +94,21 @@ class WhakamaherePlanningRequest extends SimpleORMap
         return DBManager::get()->fetchAll($sql, $params, 'User::buildExisting');
     }
 
+    public static function getSeatsPropertyId()
+    {
+        // Try to read ID of "seats" property from cache.
+        $cache = StudipCacheFactory::getCache();
+        $seatsId = $cache->read('WHAKAMAHERE_SEATS_PROPERTY_ID');
+
+        // No (valid) cache entry found, create new.
+        if (!$seatsId) {
+            $seatsId = DBManager::get()->fetchColumn("SELECT `property_id`
+                    FROM `resource_property_definitions` WHERE `name` = 'seats'");
+            // Write to cache with one week validity
+            $cache->write('WHAKAMAHERE_SEATS_PROPERTY_ID', $seatsId, 604800);
+        }
+
+        return $seatsId;
+    }
+
 }

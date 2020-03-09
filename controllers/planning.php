@@ -132,13 +132,8 @@ class PlanningController extends AuthenticatedController {
             'semester' => Request::option('semester', null),
             'institute' => Request::get('institute'. null),
             'lecturer' => Request::option('lecturer', null),
-            'seats' => studip_json_decode(Request::get('seats'), null)
+            'seats' => (array) studip_json_decode(Request::get('seats'), null)
         ]);
-
-        $log = fopen('/Users/thomashackl/Downloads/whaka.log', 'a');
-        fwrite($log, "Planned courses:\n");
-        fwrite($log, print_r($filter, 1) . "\n");
-        fclose($log);
 
         $this->render_json($this->getPlannedCourses($filter));
     }
@@ -153,13 +148,8 @@ class PlanningController extends AuthenticatedController {
             'semester' => Request::option('semester', null),
             'institute' => Request::get('institute'. null),
             'lecturer' => Request::option('lecturer', null),
-            'seats' => studip_json_decode(Request::get('seats'), null)
+            'seats' => (array) studip_json_decode(Request::get('seats'), null)
         ]);
-
-        $log = fopen('/Users/thomashackl/Downloads/whaka.log', 'a');
-        fwrite($log, "Unplanned courses:\n");
-        fwrite($log, print_r($filter, 1) . "\n");
-        fclose($log);
 
         $this->render_json($this->getUnplannedCourses($filter));
     }
@@ -172,7 +162,7 @@ class PlanningController extends AuthenticatedController {
         $filter = [
             'semester' => Request::option('semester'),
             'institute' => Request::get('institute'),
-            'seats' => studip_json_decode(Request::get('seats'))
+            'seats' => (array) studip_json_decode(Request::get('seats'))
         ];
 
         $this->render_json($this->getLecturers($filter));
@@ -384,45 +374,6 @@ class PlanningController extends AuthenticatedController {
     }
 
     /**
-     * Helper function for getting unplanned course(slot)s
-     *
-     * @param array $filter filter to apply, like semester, institute, lecturer etc.
-     * @return array
-     */
-    private function getUnplannedCourses($filter)
-    {
-        $courses = [];
-
-        /*
-         * Semester is always set, so we check if anything else is selected.
-         * Without other filter criteria, we don't load any courses and lecturers.
-         */
-        if (count($filter) > 1) {
-
-            $slots = WhakamahereCourseSlot::findUnplanned($filter);
-
-            foreach ($slots as $slot) {
-                $courses[] = [
-                    'id' => $slot->request->course_id . '-' . $slot->id,
-                    'course_id' => $slot->request->course_id,
-                    'course_name' => (string)$slot->request->course->name,
-                    'course_number' => $slot->request->course->veranstaltungsnummer,
-                    'url' => URLHelper::getLink('dispatch.php/course/overview?cid=' . $slot->request->course_id),
-                    'slot_id' => $slot->id,
-                    'lecturer_id' => $slot->user_id,
-                    'lecturer' => $slot->user_id ? $slot->user->getFullname() : 'N. N.',
-                    'duration' => $slot->duration,
-                    'weekday' => $slot->weekday,
-                    'time' => $slot->time
-                ];
-            }
-
-        }
-
-        return $courses;
-    }
-
-    /**
      * Helper function for getting planned course(slot)s
      *
      * @param array $filter filter to apply, like semester, institute, lecturer etc.
@@ -438,6 +389,8 @@ class PlanningController extends AuthenticatedController {
          */
         if (count($filter) > 1) {
 
+            $seatsId = WhakamaherePlanningRequest::getSeatsPropertyId();
+
             $entries = WhakamahereCourseTime::findFiltered($filter);
             foreach ($entries as $one) {
                 $courses[] = [
@@ -446,6 +399,7 @@ class PlanningController extends AuthenticatedController {
                     'course_id' => $one->course_id,
                     'course_name' => (string)$one->course->name,
                     'course_number' => $one->course->veranstaltungsnummer,
+                    'turnout' => $one->slot->request->property_requests->findOneBy('property_id', $seatsId)->value,
                     'slot_id' => $one->slot_id,
                     'lecturer_id' => $one->slot->user_id,
                     'lecturer' => $one->slot->user_id ? $one->slot->user->getFullname() : 'N. N.',
@@ -459,6 +413,48 @@ class PlanningController extends AuthenticatedController {
         }
         return $courses;
     }
+    /**
+     * Helper function for getting unplanned course(slot)s
+     *
+     * @param array $filter filter to apply, like semester, institute, lecturer etc.
+     * @return array
+     */
+    private function getUnplannedCourses($filter)
+    {
+        $courses = [];
+
+        /*
+         * Semester is always set, so we check if anything else is selected.
+         * Without other filter criteria, we don't load any courses and lecturers.
+         */
+        if (count($filter) > 1) {
+
+            $seatsId = WhakamaherePlanningRequest::getSeatsPropertyId();
+
+            $slots = WhakamahereCourseSlot::findUnplanned($filter);
+
+            foreach ($slots as $slot) {
+                $courses[] = [
+                    'id' => $slot->request->course_id . '-' . $slot->id,
+                    'course_id' => $slot->request->course_id,
+                    'course_name' => (string)$slot->request->course->name,
+                    'course_number' => $slot->request->course->veranstaltungsnummer,
+                    'turnout' => $slot->request->property_requests->findOneBy('property_id', $seatsId)->value,
+                    'url' => URLHelper::getLink('dispatch.php/course/overview?cid=' . $slot->request->course_id),
+                    'slot_id' => $slot->id,
+                    'lecturer_id' => $slot->user_id,
+                    'lecturer' => $slot->user_id ? $slot->user->getFullname() : 'N. N.',
+                    'duration' => $slot->duration,
+                    'weekday' => $slot->weekday,
+                    'time' => $slot->time
+                ];
+            }
+
+        }
+
+        return $courses;
+    }
+
 
     /**
      * Helper function for getting lecturers

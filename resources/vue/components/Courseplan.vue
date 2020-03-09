@@ -143,7 +143,8 @@
         },
         methods: {
             updateData() {
-                if (this.theMinSeats != 0 || this.theMaxSeats != 0 || this.theInstitute != '' || this.theLecturer != '' || this.theRoom != '') {
+                if (this.theMinSeats != 0 || this.theMaxSeats != 0 ||
+                        this.theInstitute != '' || this.theLecturer != '' || this.theRoom != '') {
                     this.getPlannedCourses()
                     this.getUnplannedCourses()
                 } else {
@@ -164,13 +165,13 @@
                     formData.append('lecturer', this.theLecturer)
                 }
 
-                if (this.minSeats != 0 || this.maxSeats != 0) {
+                if (this.theMinSeats != 0 || this.theMaxSeats != 0) {
                     let seats = {}
-                    if (this.minSeats != 0) {
-                        seats.min = this.minSeats
+                    if (this.theMinSeats != 0) {
+                        seats.min = this.theMinSeats
                     }
-                    if (this.maxSeats != 0) {
-                        seats.max = this.maxSeats
+                    if (this.theMaxSeats != 0) {
+                        seats.max = this.theMaxSeats
                     }
                     formData.append('seats', JSON.stringify(seats))
                 }
@@ -200,13 +201,13 @@
                     formData.append('lecturer', this.theLecturer)
                 }
 
-                if (this.minSeats != 0 || this.maxSeats != 0) {
+                if (this.theMinSeats != 0 || this.theMaxSeats != 0) {
                     let seats = {}
-                    if (this.minSeats != 0) {
-                        seats.min = this.minSeats
+                    if (this.theMinSeats != 0) {
+                        seats.min = this.theMinSeats
                     }
-                    if (this.maxSeats != 0) {
-                        seats.max = this.maxSeats
+                    if (this.theMaxSeats != 0) {
+                        seats.max = this.theMaxSeats
                     }
                     formData.append('seats', JSON.stringify(seats))
                 }
