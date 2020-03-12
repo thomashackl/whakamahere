@@ -379,6 +379,7 @@
 
         background-color: #ffffff;
         border: 1px solid #000000;
+        font-size: 90%;
         margin: 0;
         position: absolute;
         z-index: 999;
@@ -400,7 +401,10 @@
 
             li {
                 list-style-type: none;
-                padding: 5px;
+                padding-bottom: 1px;
+                padding-left: 5px;
+                padding-right: 5px;
+                padding-top: 1px;
 
                 &:hover {
                     color: #ff0000;
