@@ -292,6 +292,30 @@ class PlanningController extends AuthenticatedController {
     }
 
     /**
+     * (Un)Pins a course slot.
+     *
+     * @param int $slot_id the slot to (un)pin
+     */
+    public function setpin_action($slot_id)
+    {
+        $slot = WhakamahereCourseTime::findOneBySlot_id($slot_id);
+
+        if ($slot) {
+            $slot->pinned = $slot->pinned == 0 ? 1 : 0;
+            $slot->chdate = date('Y-m-d H:i:s');
+
+            if ($slot->store()) {
+                $this->set_status(200, 'Pin setting saved.');
+            } else {
+                $this->set_status(500, 'Could not save pin setting.');
+            }
+        } else {
+            $this->set_status(404, 'Time assignment not found.');
+        }
+        $this->render_nothing();
+    }
+
+    /**
      * Create sidebar entries.
      */
     private function setupSidebar()

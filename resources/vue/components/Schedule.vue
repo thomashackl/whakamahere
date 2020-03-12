@@ -52,6 +52,10 @@
             unplanSlotUrl: {
                 type: String,
                 default: ''
+            },
+            pinSlotUrl: {
+                type: String,
+                default: ''
             }
         },
         data() {
@@ -99,13 +103,13 @@
                         end: day + ' ' + this.courses[i].end,
                         courseId: this.courses[i].course_id,
                         slotId: this.courses[i].slot_id,
-                        editable: this.courses[i].pinned == 1 ? false : true,
+                        editable: this.courses[i].pinned == 0 ? true : false,
                         slotWeekday: this.courses[i].weekday,
                         slotStartTime: this.courses[i].start,
                         slotEndTime: this.courses[i].end,
                         lecturerId: this.courses[i].lecturer_id,
                         lecturerName: this.courses[i].lecturer,
-                        turnout: this.courses[i].turnout
+                        turnout: this.courses[i].turnout,
                     })
                 }
 
@@ -238,8 +242,23 @@
                     })
                 return false
             },
-            pin: function(event) {
-                event.editable = false
+            async pin(event, jsEvent) {
+                fetch(this.pinSlotUrl + '/' + event.extendedProps.slotId)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw response
+                        }
+                        const editable = (event.startEditable && event.durationEditable) || event.editable
+                        event.editable = !editable
+                        const oldLabel = jsEvent.target.innerHTML
+                        jsEvent.target.innerHTML = jsEvent.target.dataset.label2
+                        jsEvent.target.setAttribute('data-label2', oldLabel)
+                        bus.$emit('slot-pinned', event)
+                    })
+                    .catch(error => {
+                        console.log(error)
+                    })
+
                 return false
             },
             renderEvent: function(info) {
@@ -274,6 +293,10 @@
                 menuHeader.appendChild(closeAction)
                 contextMenu.appendChild(menuHeader)
 
+                // Check if calendar event is editable
+                const editable = (calendarEvent.startEditable && calendarEvent.durationEditable) ||
+                    calendarEvent.editable
+
                 // Define available menu items
                 let menuItems = document.createElement('ul')
                 const items = [
@@ -293,10 +316,11 @@
                     },
                     {
                         icon: 'place',
-                        label: 'Fixieren',
+                        label: editable ? 'Anheften' : 'Lösen',
+                        label2: editable ? 'Lösen' : 'Anheften',
                         click: (clickEvent) => {
                             clickEvent.preventDefault()
-                            this.pin(calendarEvent)
+                            this.pin(calendarEvent, clickEvent)
                             contextMenu.remove()
                         }
                     }
@@ -309,6 +333,9 @@
                     anchor.href = ''
                     if (items[i].click != null) {
                         anchor.addEventListener('click', items[i].click)
+                    }
+                    if (items[i].label2 != null) {
+                        anchor.setAttribute('data-label2', items[i].label2)
                     }
                     let icon = document.createElement('img')
                     icon.width = 16

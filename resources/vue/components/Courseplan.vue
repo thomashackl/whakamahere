@@ -6,7 +6,7 @@
                   :weekends="weekends" :lecture-start="lectureStart"
                   :courses="plannedCourseList" :institute="institute"
                   :get-slot-availability-url="getSlotAvailabilityUrl"
-                  :unplan-slot-url="unplanSlotUrl"></schedule>
+                  :unplan-slot-url="unplanSlotUrl" :pin-slot-url="pinSlotUrl"></schedule>
         <unplanned-courses-list :courses="unplannedCourseList" :lectureStart="lectureStart"></unplanned-courses-list>
     </div>
 </template>
@@ -54,6 +54,10 @@
                 default: ''
             },
             unplanSlotUrl: {
+                type: String,
+                default: ''
+            },
+            pinSlotUrl: {
                 type: String,
                 default: ''
             },
@@ -138,6 +142,14 @@
 
             bus.$on('save-course', (course) => {
                 this.saveCourse(course)
+            })
+
+            bus.$on('slot-pinned', (slot) => {
+                this.plannedCourseList.map((course) => {
+                    if (course.slot_id == slot.extendedProps.slotId) {
+                        course.pinned = slot.editable ? 0 : 1
+                    }
+                })
             })
 
         },
