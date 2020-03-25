@@ -48,6 +48,13 @@ class ConfigEntries extends Migration {
             'section' => 'whakamahereplugin',
             'description' => 'Mit welcher Uhrzeit endet die Planungsansicht?'
         ]);
+        Config::get()->create('WHAKAMAHERE_PLANNING_IGNORE_ROOM_CATEGORIES', [
+            'value' => '[]',
+            'type' => 'array',
+            'range' => 'global',
+            'section' => 'whakamahereplugin',
+            'description' => 'Welche Raumkategorien sollen in der Planung nicht berücksichtigt werden?'
+        ]);
         Config::get()->create('WHAKAMAHERE_OCCUPATION_DAYS', [
             'value' => '[1,2,3,4,5]',
             'type' => 'array',
@@ -97,6 +104,7 @@ class ConfigEntries extends Migration {
                      'WHAKAMAHERE_PLANNING_SHOW_WEEKENDS',
                      'WHAKAMAHERE_PLANNING_START_HOUR',
                      'WHAKAMAHERE_PLANNING_END_HOUR',
+                     'WHAKAMAHERE_PLANNING_IGNORE_ROOM_CATEGORIES',
                      'WHAKAMAHERE_OCCUPATION_DAYS',
                      'WHAKAMAHERE_OCCUPATION_START_HOUR',
                      'WHAKAMAHERE_OCCUPATION_END_HOUR',

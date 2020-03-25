@@ -2,11 +2,12 @@
     <select :name="name" :id="id" :required="required" :disabled="disabled">
         <template v-for="option in options" >
             <optgroup v-if="option.children != null && option.children.length > 0" :label="option.text" :key="option.id">
-                <option v-for="child in option.children" :value="child.id" :key="child.id">
+                <option v-for="child in option.children" :value="child.id" :key="child.id"
+                        :selected="option.id == value">
                     {{ child.text }}
                 </option>
             </optgroup>
-            <option v-else :value="option.id" :key="option.id">
+            <option v-else :value="option.id" :key="option.id" :selected="option.id == value">
                 {{ option.text }}
             </option>
         </template>
@@ -14,8 +15,6 @@
 </template>
 
 <script>
-    import bus from 'jsassets/bus'
-
     export default {
         name: 'Select2',
         props: {

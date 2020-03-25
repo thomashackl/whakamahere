@@ -303,7 +303,11 @@
                     {
                         icon: 'room-request',
                         label: 'Raum auswählen',
-                        click: null
+                        click: (clickEvent) => {
+                            clickEvent.preventDefault()
+                            this.getAvailableRooms(calendarEvent.extendedProps.time_id)
+                            contextMenu.remove()
+                        }
                     },
                     {
                         icon: 'trash',

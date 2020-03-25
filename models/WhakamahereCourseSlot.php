@@ -83,7 +83,7 @@ class WhakamahereCourseSlot extends SimpleORMap
 
             $select .= " JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = r.`request_id`)";
             $where .= " AND pr.`property_id` = :seats";
-            $params['seats'] = WhakamaherePlanningRequest::getSeatsPropertyId();
+            $params['seats'] = WhakamaherePropertyRequest::getSeatsPropertyId();
 
             if ($filter['seats']['min'] && $filter['seats']['max']) {
 

@@ -12,7 +12,8 @@ module.exports = {
         "planning": assetsPath + "/javascripts/entry-planning.js",
         "semesterstatus": assetsPath + "/javascripts/entry-semesterstatus.js",
         "timeline": assetsPath + "/javascripts/entry-timeline.js",
-        "statisticswidget": assetsPath + "/javascripts/entry-statistics.js"
+        "statisticswidget": assetsPath + "/javascripts/entry-statistics.js",
+        "planningrequest": assetsPath + "/javascripts/entry-planningrequest.js"
     },
     output: {
         path: path.resolve(__dirname, "assets"),
@@ -85,9 +86,9 @@ module.exports = {
     resolve: {
         alias: {
             'vue$': 'vue/dist/vue.esm.js',
-            'fullcalendar': '@fullcalendar/dist/fullcalendar',
             'jsassets': path.resolve(__dirname, 'resources/assets/javascripts/')
-        }
+        },
+        extensions: ['*', '.js', '.vue', '.json']
     },
     optimization: {
         minimizer: [

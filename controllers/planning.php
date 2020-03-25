@@ -270,6 +270,26 @@ class PlanningController extends AuthenticatedController {
     }
 
     /**
+     * Get fitting rooms for a request.
+     *
+     * @param int $time_id
+     */
+    public function available_rooms_action($time_id)
+    {
+        $time = WhakamahereCourseTime::find($time_id);
+
+        if ($time) {
+
+            $rooms = $time->findAvailableRooms();
+            $this->render_json($rooms);
+
+        } else {
+            $this->set_status(404, 'Time assignment not found.');
+            $this->render_nothing();
+        }
+    }
+
+    /**
      * Remove an already planned course from schedule.
      *
      * @param int $slot_id the slot to remove
@@ -413,7 +433,7 @@ class PlanningController extends AuthenticatedController {
          */
         if (count($filter) > 1) {
 
-            $seatsId = WhakamaherePlanningRequest::getSeatsPropertyId();
+            $seatsId = WhakamaherePropertyRequest::getSeatsPropertyId();
 
             $entries = WhakamahereCourseTime::findFiltered($filter);
             foreach ($entries as $one) {
@@ -453,7 +473,7 @@ class PlanningController extends AuthenticatedController {
          */
         if (count($filter) > 1) {
 
-            $seatsId = WhakamaherePlanningRequest::getSeatsPropertyId();
+            $seatsId = WhakamaherePropertyRequest::getSeatsPropertyId();
 
             $slots = WhakamahereCourseSlot::findUnplanned($filter);
 

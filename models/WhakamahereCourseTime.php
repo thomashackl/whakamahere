@@ -96,7 +96,7 @@ class WhakamahereCourseTime extends SimpleORMap
                     case 'seats':
                         $joins[] = " JOIN `whakamahere_property_requests` pr USING (`request_id`)";
                         $qhere[] = " AND pr.`property_id` = :seats";
-                        $params['seats'] = WhakamaherePlanningRequest::getSeatsPropertyId();
+                        $params['seats'] = WhakamaherePropertyRequest::getSeatsPropertyId();
                         if ($filter['seats']['min'] && $filter['seats']['max']) {
                             $where[] = " AND pr.`value` BETWEEN :min AND :max";
                             $params['min'] = $one['min'];
@@ -121,6 +121,14 @@ class WhakamahereCourseTime extends SimpleORMap
         return DBManager::get()->fetchAll($query, $params, 'WhakamahereCourseTime::buildExisting');
     }
 
+    /**
+     * Finds all planned times for a given user in the given semester. This can be used
+     * to check for user availability.
+     *
+     * @param string $user_id
+     * @param string $semester_id
+     * @return mixed
+     */
     public static function findByUserAndSemester($user_id, $semester_id)
     {
         return self::findBySQL("JOIN `whakamahere_course_slots` USING (`slot_id`)
@@ -129,6 +137,87 @@ class WhakamahereCourseTime extends SimpleORMap
                 AND `whakamahere_requests`.`semester_id` = :semester
             ORDER BY `weekday`, `start`, `end`",
             ['user' => $user_id, 'semester' => $semester_id]);
+    }
+
+    /**
+     * Finds rooms which are available for the current planned time.
+     */
+    public function findAvailableRooms()
+    {
+        $props = $this->slot->request->property_requests;
+
+        // Aggregate required props.
+        $requiredProps = [];
+        $joins = [];
+        $where = [];
+        $params = [
+            'wish' => $this->slot->request->room_id
+        ];
+        $i = 0;
+        foreach ($props as $prop) {
+            // Seats are extra.
+            if ($prop->name == 'seats') {
+                $seats = $prop->value;
+
+                // Use some tolerance in requested seats.
+                $seatsMin = (Config::get()->WHAKAMAHERE_SEATS_LOWER_LIMIT / 100) * $seats;
+                $seatsMax = (Config::get()->WHAKAMAHERE_SEATS_UPPER_LIMIT / 100) * $seats;
+
+                $joins[] = " INNER JOIN `resources_properties` s " .
+                    "ON (s.`resource_id` = `resources`.`id` AND s.`property_id` = :seatsid)";
+                $params['seatsid'] = $prop->property_id;
+
+                $where[] = "AND s.`state` BETWEEN :seatsmin AND :seatsmax";
+                $params['seatsmin'] = $seatsMin;
+                $params['seatsmax'] = $seatsMax;
+            } else {
+                $requiredProps[$prop->property_id] = $prop->value;
+
+                $joins[] = " INNER JOIN `resources_properties` rp" . $i .
+                    " ON (rp" . $i . ".`resource_id` = `resources`.`id` " .
+                        "AND rp" . $i . ".`property_id` = :propid" . $i . ")";
+                $params['propid' . $i] = $prop->property_id;
+
+                $where[] = "AND rp" . $i . ".`state` = :propvalue" . $i;
+                $params['propvalue' . $i] = $prop->value;
+
+                $i++;
+            }
+
+        }
+
+        $select = "SELECT DISTINCT r.`id`, r.`name`, s.`state` AS seats FROM `resources` r";
+        $order = " ORDER BY seats, r.`name`";
+
+        /*
+         * Find all rooms which have approximately the suitable size and the necessary properties.
+         */
+        $entries = DBManager::get()->fetchAll($select . $joins . $where, $params);
+
+        // Categories for matching number of seats.
+        $wished = [];
+        $equal = [];
+        $larger = [];
+        $smaller = [];
+        foreach ($entries as $one) {
+            // The wished room is prioritized.
+            if ($one['id'] == $this->slot->request->room_id) {
+                $one['wish'] = true;
+                $wished[] = $one;
+            } else {
+                $one['wish'] = false;
+                if ($one['seats'] ==  $seats) {
+                    $equal[] = $one;
+                } else if ($one['seats'] > $seats) {
+                    $larger[] = $one;
+                } else {
+                    $smaller[] = $one;
+                }
+            }
+        }
+
+        return array_merge($wished, $equal, $larger, $smaller);
+
     }
 
 }
