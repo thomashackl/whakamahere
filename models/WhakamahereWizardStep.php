@@ -230,7 +230,13 @@ class WhakamahereWizardStep implements CourseWizardStep
      */
     public function isRequired($values)
     {
-        return true;
+        $start_time = $values['BasicDataWizardStep']['start_time'];
+        $semester = Semester::findByTimestamp($start_time);
+
+        $status = WhakamahereSemesterStatus::find($semester->id);
+
+        return in_array($status->status, ['input']);
+
     }
 
     /**
