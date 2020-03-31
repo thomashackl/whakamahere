@@ -175,53 +175,57 @@ class WhakamahereWizardStep implements CourseWizardStep
      */
     public function storeValues($course, $values)
     {
-        $request = new WhakamaherePlanningRequest();
-        $request->course_id = $course->id;
+        if ($values[__CLASS__]['regular'] == 1) {
+            $request = new WhakamaherePlanningRequest();
+            $request->course_id = $course->id;
 
-        $start_time = $values['BasicDataWizardStep']['start_time'];
-        $semester = Semester::findByTimestamp($start_time);
-        $request->semester_id = $semester->id;
-        $request->institute_id = $values['BasicDataWizardStep']['institute'];
+            $start_time = $values['BasicDataWizardStep']['start_time'];
+            $semester = Semester::findByTimestamp($start_time);
+            $request->semester_id = $semester->id;
+            $request->institute_id = $values['BasicDataWizardStep']['institute'];
 
-        $values = $values[__CLASS__];
-        $request->room_id = $values['room_id'];
-        $request->cycle = $values['cycle'];
-        $request->startweek = $values['startweek'];
-        $request->comment = $values['comment'];
-        $request->internal_comment = $values['internal_comment'] ?:'';
-        $request->mkdate = date('Y-m-d H:i:s');
-        $request->chdate = date('Y-m-d H:i:s');
+            $values = $values[__CLASS__];
+            $request->room_id = $values['room_id'];
+            $request->cycle = $values['cycle'];
+            $request->startweek = $values['startweek'];
+            $request->comment = $values['comment'];
+            $request->internal_comment = $values['internal_comment'] ?: '';
+            $request->mkdate = date('Y-m-d H:i:s');
+            $request->chdate = date('Y-m-d H:i:s');
 
-        // Property requests.
-        $request->property_requests = new SimpleCollection();
-        foreach ($values['property_requests'] as $id => $value) {
-            $prop = new WhakamaherePropertyRequest();
-            $prop->property_id = $id;
-            $prop->value = $value;
-            $prop->mkdate = date('Y-m-d H:i:s');
-            $prop->chdate = date('Y-m-d H:i:s');
+            // Property requests.
+            $request->property_requests = new SimpleCollection();
+            foreach ($values['property_requests'] as $id => $value) {
+                $prop = new WhakamaherePropertyRequest();
+                $prop->property_id = $id;
+                $prop->value = $value;
+                $prop->mkdate = date('Y-m-d H:i:s');
+                $prop->chdate = date('Y-m-d H:i:s');
 
-            $request->property_requests->append($prop);
-        }
+                $request->property_requests->append($prop);
+            }
 
-        // Course slots.
-        $request->slots = new SimpleCollection();
-        foreach ($values['slots'] as $number => $slot) {
-            $s = new WhakamahereCourseSlot();
-            $s->duration = $slot['duration'];
-            $s->user_id = $slot['lecturer'];
-            $s->weekday = $slot['weekday'];
-            $s->time = $slot['time'];
-            $s->mkdate = date('Y-m-d H:i:s');
-            $s->chdate = date('Y-m-d H:i:s');
+            // Course slots.
+            $request->slots = new SimpleCollection();
+            foreach ($values['slots'] as $number => $slot) {
+                $s = new WhakamahereCourseSlot();
+                $s->duration = $slot['duration'];
+                $s->user_id = $slot['lecturer'];
+                $s->weekday = $slot['weekday'];
+                $s->time = $slot['time'];
+                $s->mkdate = date('Y-m-d H:i:s');
+                $s->chdate = date('Y-m-d H:i:s');
 
-            $request->slots->append($s);
-        }
+                $request->slots->append($s);
+            }
 
-        if ($request->store()) {
-            return $course;
+            if ($request->store()) {
+                return $course;
+            } else {
+                return false;
+            }
         } else {
-            return false;
+            return $course;
         }
     }
 

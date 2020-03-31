@@ -64,18 +64,25 @@ class CourseController extends AuthenticatedController {
         $this->weeks = WhakamaherePlanningRequest::getStartWeeks($course->start_semester);
 
         $request = WhakamaherePlanningRequest::findOneByCourse_id($course->id);
-        $this->request = $request->toArray();
 
-        $this->request['property_requests'] = [];
-        foreach ($request->property_requests as $one) {
-            $this->request['property_requests'][$one->property_id] = $one->value;
-        }
+        if ($request) {
+            $this->regular = 1;
+            $this->request = $request->toArray();
 
-        $this->request['slots'] = [];
-        $i = 1;
-        foreach ($request->slots as $one) {
-            $this->request['slots'][$i] = $one->toArray();
-            $i++;
+            $this->request['property_requests'] = [];
+            foreach ($request->property_requests as $one) {
+                $this->request['property_requests'][$one->property_id] = $one->value;
+            }
+
+            $this->request['slots'] = [];
+            $i = 1;
+            foreach ($request->slots as $one) {
+                $this->request['slots'][$i] = $one->toArray();
+                $i++;
+            }
+        } else {
+            $this->regular = 0;
+            $this->request = [];
         }
 
         $this->form = true;
