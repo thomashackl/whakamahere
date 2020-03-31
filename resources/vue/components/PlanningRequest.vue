@@ -153,6 +153,7 @@
             bus.$on('add-slot', () => {
                 this.addSlot()
             })
+            console.log('Regular: ' + this.regular)
         },
         methods: {
             addSlot: function() {

@@ -93,7 +93,7 @@ class WhakamahereWizardStep implements CourseWizardStep
         ];
         $tpl->set_attribute('request', $request);
 
-        $tpl->set_attribute('regular', $values['regular']);
+        $tpl->set_attribute('regular', $values ? $values['regular'] : 1);
 
         $plugin_manager = PluginManager::getInstance();
         $plugin_info = $plugin_manager->getPluginInfo('WhakamaherePlugin');
