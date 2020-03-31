@@ -93,6 +93,8 @@ class WhakamahereWizardStep implements CourseWizardStep
         ];
         $tpl->set_attribute('request', $request);
 
+        $tpl->set_attribute('regular', $values['regular']);
+
         $plugin_manager = PluginManager::getInstance();
         $plugin_info = $plugin_manager->getPluginInfo('WhakamaherePlugin');
         $url = URLHelper::getURL('plugins_packages/' . $plugin_info['path']);
@@ -132,24 +134,26 @@ class WhakamahereWizardStep implements CourseWizardStep
         $ok = true;
         $errors = [];
 
-        if (!$values['property_requests'][WhakamaherePropertyRequest::getSeatsPropertyId()]) {
-            $errors[] = dgettext('whakamahere', 'Es ist keine Anzahl benötigter Sitzplätze angegeben.');
-        }
+        if ($values['regular'] != 0) {
+            if (!$values['property_requests'][WhakamaherePropertyRequest::getSeatsPropertyId()]) {
+                $errors[] = dgettext('whakamahere', 'Es ist keine Anzahl benötigter Sitzplätze angegeben.');
+            }
 
-        if (count($values['slots']) < 1) {
-            $errors[] = dgettext('whakamahere',
-                'Es muss mindestens eine regelmäßige Veranstaltungszeit angelegt sein. '.
-                'Ist dies keine regelmäßige Veranstaltung, so geben Sie das '.
-                'bitte weiter oben an.');
-        } else {
-            foreach ($values['slots'] as $number => $slot) {
-                if (!$slot['duration']) {
-                    $errors[] = sprintf(dgettext('whakamahere',
-                        'Regelmäßige Zeit %s: Es ist keine Dauer in Minuten angegeben.'), $number);
-                }
-                if (!$slot['weekday']) {
-                    $errors[] = sprintf(dgettext('whakamahere',
-                        'Regelmäßige Zeit %s: Es ist keine Zeitpräferenz angegeben.'), $number);
+            if (count($values['slots']) < 1) {
+                $errors[] = dgettext('whakamahere',
+                    'Es muss mindestens eine regelmäßige Veranstaltungszeit angelegt sein. ' .
+                    'Ist dies keine regelmäßige Veranstaltung, so geben Sie das ' .
+                    'bitte weiter oben an.');
+            } else {
+                foreach ($values['slots'] as $number => $slot) {
+                    if (!$slot['duration']) {
+                        $errors[] = sprintf(dgettext('whakamahere',
+                            'Regelmäßige Zeit %s: Es ist keine Dauer in Minuten angegeben.'), $number);
+                    }
+                    if (!$slot['weekday']) {
+                        $errors[] = sprintf(dgettext('whakamahere',
+                            'Regelmäßige Zeit %s: Es ist keine Zeitpräferenz angegeben.'), $number);
+                    }
                 }
             }
         }

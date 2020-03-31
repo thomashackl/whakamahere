@@ -5,21 +5,19 @@
                 Meine Veranstaltung ist
             </legend>
             <section class="col-3">
-                <input type="radio" name="regular" id="is-regular" :checked="isRegular"
-                       @click="setRegular(true)">
+                <input type="radio" name="regular" id="is-regular" v-model="regular" v-bind:value="1">
                 <label class="undecorated" for="is-regular">
                     regelmäßig
                 </label>
             </section>
             <section class="col-3">
-                <input type="radio" name="regular" id="is-irregular" :checked="!isRegular"
-                       @click="setRegular(false)">
+                <input type="radio" name="regular" id="is-irregular" v-model="regular" v-bind:value="0">
                 <label class="undecorated" for="is-irregular">
                     unregelmäßig oder eine Blockveranstaltung
                 </label>
             </section>
         </fieldset>
-        <fieldset v-if="isRegular">
+        <fieldset v-if="regular == 1">
             <legend>Raumanforderungen</legend>
             <section>
                 <label for="seats">
@@ -52,7 +50,7 @@
                 <select2 :options="theRooms" :value="request.room_id" id="room" name="room_id"></select2>
             </section>
         </fieldset>
-        <fieldset v-if="isRegular" ref="slots" id="slots">
+        <fieldset v-if="regular == 1" ref="slots" id="slots">
             <legend>
                 <span class="required">Veranstaltungstermine</span>
             </legend>
@@ -61,7 +59,7 @@
             <studip-button icon="add" name="add-slot" id="add-slot" label="Regelmäßigen Termin hinzufügen"
                            event-name="add-slot"></studip-button>
         </fieldset>
-        <fieldset v-if="isRegular">
+        <fieldset v-if="regular == 1">
             <legend>Sonstige Daten</legend>
             <section>
                 <label for="cycle">
@@ -109,8 +107,8 @@
         },
         props: {
             regular: {
-                type: Boolean,
-                default: true
+                type: Number,
+                default: 1
             },
             seatsId: {
                 type: String
@@ -130,11 +128,6 @@
             },
             request: {
                 type: Object
-            }
-        },
-        data() {
-            return {
-                isRegular: this.regular
             }
         },
         computed: {
@@ -162,9 +155,6 @@
             })
         },
         methods: {
-            setRegular: function(value) {
-                this.isRegular = value
-            },
             addSlot: function() {
                 var newSlot = new SlotClass({
                     propsData: {
