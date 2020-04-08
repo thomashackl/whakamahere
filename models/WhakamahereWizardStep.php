@@ -150,7 +150,7 @@ class WhakamahereWizardStep implements CourseWizardStep
                         $errors[] = sprintf(dgettext('whakamahere',
                             'Regelmäßige Zeit %s: Es ist keine Dauer in Minuten angegeben.'), $number);
                     }
-                    if (!$slot['weekday']) {
+                    if (!$slot['weekday'] || !$slot['time']) {
                         $errors[] = sprintf(dgettext('whakamahere',
                             'Regelmäßige Zeit %s: Es ist keine Zeitpräferenz angegeben.'), $number);
                     }
@@ -210,7 +210,7 @@ class WhakamahereWizardStep implements CourseWizardStep
             foreach ($values['slots'] as $number => $slot) {
                 $s = new WhakamahereCourseSlot();
                 $s->duration = $slot['duration'];
-                $s->user_id = $slot['lecturer'];
+                $s->user_id = $slot['user_id'];
                 $s->weekday = $slot['weekday'];
                 $s->time = $slot['time'];
                 $s->mkdate = date('Y-m-d H:i:s');

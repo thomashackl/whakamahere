@@ -3,15 +3,16 @@
         <header>
             Regelmäßiger Termin {{ internalNumber }}
             <studip-icon shape="trash" size="20" role="info_alt" @click="removeMe"></studip-icon>
+            <input v-if="data.slot_id != null" type="hidden" name="slot_id" :value="data.slot_id">
         </header>
         <section>
             <label :for="'lecturer-' + internalNumber">
                 <span class="required">Dozent/in</span>
             </label>
-            <select :id="'lecturer-' + internalNumber" :name="'slots[' + internalNumber + '][lecturer]'">
+            <select :id="'lecturer-' + internalNumber" :name="'slots[' + internalNumber + '][user_id]'">
                 <option value="">N. N.</option>
                 <option v-for="person in lecturers" :key="person.id" :value="person.id"
-                        :selected="person.id == data.lecturer">{{ person.name }}</option>
+                        :selected="person.id == data.user_id">{{ person.name }}</option>
             </select>
         </section>
         <section>

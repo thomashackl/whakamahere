@@ -60,7 +60,10 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
 
         // Create navigation for resource requirements in courses
         if (Navigation::hasItem('/course/admin')) {
-            if (WhakamaherePlanningRequest::findOneByCourse_id(Course::findCurrent()->id)) {
+            $course = Course::findCurrent();
+            $planningdata = WhakamaherePlanningRequest::findOneByCourse_id($course->id);
+            $semesterstatus = WhakamahereSemesterStatus::find($course->start_semester->id);
+            if ($planningdata || in_array($semesterstatus->status, ['input'])) {
                 $navigation = new Navigation($this->getDisplayName(),
                     PluginEngine::getURL($this, array(), 'course/planningrequest'));
                 $navigation->setImage(Icon::create('resources'));
@@ -102,11 +105,16 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
 
 
     public function perform($unconsumed_path) {
+        $range_id = Request::option('cid', Context::get()->id);
+
+        URLHelper::removeLinkParam('cid');
         $dispatcher = new Trails_Dispatcher(
             $this->getPluginPath(),
             rtrim(PluginEngine::getLink($this, [], null), '/'),
-            'semester'
+            'media'
         );
+        URLHelper::addLinkParam('cid', $range_id);
+
         $dispatcher->plugin = $this;
         $dispatcher->dispatch($unconsumed_path);
     }

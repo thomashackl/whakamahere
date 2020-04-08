@@ -1,5 +1,5 @@
 <?php if ($form) : ?>
-<form class="default" action="<?php $controller->link_for('course/planningrequest') ?>" method="post">
+<form class="default" action="<?php echo $controller->link_for('course/store_request') ?>" method="post">
 <?php endif ?>
 <div id="whakamahere-planning-request">
     <planning-request regular="<?= $regular ?>" :properties='<?= studip_json_encode($properties) ?>'
@@ -17,5 +17,10 @@
 </script>
 
 <?php if ($form) : ?>
+    <?php echo CSRFProtection::tokenTag() ?>
+    <footer data-dialog-button>
+        <?php echo Studip\Button::createAccept(dgettext('whakamahere', 'Speichern'),
+            'submit') ?>
+    </footer>
 </form>
 <?php endif;

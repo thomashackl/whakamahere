@@ -24,7 +24,15 @@ class CourseController extends AuthenticatedController {
         $this->plugin = $this->dispatcher->plugin;
         $this->flash = Trails_Flash::instance();
 
-        if (!$this->plugin->hasPermission('read')) {
+        $this->course = Course::findCurrent();
+
+        if (Navigation::hasItem('/course')) {
+            $perm = $GLOBALS['perm']->have_studip_perm('dozent', $this->course->id);
+        } else {
+            $perm = $GLOBALS['perm']->have_perm('dozent');
+        }
+
+        if (!$perm) {
             throw new AccessDeniedException();
         }
 
@@ -35,8 +43,6 @@ class CourseController extends AuthenticatedController {
     {
         PageLayout::addScript($this->plugin->getPluginURL() . '/assets/javascripts/planningrequest.js');
         Navigation::activateItem('/course/admin/whakamahere');
-
-        $course = Course::findCurrent();
 
         $properties = WhakamaherePropertyRequest::getRequestableProperties();
         $seatsId = WhakamaherePropertyRequest::getSeatsPropertyId();
@@ -53,7 +59,7 @@ class CourseController extends AuthenticatedController {
         $this->seats = $seatsId;
 
         $this->lecturers = [];
-        foreach (CourseMember::findByCourseAndStatus($course->id, 'dozent') as $one) {
+        foreach (CourseMember::findByCourseAndStatus($this->course->id, 'dozent') as $one) {
             $this->lecturers[] = [
                 'id' => $one->user_id,
                 'name' => $one->getUserFullname('full_rev')
@@ -61,9 +67,33 @@ class CourseController extends AuthenticatedController {
         }
 
         $this->rooms = WhakamaherePlanningRequest::getAvailableRooms();;
-        $this->weeks = WhakamaherePlanningRequest::getStartWeeks($course->start_semester);
+        $this->weeks = WhakamaherePlanningRequest::getStartWeeks($this->course->start_semester);
 
-        $request = WhakamaherePlanningRequest::findOneByCourse_id($course->id);
+        if ($this->flash['request']) {
+
+            $request = WhakamaherePlanningRequest::build($this->flash['request'], $this->flash['request']['id'] == 0);
+            $request->property_requests = new SimpleCollection();
+            if ($this->flash['property_requests']) {
+                foreach ($this->flash['property_requests'] as $one) {
+                    $request->property_requests->append(
+                        WhakamaherePropertyRequest::build($one, $one['property_request_id'] == 0)
+                    );
+                }
+            }
+            $request->slots = new SimpleCollection();
+            if ($this->flash['slots']) {
+                foreach ($this->flash['slots'] as $one) {
+                    $request->slots->append(
+                        WhakamahereCourseSlot::build($one, $one['slot_id'] == 0)
+                    );
+                }
+            }
+
+            PageLayout::postInfo('<pre>' . print_r($this->flash, 1) . '</pre>');
+
+        } else {
+            $request = WhakamaherePlanningRequest::findOneByCourse_id($this->course->id);
+        }
 
         if ($request) {
             $this->regular = 1;
@@ -82,10 +112,164 @@ class CourseController extends AuthenticatedController {
             }
         } else {
             $this->regular = 0;
-            $this->request = [];
+            $this->request = [
+                'request_id' => 0,
+                'semester_id' => $this->course->start_semester->id,
+                'institute_id' => $this->course->institut_id,
+                'room_id' => '',
+                'cycle' => 1,
+                'startweek' => 0,
+                'comment' => '',
+                'internal_comment' => '',
+                'property_requests' => [],
+                'slots' => []
+            ];
         }
 
         $this->form = true;
+    }
+
+    /**
+     * Stores this request's data.
+     */
+    public function store_request_action()
+    {
+        CSRFProtection::verifyUnsafeRequest();
+
+        $property_requests = Request::getArray('property_requests');
+        $slots = Request::getArray('slots');
+        $seats = WhakamaherePropertyRequest::getSeatsPropertyId();
+
+        // Check for errors...
+        $errors = [];
+        if (!$property_requests[$seats] || count($slots) < 1) {
+
+            if (!$property_requests[$seats]) {
+                $errors[] = dgettext('whakamahere', 'Es ist keine Anzahl benötigter Sitzplätze angegeben.');
+            }
+
+            if (count($slots) < 1) {
+                $errors[] = dgettext('whakamahere',
+                    'Es muss mindestens eine regelmäßige Veranstaltungszeit angelegt sein. ' .
+                    'Ist dies keine regelmäßige Veranstaltung, so geben Sie das ' .
+                    'bitte weiter oben an.');
+            } else {
+                foreach ($slots as $number => $slot) {
+                    if (!$slot['duration']) {
+                        $errors[] = sprintf(dgettext('whakamahere',
+                            'Regelmäßige Zeit %s: Es ist keine Dauer in Minuten angegeben.'), $number);
+                    }
+                    if (!$slot['weekday'] || !$slot['time']) {
+                        $errors[] = sprintf(dgettext('whakamahere',
+                            'Regelmäßige Zeit %s: Es ist keine Zeitpräferenz angegeben.'), $number);
+                    }
+                }
+            }
+        }
+
+        $request = WhakamaherePlanningRequest::findOneByCourse_id($this->course->id);
+
+        if (Request::int('regular') == 1) {
+
+            if (!$request) {
+                $request = new WhakamaherePlanningRequest();
+                $request->course_id = $this->course->id;
+                $request->semester_id = $this->course->start_semester->id;
+                $request->institute_id = $this->course->institut_id;
+                $request->property_requests = new SimpleCollection();
+                $request->slots = new SimpleCollection();
+                $request->mkdate = date('Y-m-d H:i:s');
+            }
+
+            $request->room_id = Request::option('room_id', null);
+            $request->cycle = Request::int('cycle');
+            $request->startweek = Request::int('startweek');
+            $request->comment = Request::get('comment');
+            $request->internal_comment = '';
+
+            $propreq = new SimpleCollection();
+            foreach (Request::getArray('property_requests') as $property_id => $value) {
+                $one = $request->property_requests->findOneBy('property_id', $property_id);
+                if (!$one) {
+                    $one = new WhakamaherePropertyRequest();
+
+                    if (!$request->isNew()) {
+                        $one->request_id = $request->id;
+                    }
+
+                    $one->property_id = $property_id;
+                    $one->mkdate = date('Y-m-d H:i:s');
+                }
+
+                $one->value = $value;
+                $one->chdate = date('Y-m-d H:i:s');
+
+                $propreq->append($one);
+            }
+            $request->property_requests = $propreq;
+
+            $slots = new SimpleCollection();
+            foreach (Request::getArray('slots') as $slot) {
+                if ($slot['slot_id']) {
+                    $one = $request->slots->find('slot_id', $slot['slot_id']);
+                } else {
+                    $one = new WhakamahereCourseSlot();
+
+                    if (!$request->isNew()) {
+                        $one->request_id = $request->id;
+                    }
+
+                    $one->mkdate = date('Y-m-d H:i:s');
+                }
+
+                $one->duration = $slot['duration'];
+                $one->user_id = $slot['user_id'];
+                $one->weekday = $slot['weekday'];
+                $one->time = $slot['time'];
+                $one->chdate = date('Y-m-d H:i:s');
+
+                $slots->append($one);
+            }
+            $request->slots = $slots;
+
+            $request->chdate = date('Y-m-d H:i:s');
+
+            if (count($errors) > 0) {
+
+                PageLayout::postError(
+                    _('Bitte beheben Sie erst folgende Fehler, bevor Sie fortfahren:'), $errors);
+
+                $this->flash['request'] = $request->toArray();
+                if (count($request->property_requests) > 0) {
+                    $this->flash['property_requests'] = $request->property_requests->toArray();
+                }
+                if (count($request->slots) > 0) {
+                    $this->flash['slots'] = $request->slots->toArray();
+                }
+
+            } else {
+
+                if ($request->store()) {
+                    PageLayout::postSuccess(dgettext('whakamahere', 'Die Änderungen wurden gespeichert.'));
+                } else {
+                    PageLayout::postError(dgettext('whakamahere',
+                        'Die Änderungen konnten nicht gespeichert werden.'));
+                }
+
+            }
+
+        } else {
+
+            if (!$request || $request->delete()) {
+                PageLayout::postSuccess(dgettext('whakamahere', 'Die Änderungen wurden gespeichert.'));
+            } else {
+                PageLayout::postError(dgettext('whakamahere',
+                    'Die Änderungen konnten nicht gespeichert werden.'));
+            }
+
+        }
+
+        $this->relocate('course/planningrequest');
     }
 
 }
