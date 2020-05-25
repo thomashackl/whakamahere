@@ -191,12 +191,12 @@ class PlanningController extends AuthenticatedController {
             $time->chdate = date('Y-m-d H:i:s');
             if ($time->store()) {
                 $this->set_status(200, 'Time assignment saved.');
+                $this->render_json($time->toArray());
             } else {
                 $this->set_status(500, 'Could not save time assignment.');
+                $this->render_nothing();
             }
         }
-
-        $this->render_nothing();
     }
 
     /**
@@ -439,22 +439,23 @@ class PlanningController extends AuthenticatedController {
             foreach ($entries as $one) {
                 $courses[] = [
                     'id' => $one->course_id . '-' . $one->slot_id,
-                    'time_id' => $one->id,
+                    'time_id' => (int) $one->id,
                     'course_id' => $one->course_id,
-                    'course_name' => (string)$one->course->name,
+                    'course_name' => (string) $one->course->name,
                     'course_number' => $one->course->veranstaltungsnummer,
-                    'turnout' => $one->slot->request->property_requests->findOneBy('property_id', $seatsId)->value,
-                    'slot_id' => $one->slot_id,
+                    'turnout' => (int) $one->slot->request->property_requests->findOneBy('property_id', $seatsId)->value,
+                    'slot_id' => (int) $one->slot_id,
                     'lecturer_id' => $one->slot->user_id,
                     'lecturer' => $one->slot->user_id ? $one->slot->user->getFullname() : 'N. N.',
-                    'pinned' => $one->pinned,
-                    'weekday' => $one->weekday,
+                    'pinned' => $one->pinned == 0 ? false : true,
+                    'weekday' => (int) $one->weekday,
                     'start' => $one->start,
                     'end' => $one->end
                 ];
             }
 
         }
+
         return $courses;
     }
     /**
@@ -483,13 +484,13 @@ class PlanningController extends AuthenticatedController {
                     'course_id' => $slot->request->course_id,
                     'course_name' => (string)$slot->request->course->name,
                     'course_number' => $slot->request->course->veranstaltungsnummer,
-                    'turnout' => $slot->request->property_requests->findOneBy('property_id', $seatsId)->value,
+                    'turnout' => (int) $slot->request->property_requests->findOneBy('property_id', $seatsId)->value,
                     'url' => URLHelper::getLink('dispatch.php/course/overview?cid=' . $slot->request->course_id),
-                    'slot_id' => $slot->id,
+                    'slot_id' => (int) $slot->id,
                     'lecturer_id' => $slot->user_id,
                     'lecturer' => $slot->user_id ? $slot->user->getFullname() : 'N. N.',
-                    'duration' => $slot->duration,
-                    'weekday' => $slot->weekday,
+                    'duration' => (int) $slot->duration,
+                    'weekday' => (int) $slot->weekday,
                     'time' => $slot->time
                 ];
             }

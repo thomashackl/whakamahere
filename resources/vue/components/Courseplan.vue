@@ -4,9 +4,7 @@
                                   reference-element="#whakamahere-courseplan"/>
         <schedule :min-time="minTime" :max-time="maxTime" :locale="locale"
                   :weekends="weekends" :lecture-start="lectureStart"
-                  :courses="plannedCourseList" :institute="institute"
-                  :get-slot-availability-url="getSlotAvailabilityUrl"
-                  :unplan-slot-url="unplanSlotUrl" :pin-slot-url="pinSlotUrl"></schedule>
+                  :courses="plannedCourseList" :institute="institute"></schedule>
         <unplanned-courses-list :courses="unplannedCourseList" :lectureStart="lectureStart"></unplanned-courses-list>
     </div>
 </template>
@@ -34,30 +32,6 @@
                 default: false
             },
             lectureStart: {
-                type: String,
-                default: ''
-            },
-            getUnplannedCoursesUrl: {
-                type: String,
-                default: ''
-            },
-            getPlannedCoursesUrl: {
-                type: String,
-                default: ''
-            },
-            storeCourseUrl: {
-                type: String,
-                default: ''
-            },
-            getSlotAvailabilityUrl: {
-                type: String,
-                default: ''
-            },
-            unplanSlotUrl: {
-                type: String,
-                default: ''
-            },
-            pinSlotUrl: {
                 type: String,
                 default: ''
             },
@@ -188,7 +162,8 @@
                     formData.append('seats', JSON.stringify(seats))
                 }
 
-                const response = await fetch(this.getUnplannedCoursesUrl, {
+                const response = await fetch(
+                    STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/unplanned_courses'), {
                     method: 'post',
                     body: formData
                 }).then((response) => {
@@ -224,7 +199,8 @@
                     formData.append('seats', JSON.stringify(seats))
                 }
 
-                const response = await fetch(this.getPlannedCoursesUrl, {
+                const response = await fetch(
+                    STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/planned_courses'), {
                     method: 'post',
                     body: formData
                 }).then((response) => {
@@ -233,17 +209,19 @@
                             this.plannedCourseList = json
                             this.loadingPlanned = false;
                             bus.$emit('updated-planned-courses')
+                            console.log(json)
                         })
                 })
             },
             saveCourse(data) {
-                let formData = new FormData()
                 let course = null
+                let startRaw = null
+                let endRaw = null
+                let add = true
+                /*
+                 * We have a draggedEl -> drag & drop from unplanned courses.
+                 */
                 if (data.draggedEl != null) {
-                    formData.append('course', data.draggedEl.dataset.courseId)
-                    formData.append('slot', data.draggedEl.dataset.slotId)
-                    formData.append('start', this.formatDate(data.event.start))
-                    formData.append('end', this.formatDate(data.event.end))
                     course = {
                         id: data.draggedEl.dataset.courseId + '-' + data.draggedEl.dataset.slotId,
                         course_id: data.draggedEl.dataset.courseId,
@@ -252,37 +230,97 @@
                         course_name: data.draggedEl.dataset.courseName,
                         lecturer: data.draggedEl.dataset.lecturer,
                         lecturer_id: data.draggedEl.dataset.lecturerId,
-                        pinned: data.draggedEl.dataset.pinned,
+                        pinned: false,
                         weekday: data.event.start.getDay(),
                         start: ('0' + data.event.start.getHours()).slice(-2) + ':' +
                             ('0' + data.event.start.getMinutes()).slice(-2) + ':00',
                         end: ('0' + data.event.end.getHours()).slice(-2) + ':' +
-                            ('0' + data.event.end.getMinutes()).slice(-2) + ':00'
+                            ('0' + data.event.end.getMinutes()).slice(-2) + ':00',
+                        turnout: data.draggedEl.dataset.turnout
                     }
-                    data.event.remove()
+                    startRaw = data.event.start
+                    endRaw = data.event.end
                 } else {
-                    formData.append('course', data.course_id)
-                    formData.append('slot', data.slot_id)
-                    formData.append('start', this.formatDate(data.start))
-                    formData.append('end', this.formatDate(data.end))
-                    course = data
-                    course.start = ('0' + course.start.getHours()).slice(-2) + ':' +
-                        ('0' + course.start.getMinutes()).slice(-2) + ':00'
-                    course.end = ('0' + course.end.getHours()).slice(-2) + ':' +
-                        ('0' + course.end.getMinutes()).slice(-2) + ':00'
+                    /*
+                     * data has extendedProps -> this is a regular Fullcalendar event.
+                     */
+                    if (data.event != null) {
+                        course = {
+                            id: data.event.extendedProps.courseId + '-' + data.event.extendedProps.slotId,
+                            time_id: data.event.extendedProps.timeId,
+                            course_id: data.event.extendedProps.courseId,
+                            slot_id: data.event.extendedProps.slotId,
+                            course_number: data.event.extendedProps.courseNumber,
+                            course_name: data.event.extendedProps.courseName,
+                            lecturer: data.event.extendedProps.lecturerName,
+                            lecturer_id: data.event.extendedProps.lecturerId,
+                            pinned: false,
+                            weekday: data.event.start.getDay(),
+                            start: ('0' + data.event.start.getHours()).slice(-2) + ':' +
+                                ('0' + data.event.start.getMinutes()).slice(-2) + ':00',
+                            end: ('0' + data.event.end.getHours()).slice(-2) + ':' +
+                                ('0' + data.event.end.getMinutes()).slice(-2) + ':00',
+                            turnout: data.event.extendedProps.turnout
+                        }
+                        startRaw = data.event.start
+                        endRaw = data.event.end
+                    /*
+                     * Element comes from manually accepting time preference.
+                     */
+                    } else {
+                        course = {
+                            id: data.courseId + '-' + data.slotId,
+                            course_id: data.courseId,
+                            slot_id: data.slotId,
+                            course_number: data.courseNumber,
+                            course_name: data.courseName,
+                            lecturer: data.lecturer,
+                            lecturer_id: data.lecturerId,
+                            pinned: false,
+                            weekday: data.start.getDay(),
+                            start: ('0' + data.start.getHours()).slice(-2) + ':' +
+                                ('0' + data.start.getMinutes()).slice(-2) + ':00',
+                            end: ('0' + data.end.getHours()).slice(-2) + ':' +
+                                ('0' + data.end.getMinutes()).slice(-2) + ':00',
+                            turnout: data.turnout
+                        }
+                        startRaw = data.start
+                        endRaw = data.end
+                    }
                 }
-                fetch(this.storeCourseUrl, {
+                let formData = new FormData()
+                if (course.time_id != null) {
+                    formData.append('time_id', course.time_id)
+                }
+                formData.append('course', course.course_id)
+                formData.append('slot', course.slot_id)
+                formData.append('start', this.formatDate(startRaw))
+                formData.append('end', this.formatDate(endRaw))
+                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/store_course'), {
                     method: 'post',
                     body: formData
                 }).then((response) => {
-                    if (response.ok) {
+                    if (!response.ok) {
+                        throw response
+                    }
+                    if (data.event != null) {
+                        data.event.remove()
+                    }
+                    response.json().then((json) => {
+                        course.time_id = json.time_id
+                        this._data.plannedCourseList =
+                            this._data.plannedCourseList.filter((one) => one.slot_id != course.slot_id)
                         this._data.plannedCourseList.push(course)
                         this._data.unplannedCourseList =
                             this._data.unplannedCourseList.filter((one) => one.slot_id != course.slot_id)
-                    } else {
-                        console.log('Date could not be saved.')
-                        console.log(response)
-                    }
+                    })
+                }).catch((error) => {
+                    let messagebox = document.createElement('div')
+                    messagebox.classList.add('messagebox')
+                    messagebox.classList.add('messagebox_error')
+                    messagebox.innerHTML = error.statusText
+
+                    STUDIP.Dialog.show(messagebox, {height: 250, width: 400, title: 'Fehler ' + error.status})
                 })
             },
             // Format a given date object according to German locale.

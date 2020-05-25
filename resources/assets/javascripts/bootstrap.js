@@ -5,6 +5,9 @@ import bus from './bus'
 
 window.Vue = Vue
 
+// Declare plugin base URL for global usage
+Vue.prototype.$pluginBase = 'plugins.php/whakamahereplugin'
+
 /**
  * The following block of code is used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue

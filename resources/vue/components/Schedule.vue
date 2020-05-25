@@ -3,8 +3,8 @@
                    droppable="true" :all-day-slot="false" :header="header" :weekends="weekends" :editable="true"
                    :column-header-format="columnHeaderFormat" week-number-calculation="ISO" :events="events"
                    :min-time="minTime" :max-time="maxTime" :default-date="lectureStart"
-                   @eventReceive="dropCourse" @eventDragStart="markAvailableSlots" @eventDragStop="dropCourse"
-                   :eventRender="renderEvent"/>
+                   :valid-range="validRange" time-zone="local" :eventRender="renderEvent"
+                   @eventReceive="dropCourse" @eventDragStart="markAvailableSlots" @eventDrop="dropCourse"/>
 </template>
 
 <script>
@@ -44,18 +44,6 @@
             courses: {
                 type: Array,
                 default: () => []
-            },
-            getSlotAvailabilityUrl: {
-                type: String,
-                default: ''
-            },
-            unplanSlotUrl: {
-                type: String,
-                default: ''
-            },
-            pinSlotUrl: {
-                type: String,
-                default: ''
             }
         },
         data() {
@@ -73,6 +61,21 @@
             }
         },
         computed: {
+            /*
+             * Calculate a valid date range for the current calendar view
+             */
+            validRange: function() {
+                const start = this.lectureStart
+                let end = new Date(this.lectureStart)
+                end.setDate(end.getDate() + (this.weekend ? 6 : 4))
+
+                const range = {
+                    start: start + ' 00:00:00',
+                    end: end.getFullYear() + '-' + (end.getMonth() + 1) + '-' + end.getDate() + ' 23:59:59'
+                }
+
+                return range
+            },
             /*
              * Re-structure the given course data: we need a "dummy" day
              * for displaying the dates in the calendar view, and attributes
@@ -98,10 +101,13 @@
                     entries.push({
                         source: 'database',
                         id: this.courses[i].course_id + '-' + this.courses[i].slot_id,
+                        timeId: this.courses[i].time_id,
                         title: title + '\n' + this.courses[i].lecturer,
-                        start: day + ' ' + this.courses[i].start,
-                        end: day + ' ' + this.courses[i].end,
+                        start: new Date(day + ' ' + this.courses[i].start),
+                        end: new Date(day + ' ' + this.courses[i].end),
                         courseId: this.courses[i].course_id,
+                        courseName: this.courses[i].course_name,
+                        courseNumber: this.courses[i].course_number,
                         slotId: this.courses[i].slot_id,
                         editable: this.courses[i].pinned == 0 ? true : false,
                         slotWeekday: this.courses[i].weekday,
@@ -151,11 +157,19 @@
             })
 
             this.initDragAndDrop()
+
+            /*
+             * Some trick to defeat the nasty error about "isWithinClipping".
+             */
+            this.$refs.schedule.getApi().prev()
+            this.$nextTick(() => {
+                this.$refs.schedule.getApi().prev()
+            })
         },
         methods: {
             // When a course is dropped, we store the time assignment to database.
-            dropCourse: function(el) {
-                bus.$emit('save-course', el)
+            dropCourse: function(info) {
+                bus.$emit('save-course', info)
                 this.unmarkAvailableSlots()
             },
             // Initialize the drag & drop functionality with Dragula and FullCalendar.
@@ -185,10 +199,16 @@
             },
             // Mark slots where a course can or cannot be dropped.
             async markAvailableSlots(info) {
+                return true
                 // The virtual begin of our semester view - place dates there.
                 let lStart = new Date(this.lectureStart)
 
                 let month = ('0' + (lStart.getMonth() + 1)).slice(-2)
+
+                console.log('Passed info:')
+                console.log(info)
+                console.log('Start date:')
+                console.log(lStart)
 
                 if (info.event != null) {
                     var lecturerId = info.event.extendedProps.lecturerId
@@ -198,7 +218,8 @@
 
                 // Check availability info for slot lecturer.
                 if (lecturerId != '') {
-                    const response = await fetch(this.getSlotAvailabilityUrl + '/' + lecturerId)
+                    const response = await fetch(STUDIP.URLHelper.getURL(
+                        this.$pluginBase + '/planning/slot_availability/' + lecturerId))
                     var occupied = await response.json()
                 }
 
@@ -229,7 +250,7 @@
                 }
             },
             async unplan(event) {
-                fetch(this.unplanSlotUrl + '/' + event.extendedProps.slotId)
+                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/unplan/' + event.extendedProps.slotId))
                     .then(response => {
                         if (!response.ok) {
                             throw response
@@ -243,7 +264,7 @@
                 return false
             },
             async pin(event, jsEvent) {
-                fetch(this.pinSlotUrl + '/' + event.extendedProps.slotId)
+                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/setpin/' + event.extendedProps.slotId))
                     .then(response => {
                         if (!response.ok) {
                             throw response
@@ -260,6 +281,9 @@
                     })
 
                 return false
+            },
+            getAvailableRooms: function(timeId) {
+                console.log('Get available rooms...')
             },
             renderEvent: function(info) {
                 if (info.event.rendering != 'background') {
@@ -305,7 +329,7 @@
                         label: 'Raum auswählen',
                         click: (clickEvent) => {
                             clickEvent.preventDefault()
-                            this.getAvailableRooms(calendarEvent.extendedProps.time_id)
+                            this.getAvailableRooms(calendarEvent.extendedProps.timeId)
                             contextMenu.remove()
                         }
                     },
@@ -361,57 +385,56 @@
 </script>
 
 <style lang="scss">
-    div.fc {
-        overflow: hidden;
+    body {
+        div.fc {
+            font-size: 11px;
+            overflow: hidden;
 
-        div.fc-toolbar {
-            display: none !important;
-        }
+            .fc-event {
+                background-color: #28487c;
+                color: #ffffff;
+                display: inline-block !important;
 
-        .fc-event {
-            background-color: #28487c;
-            color: #ffffff;
-            display: inline-block !important;
-
-            .fc-time {
-                background-color: #3f72b4;
-            }
-        }
-    }
-
-    #whakamahere-context-menu {
-
-        background-color: #ffffff;
-        border: 1px solid #000000;
-        font-size: 90%;
-        margin: 0;
-        position: absolute;
-        z-index: 999;
-
-        header {
-            background-color: #d3dbe5;
-            border-bottom: 1px solid #000000;
-            padding: 3px;
-            padding-left: 5px;
-
-            img {
-                float: right;
+                .fc-time {
+                    background-color: #3f72b4;
+                }
             }
         }
 
-        ul {
+        #whakamahere-context-menu {
+
+            background-color: #ffffff;
+            border: 1px solid #000000;
+            font-size: 90%;
             margin: 0;
-            padding: 0;
+            position: absolute;
+            z-index: 999;
 
-            li {
-                list-style-type: none;
-                padding-bottom: 1px;
+            header {
+                background-color: #d3dbe5;
+                border-bottom: 1px solid #000000;
+                padding: 3px;
                 padding-left: 5px;
-                padding-right: 5px;
-                padding-top: 1px;
 
-                &:hover {
-                    color: #ff0000;
+                img {
+                    float: right;
+                }
+            }
+
+            ul {
+                margin: 0;
+                padding: 0;
+
+                li {
+                    list-style-type: none;
+                    padding-bottom: 1px;
+                    padding-left: 5px;
+                    padding-right: 5px;
+                    padding-top: 1px;
+
+                    &:hover {
+                        color: #ff0000;
+                    }
                 }
             }
         }

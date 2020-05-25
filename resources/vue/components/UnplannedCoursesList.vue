@@ -29,7 +29,7 @@
             </thead>
             <tbody class="container" v-dragula="courseList" drake="courselist">
                 <tr v-for="course in courseList" :id="course.course_id + '-' + course.slot_id"
-                    class="course"  :data-course-id="course.course_id" :data-slot-id="course.slot_id"
+                    class="course" :data-course-id="course.course_id" :data-slot-id="course.slot_id"
                     :data-course-number="course.course_number" :data-course-name="course.course_name"
                     :data-turnout="course.turnout" :data-weekday="course.weekday" :data-time="course.time"
                     :data-duration="course.duration" :data-lecturer-id="course.lecturer_id"
@@ -124,15 +124,18 @@
                 start.setDate(start.getDate() + parseInt(dataEl.dataset.weekday))
                 let end = new Date(start.getTime() + parseInt(dataEl.dataset.duration) * 60000)
 
+                console.log('Dataset')
+                console.log(dataEl.dataset)
+
                 let data = {
                     id: dataEl.dataset.courseId + '-' + dataEl.dataset.slotId,
-                    course_id: dataEl.dataset.courseId,
-                    slot_id: dataEl.dataset.slotId,
-                    course_number: dataEl.dataset.courseNumber,
-                    course_name: dataEl.dataset.courseName,
+                    courseId: dataEl.dataset.courseId,
+                    slotId: dataEl.dataset.slotId,
+                    courseNumber: dataEl.dataset.courseNumber,
+                    courseName: dataEl.dataset.courseName,
                     turnout: dataEl.dataset.turnout,
                     lecturer: dataEl.dataset.lecturer,
-                    lecturer_id: dataEl.dataset.lecturerId,
+                    lecturerId: dataEl.dataset.lecturerId,
                     pinned: false,
                     weekday: start.getDay(),
                     start: start,
@@ -150,17 +153,22 @@
     }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
     #whakamahere-unplanned-courses {
         background-color: #ffffff;
         overflow-y: scroll;
 
         table {
             caption {
-                font-size: 1em;
+                border-top: 1px solid #000000;
+                font-size: 12px;
+                padding: 0;
+                padding-left: 5px;
+                padding-right: 5px;
             }
             tr {
-                font-size: 0.9em;
+                font-size: 11px;
+                padding: 1px;
 
                 &.course {
                     cursor: move;

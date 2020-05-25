@@ -66,7 +66,7 @@ class CourseController extends AuthenticatedController {
             ];
         }
 
-        $this->rooms = WhakamaherePlanningRequest::getAvailableRooms();;
+        $this->rooms = WhakamaherePlanningRequest::getAvailableRooms();
         $this->weeks = WhakamaherePlanningRequest::getStartWeeks($this->course->start_semester);
 
         if ($this->flash['request']) {
