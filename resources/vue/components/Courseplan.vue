@@ -78,6 +78,7 @@
             }
         },
         mounted() {
+            this.updateData()
             // Catch event for changed semester in sidebar
             bus.$on('updated-semester', (element) => {
                 this.theSemester = element.value
@@ -129,13 +130,12 @@
         },
         methods: {
             updateData() {
+                this.plannedCourseList = []
+                this.unplannedCourseList = []
                 if (this.theMinSeats != 0 || this.theMaxSeats != 0 ||
                         this.theInstitute != '' || this.theLecturer != '' || this.theRoom != '') {
                     this.getPlannedCourses()
                     this.getUnplannedCourses()
-                } else {
-                    this.plannedCourseList = []
-                    this.unplannedCourseList = []
                 }
             },
             async getUnplannedCourses() {
@@ -209,7 +209,6 @@
                             this.plannedCourseList = json
                             this.loadingPlanned = false;
                             bus.$emit('updated-planned-courses')
-                            console.log(json)
                         })
                 })
             },

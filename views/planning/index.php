@@ -1,8 +1,6 @@
 <div id="whakamahere-courseplan">
     <courseplan :min-time="'<?= $minTime ?>'" :max-time="'<?= $maxTime ?>'" :locale="'<?= $locale ?>'"
                 :weekends="<?= $weekends ?>" :lecture-start="'<?= $semesterStart->format('Y-m-d') ?>'"
-                :unplanned-courses='<?= studip_json_encode($unplanned_courses) ?>'
-                :planned-courses='<?= studip_json_encode($planned_courses) ?>'
                 <?php if ($selectedSemester) : ?>
                 :semester="'<?= $selectedSemester ?>'"
                 <?php endif ?>

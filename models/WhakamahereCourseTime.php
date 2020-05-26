@@ -40,6 +40,13 @@ class WhakamahereCourseTime extends SimpleORMap
             'foreign_key' => 'slot_id',
             'assoc_foreign_key' => 'slot_id'
         ];
+        $config['has_many']['bookings'] = [
+            'class_name' => 'WhakamahereTimeBooking',
+            'foreign_key' => 'time_id',
+            'assoc_foreign_key' => 'time_id',
+            'on_store' => 'store',
+            'on_delete' => 'delete'
+        ];
 
         parent::configure($config);
     }
@@ -142,16 +149,17 @@ class WhakamahereCourseTime extends SimpleORMap
     /**
      * Finds rooms which are available for the current planned time.
      */
-    public function findAvailableRooms()
+    public function proposeRooms()
     {
         $props = $this->slot->request->property_requests;
+        $roomWish = $this->slot->request->room_id;
 
         // Aggregate required props.
         $requiredProps = [];
         $joins = [];
         $where = [];
         $params = [
-            'wish' => $this->slot->request->room_id
+            'roomwish' => $roomWish
         ];
         $i = 0;
         foreach ($props as $prop) {
@@ -163,36 +171,42 @@ class WhakamahereCourseTime extends SimpleORMap
                 $seatsMin = (Config::get()->WHAKAMAHERE_SEATS_LOWER_LIMIT / 100) * $seats;
                 $seatsMax = (Config::get()->WHAKAMAHERE_SEATS_UPPER_LIMIT / 100) * $seats;
 
-                $joins[] = " INNER JOIN `resources_properties` s " .
-                    "ON (s.`resource_id` = `resources`.`id` AND s.`property_id` = :seatsid)";
+                $joins[] = " INNER JOIN `resource_properties` s " .
+                    "ON (s.`resource_id` = r.`id` AND s.`property_id` = :seatsid) ";
                 $params['seatsid'] = $prop->property_id;
 
-                $where[] = "AND s.`state` BETWEEN :seatsmin AND :seatsmax";
-                $params['seatsmin'] = $seatsMin;
-                $params['seatsmax'] = $seatsMax;
+                $where[] = "s.`state` BETWEEN :seatsmin AND :seatsmax";
+                $params['seatsmin'] = (int) $seatsMin;
+                $params['seatsmax'] = (int) $seatsMax;
             } else {
-                $requiredProps[$prop->property_id] = $prop->value;
+                if ($prop->value) {
+                    $requiredProps[$prop->property_id] = $prop->value;
 
-                $joins[] = " INNER JOIN `resources_properties` rp" . $i .
-                    " ON (rp" . $i . ".`resource_id` = `resources`.`id` " .
-                        "AND rp" . $i . ".`property_id` = :propid" . $i . ")";
-                $params['propid' . $i] = $prop->property_id;
+                    $joins[] = " INNER JOIN `resource_properties` rp" . $i .
+                        " ON (rp" . $i . ".`resource_id` = r.`id` " .
+                        "AND rp" . $i . ".`property_id` = :propid" . $i . ") ";
+                    $params['propid' . $i] = $prop->property_id;
 
-                $where[] = "AND rp" . $i . ".`state` = :propvalue" . $i;
-                $params['propvalue' . $i] = $prop->value;
+                    $where[] = "rp" . $i . ".`state` = :propvalue" . $i;
+                    $params['propvalue' . $i] = $prop->value;
 
-                $i++;
+                    $i++;
+                }
             }
 
         }
 
         $select = "SELECT DISTINCT r.`id`, r.`name`, s.`state` AS seats FROM `resources` r";
-        $order = " ORDER BY seats, r.`name`";
+        $order = "ORDER BY " . $seats . " - seats DESC, r.`name`";
 
         /*
          * Find all rooms which have approximately the suitable size and the necessary properties.
          */
-        $entries = DBManager::get()->fetchAll($select . $joins . $where, $params);
+        $entries = DBManager::get()->fetchAll(
+            $select . implode(' ', $joins) . "WHERE r.`id` = :roomwish OR (" .
+            implode(' AND ', $where) . ")" . $order,
+            $params
+        );
 
         // Categories for matching number of seats.
         $wished = [];
@@ -200,24 +214,97 @@ class WhakamahereCourseTime extends SimpleORMap
         $larger = [];
         $smaller = [];
         foreach ($entries as $one) {
+            $one['occupied'] = array_map(function($b) {
+                    return [
+                        'id' => $b->id,
+                        'begin' => $b->begin,
+                        'end' => $b->end,
+                        'type' => $b->booking_type
+                    ];
+                }, $this->checkForBookings($one['id'], $this->buildTimeRanges()));
             // The wished room is prioritized.
             if ($one['id'] == $this->slot->request->room_id) {
-                $one['wish'] = true;
+                $one['class'] = 'wish';
                 $wished[] = $one;
             } else {
                 $one['wish'] = false;
                 if ($one['seats'] ==  $seats) {
+                    $one['class'] = 'exact';
                     $equal[] = $one;
                 } else if ($one['seats'] > $seats) {
+                    $one['class'] = 'larger';
                     $larger[] = $one;
                 } else {
+                    $one['class'] = 'smaller';
                     $smaller[] = $one;
                 }
             }
         }
 
-        return array_merge($wished, $equal, $larger, $smaller);
+        return array_merge($wished, $equal, $larger, array_reverse($smaller));
+    }
 
+    /**
+     * Fetches all already existing bookings for a room overlapping with the current CourseTime.
+     *
+     * @param string $room_id the room to check
+     */
+    public function checkForBookings($room_id, $timeranges)
+    {
+        return count($timeranges) > 0 ?
+            ResourceBooking::findByResourceAndTimeRanges(Room::find($room_id), $timeranges) :
+            [];
+    }
+
+    /**
+     * Builds all relevant real dates for this CourseTime.
+     */
+    private function buildTimeRanges()
+    {
+        // Weekday numbers and names for calculation.
+        $weekdays = [
+            0 => 'Sunday',
+            1 => 'Monday',
+            2 => 'Tuesday',
+            3 => 'Wednesday',
+            4 => 'Thursday',
+            5 => 'Friday',
+            6 => 'Saturday',
+        ];
+
+        // Timeranges to check for bookings.
+        $timeranges = [];
+
+        $request = $this->slot->request;
+
+        // Find first date matching the selected weekday.
+        $start = new DateTime('', new DateTimeZone('Europe/Berlin'));
+        $start->setTimestamp($request->course->start_semester->vorles_beginn);
+        $start->sub(new DateInterval('P1D'));
+        $start->modify('next ' . $weekdays[$this->weekday] . ' ' . $this->start);
+
+        $end = new DateTime('', new DateTimeZone('Europe/Berlin'));
+        $end->setTimestamp($request->course->start_semester->vorles_beginn);
+        $end->sub(new DateInterval('P1D'));
+        $end->modify('next ' . $weekdays[$this->weekday] . ' ' . $this->end);
+
+        $interval = new DateInterval('P' . ($request->cycle * 7) . 'D');
+
+        /*
+         * Build all relevant days and times for checking.
+         */
+        while ($start->getTimestamp() < $request->course->start_semester->vorles_ende) {
+            if (!SemesterHoliday::isHoliday($start->getTimestamp())) {
+                $timeranges[] = [
+                    'begin' => $start->getTimestamp(),
+                    'end' => $end->getTimestamp()
+                ];
+            }
+            $start->add($interval);
+            $end->add($interval);
+        }
+
+        return $timeranges;
     }
 
 }

@@ -124,9 +124,6 @@
                 start.setDate(start.getDate() + parseInt(dataEl.dataset.weekday))
                 let end = new Date(start.getTime() + parseInt(dataEl.dataset.duration) * 60000)
 
-                console.log('Dataset')
-                console.log(dataEl.dataset)
-
                 let data = {
                     id: dataEl.dataset.courseId + '-' + dataEl.dataset.slotId,
                     courseId: dataEl.dataset.courseId,

@@ -115,8 +115,6 @@ class PlanningController extends AuthenticatedController {
             $filter['institute'] = $this->selectedInstitute;
         }
 
-        $this->planned_courses = $this->getPlannedCourses($filter);
-        $this->unplanned_courses = $this->getUnplannedCourses($filter);
         $this->lecturers = $this->getLecturers($filter);
 
         $this->setupSidebar();
@@ -274,14 +272,22 @@ class PlanningController extends AuthenticatedController {
      *
      * @param int $time_id
      */
-    public function available_rooms_action($time_id)
+    public function room_proposals_action($time_id)
     {
+        PageLayout::setTitle(dgettext('whakamahere', 'Raumvorschläge'));
         $time = WhakamahereCourseTime::find($time_id);
 
         if ($time) {
 
-            $rooms = $time->findAvailableRooms();
-            $this->render_json($rooms);
+            $result = [
+                'time_id' => $time_id,
+                'course' => $time->course->getFullname(),
+                'seats' => $time->slot->request->property_requests->findOneBy(
+                        'property_id', WhakamaherePropertyRequest::getSeatsPropertyId()
+                    )->value,
+                'rooms' => $time->proposeRooms()
+            ];
+            $this->render_json($result);
 
         } else {
             $this->set_status(404, 'Time assignment not found.');

@@ -14,6 +14,8 @@
     import timeGridWeekPlugin from '@fullcalendar/timegrid'
     import { VueContext } from 'vue-context'
     var ContextClass = Vue.extend(VueContext)
+    import RoomProposals from './RoomProposals'
+    var RoomProposalsClass = Vue.extend(RoomProposals)
 
     export default {
         name: 'Schedule',
@@ -205,11 +207,6 @@
 
                 let month = ('0' + (lStart.getMonth() + 1)).slice(-2)
 
-                console.log('Passed info:')
-                console.log(info)
-                console.log('Start date:')
-                console.log(lStart)
-
                 if (info.event != null) {
                     var lecturerId = info.event.extendedProps.lecturerId
                 } else {
@@ -282,8 +279,18 @@
 
                 return false
             },
-            getAvailableRooms: function(timeId) {
-                console.log('Get available rooms...')
+            getRoomProposals: function(timeId) {
+                const proposals = new RoomProposalsClass({
+                    propsData: {
+                        timeId: timeId
+                    }
+                })
+                proposals.$mount()
+                STUDIP.Dialog.show(proposals.$el, {
+                    height: 450,
+                    width: 500,
+                    title: 'Raumvorschläge'
+                })
             },
             renderEvent: function(info) {
                 if (info.event.rendering != 'background') {
@@ -329,7 +336,7 @@
                         label: 'Raum auswählen',
                         click: (clickEvent) => {
                             clickEvent.preventDefault()
-                            this.getAvailableRooms(calendarEvent.extendedProps.timeId)
+                            this.getRoomProposals(calendarEvent.extendedProps.timeId)
                             contextMenu.remove()
                         }
                     },

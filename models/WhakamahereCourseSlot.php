@@ -39,6 +39,13 @@ class WhakamahereCourseSlot extends SimpleORMap
             'foreign_key' => 'request_id',
             'assoc_foreign_key' => 'request_id'
         ];
+        $config['has_one']['time'] = [
+            'class_name' => 'WhakamahereCourseTime',
+            'foreign_key' => 'slot_id',
+            'assoc_foreign_key' => 'slot_id',
+            'on_store' => 'store',
+            'on_delete' => 'delete'
+        ];
 
         parent::configure($config);
     }
