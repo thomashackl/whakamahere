@@ -288,7 +288,7 @@
                 proposals.$mount()
                 STUDIP.Dialog.show(proposals.$el, {
                     height: 450,
-                    width: 500,
+                    width: window.offsetWidth * 0.8,
                     title: 'Raumvorschläge'
                 })
             },

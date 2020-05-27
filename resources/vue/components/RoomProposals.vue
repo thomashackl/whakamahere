@@ -7,29 +7,47 @@
         </caption>
         <colgroup>
             <col>
-            <col width="100">
+            <col>
+            <col>
+            <col>
             <col>
         </colgroup>
         <thead>
             <tr>
                 <th>Raum</th>
                 <th>Sitzplätze</th>
+                <th>Eignung</th>
                 <th>Verfügbarkeit</th>
+                <th>Ausstattung</th>
             </tr>
         </thead>
         <tbody>
             <tr v-for="room in rooms" :key="room.id" :class="getRoomClass(room)" @click="selectRoom(room.id)">
                 <td>{{ room.name }}</td>
                 <td>{{ room.seats }}</td>
+                <td>{{ Math.round(room.score) }}%</td>
                 <td>
                     <template v-if="room.occupied.length == 0">
                         immer frei
                     </template>
                     <template v-else>
-                        gebucht am:
+                        belegt am:
                         <ul>
                             <li v-for="booking in room.occupied" :key="booking.id">
                                 {{ getDate(booking.begin) }} - {{ getDate(booking.end, true) }}
+                            </li>
+                        </ul>
+                    </template>
+                </td>
+                <td>
+                    <template v-if="room.missing_properties.length == 0">
+                        vollständig
+                    </template>
+                    <template v-else>
+                        fehlt:
+                        <ul>
+                            <li v-for="(property, index) in room.missing_properties" :key="index">
+                                {{ property }}
                             </li>
                         </ul>
                     </template>
@@ -89,15 +107,14 @@
         },
         methods: {
             getRoomClass: function(room) {
-                switch (room.class) {
-                    case 'wish':
-                        return 'room-preference'
-                    case 'exact':
-                        return 'room-exact-match'
-                    case 'larger':
-                        return 'room-larger'
-                    default:
-                        return 'room-smaller'
+                if (room.score > 100) {
+                    return 'room-preference'
+                } else if (room.score >= 85) {
+                    return 'room-good'
+                } else if (room.score >= 70) {
+                    return 'room-okay'
+                } else {
+                    return 'room-warning'
                 }
             },
             selectRoom: function(roomId) {
@@ -150,13 +167,13 @@
                     background-color: #008512;
                     color: #ffffff;
                 }
-                &.room-exact-match {
+                &.room-good {
                     background-color: #6ead10;
                 }
-                &.room-larger {
+                &.room-okay {
                     background-color: #a8ce70;
                 }
-                &.room-smaller {
+                &.room-warning {
                     background-color: #ffd785;
                 }
             }

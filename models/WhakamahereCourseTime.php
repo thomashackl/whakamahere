@@ -151,97 +151,108 @@ class WhakamahereCourseTime extends SimpleORMap
      */
     public function proposeRooms()
     {
-        $props = $this->slot->request->property_requests;
+        $requestedProperties = $this->slot->request->property_requests;
+
         $roomWish = $this->slot->request->room_id;
+        $seatsId = WhakamaherePropertyRequest::getSeatsPropertyId();
+        $seats = $requestedProperties->findOneBy('property_id', $seatsId)->value;
 
-        // Aggregate required props.
-        $requiredProps = [];
-        $joins = [];
-        $where = [];
-        $params = [
-            'roomwish' => $roomWish
-        ];
-        $i = 0;
-        foreach ($props as $prop) {
-            // Seats are extra.
-            if ($prop->name == 'seats') {
-                $seats = $prop->value;
-
-                // Use some tolerance in requested seats.
-                $seatsMin = (Config::get()->WHAKAMAHERE_SEATS_LOWER_LIMIT / 100) * $seats;
-                $seatsMax = (Config::get()->WHAKAMAHERE_SEATS_UPPER_LIMIT / 100) * $seats;
-
-                $joins[] = " INNER JOIN `resource_properties` s " .
-                    "ON (s.`resource_id` = r.`id` AND s.`property_id` = :seatsid) ";
-                $params['seatsid'] = $prop->property_id;
-
-                $where[] = "s.`state` BETWEEN :seatsmin AND :seatsmax";
-                $params['seatsmin'] = (int) $seatsMin;
-                $params['seatsmax'] = (int) $seatsMax;
-            } else {
-                if ($prop->value) {
-                    $requiredProps[$prop->property_id] = $prop->value;
-
-                    $joins[] = " INNER JOIN `resource_properties` rp" . $i .
-                        " ON (rp" . $i . ".`resource_id` = r.`id` " .
-                        "AND rp" . $i . ".`property_id` = :propid" . $i . ") ";
-                    $params['propid' . $i] = $prop->property_id;
-
-                    $where[] = "rp" . $i . ".`state` = :propvalue" . $i;
-                    $params['propvalue' . $i] = $prop->value;
-
-                    $i++;
-                }
-            }
-
-        }
-
-        $select = "SELECT DISTINCT r.`id`, r.`name`, s.`state` AS seats FROM `resources` r";
-        $order = "ORDER BY " . $seats . " - seats DESC, r.`name`";
+        // Use some tolerance in requested seats.
+        $seatsMin = (Config::get()->WHAKAMAHERE_SEATS_LOWER_LIMIT / 100) * $seats;
+        $seatsMax = (Config::get()->WHAKAMAHERE_SEATS_UPPER_LIMIT / 100) * $seats;
 
         /*
-         * Find all rooms which have approximately the suitable size and the necessary properties.
+         * Find all rooms which have approximately the suitable size.
+         * Requested properties will be checked later on. An explicitly requested
+         * room will always be part of the result, no matter if it fits.
          */
         $entries = DBManager::get()->fetchAll(
-            $select . implode(' ', $joins) . "WHERE r.`id` = :roomwish OR (" .
-            implode(' AND ', $where) . ")" . $order,
-            $params
+            "SELECT DISTINCT r.*
+            FROM `resources` r
+                INNER JOIN `resource_properties` s ON (s.`resource_id` = r.`id` AND s.`property_id` = :seatsid)
+            WHERE r.`id` = :roomwish
+                OR s.`state` BETWEEN :seatsmin AND :seatsmax
+            ORDER BY r.`name`",
+            [
+                'seatsid' => $seatsId,
+                'roomwish' => $roomWish,
+                'seatsmin' => (int) $seatsMin,
+                'seatsmax' => (int) $seatsMax
+            ],
+            'Room::buildExisting'
         );
 
-        // Categories for matching number of seats.
-        $wished = [];
-        $equal = [];
-        $larger = [];
-        $smaller = [];
+        /*
+         * Now iterate over found rooms and set a score according
+         * to how good the room matches the request.
+         */
+        $rooms = [];
         foreach ($entries as $one) {
-            $one['occupied'] = array_map(function($b) {
+            $room = [
+                'id' => $one->id,
+                'name' => $one->name,
+                'missing_properties' => [],
+                'score' => 100
+            ];
+            // Check if current room is already occupied anywhere in the semester.
+            $room['occupied'] = array_map(function($b) {
                     return [
                         'id' => $b->id,
                         'begin' => $b->begin,
                         'end' => $b->end,
                         'type' => $b->booking_type
                     ];
-                }, $this->checkForBookings($one['id'], $this->buildTimeRanges()));
+                }, $this->checkForBookings($one->id, $this->buildTimeRanges()));
+
             // The wished room is prioritized.
-            if ($one['id'] == $this->slot->request->room_id) {
-                $one['class'] = 'wish';
-                $wished[] = $one;
+            if ($one->id == $this->slot->request->room_id) {
+
+                $room['seats'] = (int) $one->properties->findOneBy('property_id', $seatsId)->state;
+                $room['score'] = 100.49;
+                $rooms[] = $room;
+
             } else {
-                $one['wish'] = false;
-                if ($one['seats'] ==  $seats) {
-                    $one['class'] = 'exact';
-                    $equal[] = $one;
-                } else if ($one['seats'] > $seats) {
-                    $one['class'] = 'larger';
-                    $larger[] = $one;
-                } else {
-                    $one['class'] = 'smaller';
-                    $smaller[] = $one;
+
+                // Now increase score for each matching property.
+                foreach ($requestedProperties as $property) {
+
+                    $roomProperty = $one->properties->findOneBy('property_id', $property->property_id);
+
+                    // Seats are treated specially
+                    if ($property->property_id == $seatsId) {
+
+                        $room['seats'] = (int) $roomProperty->state;
+
+                        // Generate score depending on seats number difference
+                        if ($roomProperty->state >= $property->value) {
+                            $room['score'] *= $property->value / $roomProperty->state;
+                        } else {
+                            $room['score'] = 0.75 * $room['score'] * ($roomProperty->state / $property->value);
+                        }
+
+                    } else {
+
+                        // Add score points for each fulfilled property request.
+                        if ($roomProperty && $roomProperty->state == $property->value) {
+                            $room['score'] *= 1.1;
+                        } else {
+                            $room['score'] *= 0.9;
+                            $room['missing_properties'][] = (string) $property->property->display_name;
+                        }
+
+                    }
                 }
+
+                $rooms[] = $room;
             }
         }
 
-        return array_merge($wished, $equal, $larger, array_reverse($smaller));
+        // Sort found rooms by score.
+        usort($rooms, function ($a, $b) {
+            return $b['score'] - $a['score'];
+        });
+
+        return $rooms;
     }
 
     /**
