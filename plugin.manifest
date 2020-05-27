@@ -1,7 +1,7 @@
 pluginname=Whakamahere
 pluginclassname=WhakamaherePlugin
 origin=upa
-version=0.8.1
+version=0.8.2
 description=Semester planning for course times and rooms
 studipMinVersion=4.3
 studipMaxVersion=4.9.99

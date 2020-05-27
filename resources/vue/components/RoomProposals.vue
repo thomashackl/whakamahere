@@ -62,12 +62,16 @@
 
 <script>
     import StudipMessagebox from './StudipMessagebox'
+    import { globalfunctions } from './mixins/globalfunctions'
 
     export default {
         name: 'RoomProposals',
         components: {
             StudipMessagebox
         },
+        mixins: [
+            globalfunctions
+        ],
         props: {
             timeId: {
                 type: Number,
@@ -97,12 +101,7 @@
                     this.loading = false
                 })
             }).catch((error) => {
-                let messagebox = document.createElement('div')
-                messagebox.classList.add('messagebox')
-                messagebox.classList.add('messagebox_error')
-                messagebox.innerHTML = error.statusText
-
-                STUDIP.Dialog.show(messagebox, {height: 250, width: 400, title: 'Fehler ' + error.status})
+                this.showErrorMessage(error)
             })
         },
         methods: {

@@ -9,19 +9,23 @@
 
 <script>
     import bus from 'jsassets/bus'
+    import { globalfunctions } from './mixins/globalfunctions'
     import FullCalendar from '@fullcalendar/vue'
     import interactionPlugin, { ThirdPartyDraggable } from '@fullcalendar/interaction'
     import timeGridWeekPlugin from '@fullcalendar/timegrid'
-    import { VueContext } from 'vue-context'
-    var ContextClass = Vue.extend(VueContext)
     import RoomProposals from './RoomProposals'
     var RoomProposalsClass = Vue.extend(RoomProposals)
+    import SlotDetails from './SlotDetails'
+    var SlotDetailsClass = Vue.extend(SlotDetails)
 
     export default {
         name: 'Schedule',
         components: {
             FullCalendar
         },
+        mixins: [
+            globalfunctions
+        ],
         props: {
             locale: {
                 type: String,
@@ -255,12 +259,14 @@
                         bus.$emit('remove-planned-course', event.extendedProps.slotId)
                         bus.$emit('add-unplanned-course', event)
                     })
-                    .catch(error => {
-                        console.log(error)
+                    .catch((error) => {
+                        this.showErrorMessage(error)
                     })
                 return false
             },
             async pin(event, jsEvent) {
+                return false
+
                 fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/setpin/' + event.extendedProps.slotId))
                     .then(response => {
                         if (!response.ok) {
@@ -272,9 +278,31 @@
                         jsEvent.target.innerHTML = jsEvent.target.dataset.label2
                         jsEvent.target.setAttribute('data-label2', oldLabel)
                         bus.$emit('slot-pinned', event)
+                    }).catch((error) => {
+                        this.showErrorMessage(error)
                     })
-                    .catch(error => {
-                        console.log(error)
+            },
+            async showDetails(event, jsEvent) {
+                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/details/' + event.extendedProps.slotId))
+                    .then(response => {
+                        if (!response.ok) {
+                            throw response
+                        }
+                        response.json().then((json) => {
+                            const details = new SlotDetailsClass({
+                                propsData: {
+                                    details: json
+                                }
+                            })
+                            details.$mount()
+                            STUDIP.Dialog.show(details.$el, {
+                                height: window.offsetHeight * 0.8,
+                                width: window.offsetWidth * 0.8,
+                                title: 'Details'
+                            })
+                        })
+                    }).catch((error) => {
+                        this.showErrorMessage(error)
                     })
 
                 return false
@@ -356,6 +384,15 @@
                         click: (clickEvent) => {
                             clickEvent.preventDefault()
                             this.pin(calendarEvent, clickEvent)
+                            contextMenu.remove()
+                        }
+                    },
+                    {
+                        icon: 'info',
+                        label: 'Details',
+                        click: (clickEvent) => {
+                            clickEvent.preventDefault()
+                            this.showDetails(calendarEvent, clickEvent)
                             contextMenu.remove()
                         }
                     }
@@ -441,6 +478,16 @@
 
                     &:hover {
                         color: #ff0000;
+                    }
+
+                    &:not(:last-child) {
+                        margin-bottom: 3px;
+                    }
+
+                    a {
+                        img, svg {
+                            vertical-align: text-bottom;
+                        }
                     }
                 }
             }

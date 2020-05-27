@@ -1,6 +1,5 @@
 import './public-path'
 import Vue from 'vue'
-import Vuex from 'vuex'
 import bus from './bus'
 
 window.Vue = Vue
@@ -28,5 +27,4 @@ files.keys().map(key =>
     )
 );
 
-Vue.use(Vuex)
 Vue.use(bus)

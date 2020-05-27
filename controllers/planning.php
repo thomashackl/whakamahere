@@ -169,7 +169,7 @@ class PlanningController extends AuthenticatedController {
     /**
      * Stores a course assignment to a time slot and (optionally) a room.
      */
-    public function store_course_action()
+    public function store_time_action()
     {
         $startDate = new DateTime(Request::get('start'));
         $endDate = new DateTime(Request::get('end'));
@@ -291,7 +291,7 @@ class PlanningController extends AuthenticatedController {
 
         } else {
             $this->set_status(404, 'Time assignment not found.');
-            $this->render_nothing();
+            $this->render_text('Time assignment not found');
         }
     }
 
@@ -339,6 +339,44 @@ class PlanningController extends AuthenticatedController {
             $this->set_status(404, 'Time assignment not found.');
         }
         $this->render_nothing();
+    }
+
+    /**
+     * Show full details for a given slot.
+     *
+     * @param int $slot_id the slot to show details for.
+     */
+    public function details_action($slot_id)
+    {
+        $slot = WhakamahereCourseSlot::find($slot_id);
+
+        if ($slot) {
+            $request = $slot->request;
+
+            $this->render_json([
+                'comment' => $request->comment,
+                'course' => $request->course->getFullname(),
+                'cycle' => (int) $request->cycle,
+                'duration' => (int) $slot->duration,
+                'internal_comment' => $request->internal_comment,
+                'lecturer' => $slot->user_id ? $slot->user->getFullname() : 'N. N.',
+                'property_requests' => $request->property_requests->map(function ($value, $key) {
+                    return [
+                        'id' => $value->property_id,
+                        'name' => (string) $value->property->display_name,
+                        'value' => $value->value == 1 ? 'ja' : $value->value
+                    ];
+                }),
+                'room' => $request->room_id ? $request->room->name : dgettext('whakamahere', 'nicht angegeben'),
+                'semester' => (string) $request->semester->name,
+                'startweek' => (int) $request->startweek,
+                'time' => $slot->time,
+                'weekday' => (int) $slot->weekday
+            ]);
+        } else {
+            $this->set_status(404, 'Time assignment not found.');
+            $this->render_text('Time assignment not found');
+        }
     }
 
     /**

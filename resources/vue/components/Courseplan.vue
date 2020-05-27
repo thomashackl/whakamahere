@@ -11,6 +11,7 @@
 
 <script>
     import bus from 'jsassets/bus'
+    import {globalfunctions} from "./mixins/globalfunctions";
 
     export default {
         name: 'Courseplan',
@@ -64,6 +65,9 @@
                 default: 0
             }
         },
+        mixins: [
+            globalfunctions
+        ],
         data() {
             return {
                 plannedCourseList: this.plannedCourses,
@@ -167,12 +171,17 @@
                     method: 'post',
                     body: formData
                 }).then((response) => {
+                    if (!response.ok) {
+                        throw response
+                    }
                     response.json()
                         .then((json) => {
                             this.unplannedCourseList = json
                             this.loadingUnplanned = false;
                             bus.$emit('updated-unplanned-courses')
                         })
+                }).catch((error) => {
+                    this.showErrorMessage(error)
                 })
             },
             async getPlannedCourses() {
@@ -295,7 +304,7 @@
                 formData.append('slot', course.slot_id)
                 formData.append('start', this.formatDate(startRaw))
                 formData.append('end', this.formatDate(endRaw))
-                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/store_course'), {
+                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/store_time'), {
                     method: 'post',
                     body: formData
                 }).then((response) => {
@@ -314,12 +323,7 @@
                             this._data.unplannedCourseList.filter((one) => one.slot_id != course.slot_id)
                     })
                 }).catch((error) => {
-                    let messagebox = document.createElement('div')
-                    messagebox.classList.add('messagebox')
-                    messagebox.classList.add('messagebox_error')
-                    messagebox.innerHTML = error.statusText
-
-                    STUDIP.Dialog.show(messagebox, {height: 250, width: 400, title: 'Fehler ' + error.status})
+                    this.showErrorMessage(error)
                 })
             },
             // Format a given date object according to German locale.

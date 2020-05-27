@@ -57,6 +57,11 @@ class WhakamaherePlanningRequest extends SimpleORMap
             'on_store' => 'store',
             'on_delete' => 'delete'
         ];
+        $config['has_one']['room'] = [
+            'class_name' => 'Room',
+            'foreign_key' => 'room_id',
+            'assoc_foreign_key' => 'id'
+        ];
 
         parent::configure($config);
     }

@@ -12,9 +12,13 @@
 
 <script>
     import bus from 'jsassets/bus'
+    import { globalfunctions } from './mixins/globalfunctions'
 
     export default {
         name: 'SidebarFilters',
+        mixins: [
+            globalfunctions
+        ],
         props: {
             semesters: {
                 type: Array,
@@ -112,8 +116,7 @@
                         throw response
                     }
                 }).catch((error) => {
-                    alert('Es ist ein Fehler aufgetreten. Die Auswahl konnte nicht gespeichert werden.')
-                    console.log(error)
+                    this.showErrorMessage(error)
                 })
             }
         }
