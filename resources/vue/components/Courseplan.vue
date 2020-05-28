@@ -181,7 +181,7 @@
                             bus.$emit('updated-unplanned-courses')
                         })
                 }).catch((error) => {
-                    this.showErrorMessage(error)
+                    this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
                 })
             },
             async getPlannedCourses() {
@@ -304,7 +304,7 @@
                 formData.append('slot', course.slot_id)
                 formData.append('start', this.formatDate(startRaw))
                 formData.append('end', this.formatDate(endRaw))
-                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/store_time'), {
+                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/slot/store_time'), {
                     method: 'post',
                     body: formData
                 }).then((response) => {
@@ -323,7 +323,7 @@
                             this._data.unplannedCourseList.filter((one) => one.slot_id != course.slot_id)
                     })
                 }).catch((error) => {
-                    this.showErrorMessage(error)
+                    this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
                 })
             },
             // Format a given date object according to German locale.

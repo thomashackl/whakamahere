@@ -116,7 +116,7 @@
                         throw response
                     }
                 }).catch((error) => {
-                    this.showErrorMessage(error)
+                    this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
                 })
             }
         }

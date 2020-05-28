@@ -270,7 +270,7 @@ class WhakamahereCourseTime extends SimpleORMap
     /**
      * Builds all relevant real dates for this CourseTime.
      */
-    private function buildTimeRanges()
+    public function buildTimeRanges()
     {
         // Weekday numbers and names for calculation.
         $weekdays = [

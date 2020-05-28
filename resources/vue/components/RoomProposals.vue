@@ -11,6 +11,7 @@
             <col>
             <col>
             <col>
+            <col width="24">
         </colgroup>
         <thead>
             <tr>
@@ -19,10 +20,11 @@
                 <th>Eignung</th>
                 <th>Verfügbarkeit</th>
                 <th>Ausstattung</th>
+                <th>Buchen</th>
             </tr>
         </thead>
         <tbody>
-            <tr v-for="room in rooms" :key="room.id" :class="getRoomClass(room)" @click="selectRoom(room.id)">
+            <tr v-for="room in rooms" :key="room.id" :class="getRoomClass(room)">
                 <td>{{ room.name }}</td>
                 <td>{{ room.seats }}</td>
                 <td>{{ Math.round(room.score) }}%</td>
@@ -52,6 +54,11 @@
                         </ul>
                     </template>
                 </td>
+                <td>
+                    <a href="" @click="selectRoom($event, room.id, room.name)">
+                        <studip-icon shape="room-clear" height="24" width="24"></studip-icon>
+                    </a>
+                </td>
             </tr>
         </tbody>
     </table>
@@ -61,12 +68,14 @@
 </template>
 
 <script>
+    import StudipIcon from './StudipIcon'
     import StudipMessagebox from './StudipMessagebox'
     import { globalfunctions } from './mixins/globalfunctions'
 
     export default {
         name: 'RoomProposals',
         components: {
+            StudipIcon,
             StudipMessagebox
         },
         mixins: [
@@ -88,7 +97,7 @@
         },
         mounted() {
             fetch(
-                STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/room_proposals/' + this.timeId)
+                STUDIP.URLHelper.getURL(this.$pluginBase + '/slot/room_proposals/' + this.timeId)
             ).then((response) => {
                 if (!response.ok) {
                     throw response
@@ -101,7 +110,7 @@
                     this.loading = false
                 })
             }).catch((error) => {
-                this.showErrorMessage(error)
+                this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
             })
         },
         methods: {
@@ -116,8 +125,30 @@
                     return 'room-warning'
                 }
             },
-            selectRoom: function(roomId) {
-                alert(roomId)
+            selectRoom: function(event, roomId, roomName) {
+                event.preventDefault()
+
+                let formData = new FormData()
+                formData.append('room', roomId)
+                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/slot/book_room/' + this.timeId), {
+                    method: 'post',
+                    body: formData
+                }).then((response) => {
+                    // An error occurred.
+                    if (!response.ok) {
+                        throw response
+                    }
+
+                    if (response.status == 206) {
+                        this.showMessage('warning', 'Teilweise erfolgreich',
+                            'Die Raumbuchungen konnten nur teilweise gespeichert werden.')
+                    } else {
+                        this.showMessage('success', 'Erfolgreich',
+                            'Die Raumbuchungen wurden gespeichert.')
+                    }
+                }).catch((error) => {
+                    this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
+                })
             },
             getDate: function(timestamp, short) {
                 if (short == null) {
@@ -160,8 +191,6 @@
 
         tbody {
             tr {
-                cursor: pointer;
-
                 &.room-preference {
                     background-color: #008512;
                     color: #ffffff;

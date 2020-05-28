@@ -1,3 +1,6 @@
+import StudipMessagebox from '../StudipMessagebox'
+var MessageboxClass = Vue.extend(StudipMessagebox)
+
 export const globalfunctions = {
     methods: {
         getWeekdays: function() {
@@ -11,13 +14,19 @@ export const globalfunctions = {
                 { number: 0, name: 'Sonntag' }
             ]
         },
-        showErrorMessage: function(error) {
-            let messagebox = document.createElement('div')
-            messagebox.classList.add('messagebox')
-            messagebox.classList.add('messagebox_error')
-            messagebox.innerHTML = error.statusText
-
-            STUDIP.Dialog.show(messagebox, { height: 250, width: 400, title: 'Fehler (' + error.status + ')' })
+        showMessage: function(type, title, message) {
+            const box = new MessageboxClass({
+                propsData: {
+                    type: type,
+                    message: message
+                }
+            })
+            box.$mount()
+            STUDIP.Dialog.show(box.$el, {
+                height: 250,
+                width: 400,
+                title: title
+            })
         }
     }
 }

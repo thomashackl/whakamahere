@@ -220,7 +220,7 @@
                 // Check availability info for slot lecturer.
                 if (lecturerId != '') {
                     const response = await fetch(STUDIP.URLHelper.getURL(
-                        this.$pluginBase + '/planning/slot_availability/' + lecturerId))
+                        this.$pluginBase + '/slot/availability/' + lecturerId))
                     var occupied = await response.json()
                 }
 
@@ -251,7 +251,7 @@
                 }
             },
             async unplan(event) {
-                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/unplan/' + event.extendedProps.slotId))
+                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/slot/unplan/' + event.extendedProps.slotId))
                     .then(response => {
                         if (!response.ok) {
                             throw response
@@ -260,14 +260,14 @@
                         bus.$emit('add-unplanned-course', event)
                     })
                     .catch((error) => {
-                        this.showErrorMessage(error)
+                        this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
                     })
                 return false
             },
             async pin(event, jsEvent) {
                 return false
 
-                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/setpin/' + event.extendedProps.slotId))
+                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/slot/setpin/' + event.extendedProps.slotId))
                     .then(response => {
                         if (!response.ok) {
                             throw response
@@ -279,11 +279,11 @@
                         jsEvent.target.setAttribute('data-label2', oldLabel)
                         bus.$emit('slot-pinned', event)
                     }).catch((error) => {
-                        this.showErrorMessage(error)
+                    this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
                     })
             },
             async showDetails(event, jsEvent) {
-                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/details/' + event.extendedProps.slotId))
+                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/slot/details/' + event.extendedProps.slotId))
                     .then(response => {
                         if (!response.ok) {
                             throw response
@@ -302,7 +302,7 @@
                             })
                         })
                     }).catch((error) => {
-                        this.showErrorMessage(error)
+                    this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
                     })
 
                 return false
