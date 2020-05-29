@@ -61,7 +61,11 @@ class PlanningController extends AuthenticatedController {
 
         PageLayout::setTitle(dgettext('whakamahere', 'Planung'));
 
-        $this->view = 'semester';
+        if ($show == 'week') {
+            PageLayout::postWarning(dgettext('whakamahere', 'Wochenansicht hamma noch ned.'));
+        }
+
+        $this->view = $show;
 
         // Schedule view start and end hours.
         $this->minTime = Config::get()->WHAKAMAHERE_PLANNING_START_HOUR;

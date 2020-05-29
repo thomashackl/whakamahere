@@ -265,8 +265,6 @@
                 return false
             },
             async pin(event, jsEvent) {
-                return false
-
                 fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/slot/setpin/' + event.extendedProps.slotId))
                     .then(response => {
                         if (!response.ok) {
@@ -279,7 +277,7 @@
                         jsEvent.target.setAttribute('data-label2', oldLabel)
                         bus.$emit('slot-pinned', event)
                     }).catch((error) => {
-                    this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
+                        this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
                     })
             },
             async showDetails(event, jsEvent) {
