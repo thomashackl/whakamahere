@@ -233,9 +233,7 @@ class WhakamahereCourseTime extends SimpleORMap
                     } else {
 
                         // Add score points for each fulfilled property request.
-                        if ($roomProperty && $roomProperty->state == $property->value) {
-                            $room['score'] *= 1.1;
-                        } else {
+                        if (!$roomProperty || $roomProperty->state != $property->value) {
                             $room['score'] *= 0.9;
                             $room['missing_properties'][] = (string) $property->property->display_name;
                         }
