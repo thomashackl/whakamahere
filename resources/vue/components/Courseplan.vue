@@ -119,14 +119,25 @@
                 bus.$emit('updated-unplanned-courses')
             })
 
+            // Saved course data to database
             bus.$on('save-course', (course) => {
                 this.saveCourse(course)
             })
 
+            // Pinned or unpinned a slot
             bus.$on('slot-pinned', (slot) => {
                 this.plannedCourseList.map((course) => {
                     if (course.slot_id == slot.extendedProps.slotId) {
                         course.pinned = slot.editable ? false : true
+                    }
+                })
+            })
+
+            // Booked a room for a slot
+            bus.$on('room-booked', (data) => {
+                this.plannedCourseList.map((course) => {
+                    if (course.slot_id == data.slot) {
+                        course.bookings = data.bookings
                     }
                 })
             })

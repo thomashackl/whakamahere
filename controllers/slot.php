@@ -151,6 +151,8 @@ class SlotController extends AuthenticatedController {
 
             $result = [
                 'time_id' => $time_id,
+                'slot_id' => $time->slot->id,
+                'course_id' => $time->course->id,
                 'course' => $time->course->getFullname(),
                 'seats' => $time->slot->request->property_requests->findOneBy(
                     'property_id', WhakamaherePropertyRequest::getSeatsPropertyId()
@@ -293,16 +295,22 @@ class SlotController extends AuthenticatedController {
                         $time->bookings->append($tb);
 
                         $booked[] = [
-                            'id' => $booking->id,
-                            'begin' => $range['begin'],
-                            'end' => $range['end']
+                            'booking_id' => $booking->id,
+                            'room' => (string) $booking->resource->name,
+                            'begin' => (int) $range['begin'],
+                            'end' => (int) $range['end']
                         ];
                     } else {
                         $failed[] = [
-                            'begin' => $range['begin'],
-                            'end' => $range['end']
+                            'begin' => (int) $range['begin'],
+                            'end' => (int) $range['end']
                         ];
                     }
+                } else {
+                    $failed[] = [
+                        'begin' => (int) $range['begin'],
+                        'end' => (int) $range['end']
+                    ];
                 }
             }
 

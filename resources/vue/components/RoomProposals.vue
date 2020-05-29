@@ -68,6 +68,7 @@
 </template>
 
 <script>
+    import bus from 'jsassets/bus'
     import StudipIcon from './StudipIcon'
     import StudipMessagebox from './StudipMessagebox'
     import { globalfunctions } from './mixins/globalfunctions'
@@ -90,6 +91,7 @@
         data() {
             return {
                 course: '',
+                slot: '',
                 loading: true,
                 seats: 0,
                 rooms: []
@@ -105,6 +107,7 @@
                 response.json().then((json) => {
                     this.timeId = json.time_id
                     this.course = json.course
+                    this.slot = json.slot_id
                     this.seats = json.seats
                     this.rooms = json.rooms
                     this.loading = false
@@ -142,9 +145,17 @@
                     if (response.status == 206) {
                         this.showMessage('warning', 'Teilweise erfolgreich',
                             'Die Raumbuchungen konnten nur teilweise gespeichert werden.')
+
+                        response.json().then((json) => {
+                            bus.$emit('room-booked', { slot: this.slot, bookings: json, partial: true })
+                        })
                     } else {
                         this.showMessage('success', 'Erfolgreich',
                             'Die Raumbuchungen wurden gespeichert.')
+
+                        response.json().then((json) => {
+                            bus.$emit('room-booked', { slot: this.slot, bookings: json })
+                        })
                     }
                 }).catch((error) => {
                     this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
