@@ -75,7 +75,7 @@ class WhakamahereCourseTime extends SimpleORMap
             if ($one) {
                 switch ($type) {
                     case 'semester':
-                        $joins[] = "JOIN `whakamahere_requests` r USING (`course_id`)";
+                        $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = t.`course_id`)";
                         $where[] = "AND r.`semester_id` = :semester";
                         $params['semester'] = $one;
                         break;
@@ -94,14 +94,14 @@ class WhakamahereCourseTime extends SimpleORMap
                         $params['institutes'] = $institutes;
                         break;
                     case 'lecturer':
-                        $joins[] = "JOIN `whakamahere_course_slots` cs ON (t.`slot_id` = cs.`slot_id`)";
+                        $joins[] = "JOIN `whakamahere_course_slots` cs ON (cs.`slot_id` = t.`slot_id`)";
                         $where[] = "AND cs.`user_id` = :lecturer";
                         $params['lecturer'] = $one;
                         break;
                     case 'room':
                         break;
                     case 'seats':
-                        $joins[] = " JOIN `whakamahere_property_requests` pr USING (`request_id`)";
+                        $joins[] = " JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = t.`slot_id`)";
                         $qhere[] = " AND pr.`property_id` = :seats";
                         $params['seats'] = WhakamaherePropertyRequest::getSeatsPropertyId();
                         if ($filter['seats']['min'] && $filter['seats']['max']) {
