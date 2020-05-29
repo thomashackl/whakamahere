@@ -101,7 +101,7 @@ class WhakamahereCourseTime extends SimpleORMap
                     case 'room':
                         break;
                     case 'seats':
-                        $joins[] = " JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = t.`slot_id`)";
+                        $joins[] = " JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = r.`request_id`)";
                         $qhere[] = " AND pr.`property_id` = :seats";
                         $params['seats'] = WhakamaherePropertyRequest::getSeatsPropertyId();
                         if ($filter['seats']['min'] && $filter['seats']['max']) {

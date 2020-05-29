@@ -126,7 +126,7 @@
             bus.$on('slot-pinned', (slot) => {
                 this.plannedCourseList.map((course) => {
                     if (course.slot_id == slot.extendedProps.slotId) {
-                        course.pinned = slot.editable ? 0 : 1
+                        course.pinned = slot.editable ? false : true
                     }
                 })
             })

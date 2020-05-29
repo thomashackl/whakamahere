@@ -272,7 +272,7 @@ class PlanningController extends AuthenticatedController {
 
             $entries = WhakamahereCourseTime::findFiltered($filter);
             foreach ($entries as $one) {
-                $courses[] = [
+                $course = [
                     'id' => $one->course_id . '-' . $one->slot_id,
                     'time_id' => (int) $one->id,
                     'course_id' => $one->course_id,
@@ -287,6 +287,22 @@ class PlanningController extends AuthenticatedController {
                     'start' => $one->start,
                     'end' => $one->end
                 ];
+
+                $course['bookings'] = [];
+                foreach ($one->bookings as $booking) {
+                    $course['bookings'][] = [
+                        'booking_id' => $booking->booking_id,
+                        'room' => (string) $booking->booking->resource->name,
+                        'begin' => $booking->booking->begin,
+                        'end' => $booking->booking->end
+                    ];
+                }
+
+                usort($course['bookings'], function($a, $b) {
+                    return $a['begin'] - $b['begin'];
+                });
+
+                $courses[] = $course;
             }
 
         }

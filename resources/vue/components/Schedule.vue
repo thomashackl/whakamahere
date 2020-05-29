@@ -117,12 +117,14 @@
                         courseNumber: this.courses[i].course_number,
                         slotId: this.courses[i].slot_id,
                         editable: this.courses[i].pinned == 0 ? true : false,
+                        pinned: this.courses[i].pinned == 0 ? false : true,
                         slotWeekday: this.courses[i].weekday,
                         slotStartTime: this.courses[i].start,
                         slotEndTime: this.courses[i].end,
                         lecturerId: this.courses[i].lecturer_id,
                         lecturerName: this.courses[i].lecturer,
                         turnout: this.courses[i].turnout,
+                        bookings: this.courses[i].bookings
                     })
                 }
 
@@ -176,7 +178,6 @@
         methods: {
             // When a course is dropped, we store the time assignment to database.
             dropCourse: function(info) {
-                console.log('Course dropped')
                 bus.$emit('save-course', info)
             },
             // Initialize the drag & drop functionality with Dragula and FullCalendar.
@@ -321,6 +322,20 @@
             renderEvent: function(info) {
                 if (info.event.rendering != 'background') {
 
+                    // Mark events that have no room bookings yet.
+                    if (info.event.extendedProps.bookings.length == 0) {
+                        info.el.classList.add('no-room')
+                    } else {
+                        info.el.classList.remove('no-room')
+                    }
+
+                    // Mark pinned events.
+                    if (info.event.extendedProps.pinned) {
+                        info.el.classList.add('pinned')
+                    } else {
+                        info.el.classList.remove('pinned')
+                    }
+
                     info.el.addEventListener('contextmenu', (event) => {
                         event.preventDefault()
                         this.showContextMenu(event, info.event)
@@ -434,13 +449,26 @@
             overflow: hidden;
 
             .fc-event {
-                background-color: #28487c;
+                background-color: #28497c;
                 color: #ffffff;
                 display: inline-block !important;
 
                 .fc-time {
                     background-color: #3f72b4;
                 }
+
+                &.no-room {
+                    .fc-time {
+                        background-color: #d60000;
+                    }
+                }
+
+                &.pinned {
+                    background-color: #a9b6cb;
+                }
+            }
+
+            a {
             }
         }
 
