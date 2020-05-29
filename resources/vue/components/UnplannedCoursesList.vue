@@ -157,12 +157,28 @@
 
         table {
             caption {
+                background-color: #ffffff;
                 border-top: 1px solid #000000;
                 font-size: 12px;
                 padding: 0;
                 padding-left: 5px;
                 padding-right: 5px;
             }
+            caption, thead tr th {
+                position: sticky;
+                position: -webkit-sticky;
+                top: 0;
+                z-index: 100;
+            }
+
+            thead {
+                tr {
+                    th {
+                        top: 22px;
+                    }
+                }
+            }
+
             tr {
                 font-size: 11px;
                 padding: 1px;
