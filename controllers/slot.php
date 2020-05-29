@@ -224,6 +224,14 @@ class SlotController extends AuthenticatedController {
             $request = $slot->request;
 
             $this->render_json([
+                'bookings' => $slot->planned_time->bookings->map(function ($value, $key) {
+                    return [
+                        'id' => $value->booking_id,
+                        'room' => (string) $value->booking->resource->name,
+                        'begin' => date('d.m.Y H:i', $value->booking->begin),
+                        'end' => date('H:i', $value->booking->end),
+                    ];
+                }),
                 'comment' => $request->comment,
                 'course' => $request->course->getFullname(),
                 'cycle' => (int) $request->cycle,

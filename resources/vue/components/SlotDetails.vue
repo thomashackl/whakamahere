@@ -48,6 +48,18 @@
                     </li>
                 </ul>
             </section>
+            <section v-if="details.comment != ''">
+                <div class="label">Kommentar:</div>
+                {{ details.comment }}
+            </section>
+        </fieldset>
+        <fieldset v-if="details.bookings.length > 0">
+            <legend>Bereits gebucht</legend>
+            <ul>
+                <li v-for="booking in details.bookings" :key="booking.booking_id">
+                    {{ booking.begin }} - {{ booking.end }}: {{ booking.room }}
+                </li>
+            </ul>
         </fieldset>
     </form>
 </template>

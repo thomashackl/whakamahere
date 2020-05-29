@@ -232,19 +232,20 @@
                 if (data.draggedEl != null) {
                     course = {
                         id: data.draggedEl.dataset.courseId + '-' + data.draggedEl.dataset.slotId,
+                        bookings: [],
                         course_id: data.draggedEl.dataset.courseId,
-                        slot_id: data.draggedEl.dataset.slotId,
-                        course_number: data.draggedEl.dataset.courseNumber,
                         course_name: data.draggedEl.dataset.courseName,
+                        course_number: data.draggedEl.dataset.courseNumber,
+                        end: ('0' + data.event.end.getHours()).slice(-2) + ':' +
+                            ('0' + data.event.end.getMinutes()).slice(-2) + ':00',
                         lecturer: data.draggedEl.dataset.lecturer,
                         lecturer_id: data.draggedEl.dataset.lecturerId,
                         pinned: false,
-                        weekday: data.event.start.getDay(),
+                        slot_id: data.draggedEl.dataset.slotId,
                         start: ('0' + data.event.start.getHours()).slice(-2) + ':' +
                             ('0' + data.event.start.getMinutes()).slice(-2) + ':00',
-                        end: ('0' + data.event.end.getHours()).slice(-2) + ':' +
-                            ('0' + data.event.end.getMinutes()).slice(-2) + ':00',
-                        turnout: data.draggedEl.dataset.turnout
+                        turnout: data.draggedEl.dataset.turnout,
+                        weekday: data.event.start.getDay()
                     }
                     startRaw = data.event.start
                     endRaw = data.event.end
@@ -255,20 +256,21 @@
                     if (data.event != null) {
                         course = {
                             id: data.event.extendedProps.courseId + '-' + data.event.extendedProps.slotId,
-                            time_id: data.event.extendedProps.timeId,
+                            bookings: data.event.extendedProps.bookings,
                             course_id: data.event.extendedProps.courseId,
-                            slot_id: data.event.extendedProps.slotId,
-                            course_number: data.event.extendedProps.courseNumber,
                             course_name: data.event.extendedProps.courseName,
+                            course_number: data.event.extendedProps.courseNumber,
+                            end: ('0' + data.event.end.getHours()).slice(-2) + ':' +
+                                ('0' + data.event.end.getMinutes()).slice(-2) + ':00',
                             lecturer: data.event.extendedProps.lecturerName,
                             lecturer_id: data.event.extendedProps.lecturerId,
                             pinned: false,
-                            weekday: data.event.start.getDay(),
+                            slot_id: data.event.extendedProps.slotId,
                             start: ('0' + data.event.start.getHours()).slice(-2) + ':' +
                                 ('0' + data.event.start.getMinutes()).slice(-2) + ':00',
-                            end: ('0' + data.event.end.getHours()).slice(-2) + ':' +
-                                ('0' + data.event.end.getMinutes()).slice(-2) + ':00',
-                            turnout: data.event.extendedProps.turnout
+                            time_id: data.event.extendedProps.timeId,
+                            turnout: data.event.extendedProps.turnout,
+                            weekday: data.event.start.getDay()
                         }
                         startRaw = data.event.start
                         endRaw = data.event.end
@@ -278,19 +280,20 @@
                     } else {
                         course = {
                             id: data.courseId + '-' + data.slotId,
+                            bookings: [],
                             course_id: data.courseId,
-                            slot_id: data.slotId,
-                            course_number: data.courseNumber,
                             course_name: data.courseName,
+                            course_number: data.courseNumber,
+                            end: ('0' + data.end.getHours()).slice(-2) + ':' +
+                                ('0' + data.end.getMinutes()).slice(-2) + ':00',
                             lecturer: data.lecturer,
                             lecturer_id: data.lecturerId,
                             pinned: false,
-                            weekday: data.start.getDay(),
+                            slot_id: data.slotId,
                             start: ('0' + data.start.getHours()).slice(-2) + ':' +
                                 ('0' + data.start.getMinutes()).slice(-2) + ':00',
-                            end: ('0' + data.end.getHours()).slice(-2) + ':' +
-                                ('0' + data.end.getMinutes()).slice(-2) + ':00',
-                            turnout: data.turnout
+                            turnout: data.turnout,
+                            weekday: data.start.getDay()
                         }
                         startRaw = data.start
                         endRaw = data.end

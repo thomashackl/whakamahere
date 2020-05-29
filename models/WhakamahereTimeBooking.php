@@ -30,7 +30,7 @@ class WhakamahereTimeBooking extends SimpleORMap
             'foreign_key' => 'time_id',
             'assoc_foreign_key' => 'time_id'
         ];
-        $config['belongs_to']['booking'] = [
+        $config['has_one']['booking'] = [
             'class_name' => 'ResourceBooking',
             'foreign_key' => 'booking_id',
             'assoc_foreign_key' => 'id'

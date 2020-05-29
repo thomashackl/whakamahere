@@ -293,8 +293,8 @@ class PlanningController extends AuthenticatedController {
                     $course['bookings'][] = [
                         'booking_id' => $booking->booking_id,
                         'room' => (string) $booking->booking->resource->name,
-                        'begin' => $booking->booking->begin,
-                        'end' => $booking->booking->end
+                        'begin' => (int) $booking->booking->begin,
+                        'end' => (int) $booking->booking->end
                     ];
                 }
 
