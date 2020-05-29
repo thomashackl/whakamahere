@@ -4,7 +4,8 @@
                    :column-header-format="columnHeaderFormat" week-number-calculation="ISO" :events="events"
                    :min-time="minTime" :max-time="maxTime" :default-date="lectureStart"
                    :valid-range="validRange" time-zone="local" :eventRender="renderEvent"
-                   @eventReceive="dropCourse" @eventDragStart="markAvailableSlots" @eventDrop="dropCourse"/>
+                   @eventReceive="dropCourse" @eventDragStart="markAvailableSlots"
+                   @eventDragStop="this.unmarkAvailableSlots" @eventDrop="dropCourse"/>
 </template>
 
 <script>
@@ -175,8 +176,8 @@
         methods: {
             // When a course is dropped, we store the time assignment to database.
             dropCourse: function(info) {
+                console.log('Course dropped')
                 bus.$emit('save-course', info)
-                this.unmarkAvailableSlots()
             },
             // Initialize the drag & drop functionality with Dragula and FullCalendar.
             initDragAndDrop: function() {
@@ -205,7 +206,6 @@
             },
             // Mark slots where a course can or cannot be dropped.
             async markAvailableSlots(info) {
-                return true
                 // The virtual begin of our semester view - place dates there.
                 let lStart = new Date(this.lectureStart)
 
@@ -300,7 +300,7 @@
                             })
                         })
                     }).catch((error) => {
-                    this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
+                        this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
                     })
 
                 return false
@@ -320,6 +320,7 @@
             },
             renderEvent: function(info) {
                 if (info.event.rendering != 'background') {
+
                     info.el.addEventListener('contextmenu', (event) => {
                         event.preventDefault()
                         this.showContextMenu(event, info.event)
