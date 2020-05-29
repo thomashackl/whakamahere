@@ -11,10 +11,13 @@
 
 <script>
     import bus from 'jsassets/bus'
-    import {globalfunctions} from "./mixins/globalfunctions";
+    import { globalfunctions } from './mixins/globalfunctions'
 
     export default {
         name: 'Courseplan',
+        mixins: [
+            globalfunctions
+        ],
         props: {
             locale: {
                 type: String,
@@ -65,9 +68,6 @@
                 default: 0
             }
         },
-        mixins: [
-            globalfunctions
-        ],
         data() {
             return {
                 plannedCourseList: this.plannedCourses,

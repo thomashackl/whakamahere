@@ -45,6 +45,7 @@
 
 <script>
     import bus from 'jsassets/bus'
+    import { globalfunctions } from './mixins/globalfunctions'
     import StudipIcon from './StudipIcon'
 
     export default {
@@ -52,6 +53,9 @@
         components: {
             StudipIcon
         },
+        mixins: [
+            globalfunctions
+        ],
         props: {
             number: {
                 type: Number
@@ -77,7 +81,8 @@
         },
         data() {
             return {
-                internalNumber: this.number
+                internalNumber: this.number,
+                weekdays: this.getWeekdays()
             }
         },
         mounted() {
