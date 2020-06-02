@@ -372,6 +372,16 @@ class WhakamahereCourseTime extends SimpleORMap
     }
 
     /**
+     * Checks whether all planned dates have an assigned room booking.
+     *
+     * @return bool true if not all planned dates have a room
+     */
+    public function hasPartialBookings()
+    {
+        return (count($this->bookings) > 0 && (count($this->buildTimeRanges()) != count($this->bookings)));
+    }
+
+    /**
      * Provides an array structure usable for JSON encoding.
      *
      * @return array
@@ -390,6 +400,7 @@ class WhakamahereCourseTime extends SimpleORMap
             'slot_id' => (int) $this->slot_id,
             'lecturer_id' => $this->slot->user_id,
             'lecturer' => $this->slot->user_id ? $this->slot->user->getFullname() : 'N. N.',
+            'partial_bookings' => $this->hasPartialBookings(),
             'pinned' => $this->pinned == 0 ? false : true,
             'weekday' => (int) $this->weekday,
             'start' => $this->start,

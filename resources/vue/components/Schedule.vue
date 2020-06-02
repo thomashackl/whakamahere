@@ -106,26 +106,27 @@
                     let day = lStart.getFullYear() + '-' + month + '-' + date
 
                     entries.push({
-                        source: 'database',
-                        id: this.courses[i].course_id + '-' + this.courses[i].slot_id,
-                        timeId: this.courses[i].time_id,
-                        title: title += '\n' + this.courses[i].lecturer,
-                        start: new Date(day + ' ' + this.courses[i].start),
-                        end: new Date(day + ' ' + this.courses[i].end),
+                        bookings: this.courses[i].bookings,
                         courseId: this.courses[i].course_id,
                         courseName: this.courses[i].course_name,
                         courseNumber: this.courses[i].course_number,
-                        slotId: this.courses[i].slot_id,
                         editable: this.courses[i].pinned == 0 ? true : false,
-                        pinned: this.courses[i].pinned == 0 ? false : true,
-                        slotWeekday: this.courses[i].weekday,
-                        slotStartTime: this.courses[i].start,
-                        slotEndTime: this.courses[i].end,
+                        end: new Date(day + ' ' + this.courses[i].end),
+                        id: this.courses[i].course_id + '-' + this.courses[i].slot_id,
                         lecturerId: this.courses[i].lecturer_id,
                         lecturerName: this.courses[i].lecturer,
-                        turnout: this.courses[i].turnout,
-                        bookings: this.courses[i].bookings,
-                        rooms: this.courses[i].rooms
+                        partial: this.courses[i].partial_bookings,
+                        pinned: this.courses[i].pinned == 0 ? false : true,
+                        rooms: this.courses[i].rooms,
+                        slotEndTime: this.courses[i].end,
+                        slotId: this.courses[i].slot_id,
+                        slotStartTime: this.courses[i].start,
+                        slotWeekday: this.courses[i].weekday,
+                        source: 'database',
+                        start: new Date(day + ' ' + this.courses[i].start),
+                        timeId: this.courses[i].time_id,
+                        title: title += '\n' + this.courses[i].lecturer,
+                        turnout: this.courses[i].turnout
                     })
                 }
 
@@ -356,8 +357,14 @@
 
                     // Mark events that have no room bookings yet.
                     if (info.event.extendedProps.bookings.length == 0) {
+                        info.el.classList.remove('partially-booked')
                         info.el.classList.add('no-room')
                     } else {
+
+                        // Extra mark for partially booked events.
+                        if (info.event.extendedProps.partial) {
+                            info.el.classList.add('partially-booked')
+                        }
                         info.el.classList.remove('no-room')
                     }
 
@@ -504,6 +511,13 @@
                 &.no-room {
                     .fc-time {
                         background-color: #d60000;
+                    }
+                }
+
+                &.partially-booked {
+                    .fc-time {
+                        background-color: #ffbd33;
+                        color: #28497c;
                     }
                 }
 

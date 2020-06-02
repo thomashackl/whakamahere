@@ -33,7 +33,7 @@
                     :data-course-number="course.course_number" :data-course-name="course.course_name"
                     :data-turnout="course.turnout" :data-weekday="course.weekday" :data-time="course.time"
                     :data-duration="course.duration" :data-lecturer-id="course.lecturer_id"
-                    :data-lecturer="course.lecturer" :data-bookings="[]">
+                    :data-lecturer="course.lecturer" :data-bookings="[]" :data-partial="false">
                     <td class="course-name">{{ course.course_number }} {{ course.course_name }}</td>
                     <td class="course-turnout">{{ course.turnout }}</td>
                     <td class="course-duration">{{ course.duration }}</td>
