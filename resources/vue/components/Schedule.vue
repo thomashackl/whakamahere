@@ -109,7 +109,7 @@
                         source: 'database',
                         id: this.courses[i].course_id + '-' + this.courses[i].slot_id,
                         timeId: this.courses[i].time_id,
-                        title: title + '\n' + this.courses[i].lecturer,
+                        title: title += '\n' + this.courses[i].lecturer,
                         start: new Date(day + ' ' + this.courses[i].start),
                         end: new Date(day + ' ' + this.courses[i].end),
                         courseId: this.courses[i].course_id,
@@ -124,7 +124,8 @@
                         lecturerId: this.courses[i].lecturer_id,
                         lecturerName: this.courses[i].lecturer,
                         turnout: this.courses[i].turnout,
-                        bookings: this.courses[i].bookings
+                        bookings: this.courses[i].bookings,
+                        rooms: this.courses[i].rooms
                     })
                 }
 
@@ -208,7 +209,8 @@
                             bookings: [],
                             turnout: eventEl.dataset.turnout,
                             lecturer: eventEl.dataset.lecturer,
-                            lecturer_id: eventEl.dataset.lecturerId
+                            lecturer_id: eventEl.dataset.lecturerId,
+                            rooms: eventEl.dataset.rooms
                         }
                     }
                 })
@@ -330,6 +332,12 @@
             },
             renderEvent: function(info) {
                 if (info.event.rendering != 'background') {
+
+                    // Add room names to time row if applicable
+                    if (info.event.extendedProps.rooms != '') {
+                        const timeDiv = info.el.querySelector('div.fc-time')
+                        timeDiv.innerHTML = timeDiv.innerHTML + ' (' + info.event.extendedProps.rooms + ')'
+                    }
 
                     // Mark events that have no room bookings yet.
                     if (info.event.extendedProps.bookings.length == 0) {

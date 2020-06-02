@@ -74,6 +74,7 @@ class SlotController extends AuthenticatedController {
                         $one->chdate = date('Y-m-d H:i:s');
 
                         if ($one->store() !== false) {
+                            $rooms[(string) $one->booking->resource->name] = true;
                             $newBookings->append($one);
                         }
                     }
@@ -86,21 +87,22 @@ class SlotController extends AuthenticatedController {
 
                 $course = [
                     'id' => $time->course_id . '-' . $time->slot_id,
-                    'time_id' => (int) $time->id,
                     'course_id' => $time->course_id,
                     'course_name' => (string) $time->course->name,
                     'course_number' => $time->course->veranstaltungsnummer,
+                    'end' => $time->end,
+                    'lecturer' => $time->slot->user_id ? $one->slot->user->getFullname() : 'N. N.',
+                    'lecturer_id' => $time->slot->user_id,
+                    'pinned' => $time->pinned == 0 ? false : true,
+                    'slot_id' => (int) $time->slot_id,
+                    'start' => $time->start,
+                    'time_id' => (int) $time->id,
                     'turnout' => (int) $time->slot->request->property_requests
                         ->findOneBy('property_id', WhakamaherePropertyRequest::getSeatsPropertyId())->value,
-                    'slot_id' => (int) $time->slot_id,
-                    'lecturer_id' => $time->slot->user_id,
-                    'lecturer' => $time->slot->user_id ? $one->slot->user->getFullname() : 'N. N.',
-                    'pinned' => $time->pinned == 0 ? false : true,
-                    'weekday' => (int) $time->weekday,
-                    'start' => $time->start,
-                    'end' => $time->end
+                    'weekday' => (int) $time->weekday
                 ];
 
+                $rooms = [];
                 $course['bookings'] = [];
                 foreach ($time->bookings as $booking) {
                     $course['bookings'][] = [
@@ -109,7 +111,9 @@ class SlotController extends AuthenticatedController {
                         'begin' => (int) $booking->booking->begin,
                         'end' => (int) $booking->booking->end
                     ];
+                    $rooms[(string) $booking->booking->resource->name] = true;
                 }
+                $course['rooms'] = implode(', ', array_keys($rooms));
 
                 usort($course['bookings'], function($a, $b) {
                     return $a['begin'] - $b['begin'];
@@ -352,12 +356,16 @@ class SlotController extends AuthenticatedController {
 
             if (count($result['failed']) == 0) {
                 $this->set_status(200);
-                $this->render_json($result['booked']);
+                $this->render_json([
+                    'booked' => $result['booked'],
+                    'room_names' => [(string) $room->name]
+                ]);
             } else {
                 $this->set_status(206);
                 $this->render_json([
                     'booked' => $result['booked'],
-                    'failed' => $result['failed']
+                    'failed' => $result['failed'],
+                    'room_names' => [(string) $room->name]
                 ]);
             }
 

@@ -147,14 +147,14 @@
                             'Die Raumbuchungen konnten nur teilweise gespeichert werden.')
 
                         response.json().then((json) => {
-                            bus.$emit('room-booked', { slot: this.slot, bookings: json, partial: true })
+                            bus.$emit('room-booked', { slot: this.slot, roomData: json, partial: true })
                         })
                     } else {
                         this.showMessage('success', 'Erfolgreich',
                             'Die Raumbuchungen wurden gespeichert.')
 
                         response.json().then((json) => {
-                            bus.$emit('room-booked', { slot: this.slot, bookings: json })
+                            bus.$emit('room-booked', { slot: this.slot, roomData: json })
                         })
                     }
                 }).catch((error) => {

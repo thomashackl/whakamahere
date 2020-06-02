@@ -137,7 +137,8 @@
             bus.$on('room-booked', (data) => {
                 this.plannedCourseList.map((course) => {
                     if (course.slot_id == data.slot) {
-                        course.bookings = data.bookings
+                        course.rooms = data.roomData.room_names
+                        course.bookings = data.roomData.booked
                     }
                 })
             })

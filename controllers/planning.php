@@ -289,7 +289,9 @@ class PlanningController extends AuthenticatedController {
                 ];
 
                 $course['bookings'] = [];
+                $rooms = [];
                 foreach ($one->bookings as $booking) {
+                    $rooms[(string) $booking->booking->resource->name] = true;
                     $course['bookings'][] = [
                         'booking_id' => $booking->booking_id,
                         'room' => (string) $booking->booking->resource->name,
@@ -297,6 +299,7 @@ class PlanningController extends AuthenticatedController {
                         'end' => (int) $booking->booking->end
                     ];
                 }
+                $course['rooms'] = implode(',', array_keys($rooms));
 
                 usort($course['bookings'], function($a, $b) {
                     return $a['begin'] - $b['begin'];
