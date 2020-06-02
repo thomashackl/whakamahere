@@ -317,6 +317,21 @@
 
                 return false
             },
+            async removeBookings(event, jsEvent) {
+                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/slot/remove_bookings/' + event.extendedProps.timeId))
+                    .then(response => {
+                        if (!response.ok) {
+                            throw response
+                        }
+                        response.json().then((json) => {
+                            bus.$emit('updated-course', json)
+                        })
+                    }).catch((error) => {
+                        this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
+                    })
+
+                return false
+            },
             getRoomProposals: function(timeId) {
                 const proposals = new RoomProposalsClass({
                     propsData: {
@@ -389,45 +404,57 @@
 
                 // Define available menu items
                 let menuItems = document.createElement('ul')
-                const items = [
-                    {
-                        icon: 'room-request',
-                        label: 'Raum auswählen',
-                        click: (clickEvent) => {
-                            clickEvent.preventDefault()
-                            this.getRoomProposals(calendarEvent.extendedProps.timeId)
-                            contextMenu.remove()
-                        }
-                    },
-                    {
-                        icon: 'trash',
-                        label: 'Aus der Planung entfernen',
-                        click: (clickEvent) => {
-                            clickEvent.preventDefault()
-                            this.unplan(calendarEvent)
-                            contextMenu.remove()
-                        }
-                    },
-                    {
-                        icon: 'place',
-                        label: editable ? 'Anheften' : 'Lösen',
-                        label2: editable ? 'Lösen' : 'Anheften',
-                        click: (clickEvent) => {
-                            clickEvent.preventDefault()
-                            this.pin(calendarEvent, clickEvent)
-                            contextMenu.remove()
-                        }
-                    },
-                    {
-                        icon: 'info',
-                        label: 'Details',
-                        click: (clickEvent) => {
-                            clickEvent.preventDefault()
-                            this.showDetails(calendarEvent, clickEvent)
-                            contextMenu.remove()
-                        }
+                const items = []
+                items.push({
+                    icon: 'room-request',
+                    label: 'Raum auswählen',
+                    click: (clickEvent) => {
+                        clickEvent.preventDefault()
+                        this.getRoomProposals(calendarEvent.extendedProps.timeId)
+                        contextMenu.remove()
                     }
-                ]
+                })
+
+                if (calendarEvent.extendedProps.bookings.length > 0) {
+                    items.push({
+                        icon: 'room-occupied',
+                        label: 'Raumbuchung entfernen',
+                        click: (clickEvent) => {
+                            clickEvent.preventDefault()
+                            this.removeBookings(calendarEvent)
+                            contextMenu.remove()
+                        }
+                    })
+                }
+
+                items.push({
+                    icon: 'trash',
+                    label: 'Aus der Planung entfernen',
+                    click: (clickEvent) => {
+                        clickEvent.preventDefault()
+                        this.unplan(calendarEvent)
+                        contextMenu.remove()
+                    }
+                })
+                items.push({
+                    icon: 'place',
+                    label: editable ? 'Anheften' : 'Lösen',
+                    label2: editable ? 'Lösen' : 'Anheften',
+                    click: (clickEvent) => {
+                        clickEvent.preventDefault()
+                        this.pin(calendarEvent, clickEvent)
+                        contextMenu.remove()
+                    }
+                })
+                items.push({
+                    icon: 'info',
+                    label: 'Details',
+                    click: (clickEvent) => {
+                        clickEvent.preventDefault()
+                        this.showDetails(calendarEvent, clickEvent)
+                        contextMenu.remove()
+                    }
+                })
 
                 // Build given menu items as HTML elements.
                 for (let i = 0; i < items.length; i++) {

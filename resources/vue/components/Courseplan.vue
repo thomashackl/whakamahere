@@ -143,6 +143,13 @@
                 })
             })
 
+            // Updated a single course
+            bus.$on('updated-course', (course) => {
+                this._data.plannedCourseList =
+                    this._data.plannedCourseList.filter((one) => one.slot_id != course.slot_id)
+                this._data.plannedCourseList.push(course)
+            })
+
         },
         methods: {
             updateData() {

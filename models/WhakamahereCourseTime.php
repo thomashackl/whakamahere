@@ -371,4 +371,49 @@ class WhakamahereCourseTime extends SimpleORMap
         }
     }
 
+    /**
+     * Provides an array structure usable for JSON encoding.
+     *
+     * @return array
+     */
+    public function formatForSchedule()
+    {
+        $seatsId = WhakamaherePropertyRequest::getSeatsPropertyId();
+
+        $result = [
+            'id' => $this->course_id . '-' . $this->slot_id,
+            'time_id' => (int) $this->id,
+            'course_id' => $this->course_id,
+            'course_name' => (string) $this->course->name,
+            'course_number' => $this->course->veranstaltungsnummer,
+            'turnout' => (int) $this->slot->request->property_requests->findOneBy('property_id', $seatsId)->value,
+            'slot_id' => (int) $this->slot_id,
+            'lecturer_id' => $this->slot->user_id,
+            'lecturer' => $this->slot->user_id ? $this->slot->user->getFullname() : 'N. N.',
+            'pinned' => $this->pinned == 0 ? false : true,
+            'weekday' => (int) $this->weekday,
+            'start' => $this->start,
+            'end' => $this->end
+        ];
+
+        $result['bookings'] = [];
+        $rooms = [];
+        foreach ($this->bookings as $booking) {
+            $rooms[(string) $booking->booking->resource->name] = true;
+            $result['bookings'][] = [
+                'booking_id' => $booking->booking_id,
+                'room' => (string) $booking->booking->resource->name,
+                'begin' => (int) $booking->booking->begin,
+                'end' => (int) $booking->booking->end
+            ];
+        }
+        $result['rooms'] = implode(',', array_keys($rooms));
+
+        usort($result['bookings'], function($a, $b) {
+            return $a['begin'] - $b['begin'];
+        });
+
+        return $result;
+    }
+
 }

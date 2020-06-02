@@ -272,40 +272,7 @@ class PlanningController extends AuthenticatedController {
 
             $entries = WhakamahereCourseTime::findFiltered($filter);
             foreach ($entries as $one) {
-                $course = [
-                    'id' => $one->course_id . '-' . $one->slot_id,
-                    'time_id' => (int) $one->id,
-                    'course_id' => $one->course_id,
-                    'course_name' => (string) $one->course->name,
-                    'course_number' => $one->course->veranstaltungsnummer,
-                    'turnout' => (int) $one->slot->request->property_requests->findOneBy('property_id', $seatsId)->value,
-                    'slot_id' => (int) $one->slot_id,
-                    'lecturer_id' => $one->slot->user_id,
-                    'lecturer' => $one->slot->user_id ? $one->slot->user->getFullname() : 'N. N.',
-                    'pinned' => $one->pinned == 0 ? false : true,
-                    'weekday' => (int) $one->weekday,
-                    'start' => $one->start,
-                    'end' => $one->end
-                ];
-
-                $course['bookings'] = [];
-                $rooms = [];
-                foreach ($one->bookings as $booking) {
-                    $rooms[(string) $booking->booking->resource->name] = true;
-                    $course['bookings'][] = [
-                        'booking_id' => $booking->booking_id,
-                        'room' => (string) $booking->booking->resource->name,
-                        'begin' => (int) $booking->booking->begin,
-                        'end' => (int) $booking->booking->end
-                    ];
-                }
-                $course['rooms'] = implode(',', array_keys($rooms));
-
-                usort($course['bookings'], function($a, $b) {
-                    return $a['begin'] - $b['begin'];
-                });
-
-                $courses[] = $course;
+                $courses[] = $one->formatForSchedule();
             }
 
         }

@@ -84,43 +84,8 @@ class SlotController extends AuthenticatedController {
             }
 
             if ($time->store()) {
-
-                $course = [
-                    'id' => $time->course_id . '-' . $time->slot_id,
-                    'course_id' => $time->course_id,
-                    'course_name' => (string) $time->course->name,
-                    'course_number' => $time->course->veranstaltungsnummer,
-                    'end' => $time->end,
-                    'lecturer' => $time->slot->user_id ? $one->slot->user->getFullname() : 'N. N.',
-                    'lecturer_id' => $time->slot->user_id,
-                    'pinned' => $time->pinned == 0 ? false : true,
-                    'slot_id' => (int) $time->slot_id,
-                    'start' => $time->start,
-                    'time_id' => (int) $time->id,
-                    'turnout' => (int) $time->slot->request->property_requests
-                        ->findOneBy('property_id', WhakamaherePropertyRequest::getSeatsPropertyId())->value,
-                    'weekday' => (int) $time->weekday
-                ];
-
-                $rooms = [];
-                $course['bookings'] = [];
-                foreach ($time->bookings as $booking) {
-                    $course['bookings'][] = [
-                        'booking_id' => $booking->booking_id,
-                        'room' => (string) $booking->booking->resource->name,
-                        'begin' => (int) $booking->booking->begin,
-                        'end' => (int) $booking->booking->end
-                    ];
-                    $rooms[(string) $booking->booking->resource->name] = true;
-                }
-                $course['rooms'] = implode(', ', array_keys($rooms));
-
-                usort($course['bookings'], function($a, $b) {
-                    return $a['begin'] - $b['begin'];
-                });
-
                 $this->set_status(200, 'Time assignment saved.');
-                $this->render_json($course);
+                $this->render_json($time->formatForSchedule());
             } else {
                 $this->set_status(500, 'Could not save time assignment.');
                 $this->render_nothing();
@@ -369,6 +334,27 @@ class SlotController extends AuthenticatedController {
                 ]);
             }
 
+        } else {
+            $this->set_status(404, 'Time assignment or room not found.');
+            $this->render_text('Time assignment or room not found');
+        }
+    }
+
+    public function remove_bookings_action($time_id)
+    {
+        $time = WhakamahereCourseTime::find($time_id);
+
+        if ($time) {
+            $time->bookings = new SimpleCollection();
+            $time->chdate = date('Y-m-d H:i:s');
+
+            if ($time->store()) {
+                $this->set_status(200);
+                $this->render_json($time->formatForSchedule());
+            } else {
+                $this->set_status(500, 'Could not clear room assignments.');
+                $this->render_text('Could not clear room assignments.');
+            }
         } else {
             $this->set_status(404, 'Time assignment or room not found.');
             $this->render_text('Time assignment or room not found');
