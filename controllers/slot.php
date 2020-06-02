@@ -45,8 +45,10 @@ class SlotController extends AuthenticatedController {
         $endDate = new DateTime(Request::get('end'));
 
         if (Request::option('room', '') == '') {
+            $oldWeekday = false;
             if (Request::int('time_id', 0) != 0) {
                 $time = WhakamahereCourseTime::find(Request::int('time_id'));
+                $oldWeekday = $time->weekday;
             } else {
                 $time = new WhakamahereCourseTime();
                 $time->course_id = Request::option('course');
@@ -57,9 +59,64 @@ class SlotController extends AuthenticatedController {
             $time->start = $startDate->format('H:i');
             $time->end = $endDate->format('H:i');
             $time->chdate = date('Y-m-d H:i:s');
+
+            if (count($time->bookings) > 0) {
+
+                $newBookings = new SimpleCollection();
+
+                // If weekday stayed the same, try to to keep the booked room.
+                if ($time->weekday === $oldWeekday) {
+                    foreach ($time->bookings as $one) {
+
+                        $one->booking->begin = strtotime(date('d.m.Y ', $one->booking->begin) . $time->start);
+                        $one->booking->end = strtotime(date('d.m.Y ', $one->booking->end) . $time->end);
+                        $one->booking->chdate = time();
+                        $one->chdate = date('Y-m-d H:i:s');
+
+                        if ($one->store() !== false) {
+                            $newBookings->append($one);
+                        }
+                    }
+                }
+
+                $time->bookings = $newBookings;
+            }
+
             if ($time->store()) {
+
+                $course = [
+                    'id' => $time->course_id . '-' . $time->slot_id,
+                    'time_id' => (int) $time->id,
+                    'course_id' => $time->course_id,
+                    'course_name' => (string) $time->course->name,
+                    'course_number' => $time->course->veranstaltungsnummer,
+                    'turnout' => (int) $time->slot->request->property_requests
+                        ->findOneBy('property_id', WhakamaherePropertyRequest::getSeatsPropertyId())->value,
+                    'slot_id' => (int) $time->slot_id,
+                    'lecturer_id' => $time->slot->user_id,
+                    'lecturer' => $time->slot->user_id ? $one->slot->user->getFullname() : 'N. N.',
+                    'pinned' => $time->pinned == 0 ? false : true,
+                    'weekday' => (int) $time->weekday,
+                    'start' => $time->start,
+                    'end' => $time->end
+                ];
+
+                $course['bookings'] = [];
+                foreach ($time->bookings as $booking) {
+                    $course['bookings'][] = [
+                        'booking_id' => $booking->booking_id,
+                        'room' => (string) $booking->booking->resource->name,
+                        'begin' => (int) $booking->booking->begin,
+                        'end' => (int) $booking->booking->end
+                    ];
+                }
+
+                usort($course['bookings'], function($a, $b) {
+                    return $a['begin'] - $b['begin'];
+                });
+
                 $this->set_status(200, 'Time assignment saved.');
-                $this->render_json($time->toArray());
+                $this->render_json($course);
             } else {
                 $this->set_status(500, 'Could not save time assignment.');
                 $this->render_nothing();
@@ -177,6 +234,7 @@ class SlotController extends AuthenticatedController {
         $planned = WhakamahereCourseTime::findOneBySlot_id($slot_id);
 
         if ($planned) {
+
             if ($planned->delete()) {
                 $this->set_status(200, 'Time assignment removed.');
             } else {
@@ -264,67 +322,42 @@ class SlotController extends AuthenticatedController {
         $time = WhakamahereCourseTime::find($time_id);
         $room = Room::find(Request::option('room'));
 
+        $result = [
+            'booked' => [],
+            'failed' => []
+        ];
+
         if ($time && $room) {
 
-            $timeRanges = $time->buildTimeRanges();
-
-            // Some structure for reporting what happened.
-            $booked = [];
-            $failed = [];
-            foreach ($timeRanges as $range) {
-                /*
-                 * First check if room is already occupied at the current time,
-                 * otherwise we don't need to try to book. We must do that
-                 * before we create the ResourceBooking object because
-                 * reservations are deleted automatically which we don't want.
-                 */
-                if (count(ResourceBooking::findByResourceAndTimeRanges($room, [$range])) == 0) {
-                    $booking = new ResourceBooking();
-                    $booking->resource_id = Request::option('room');
-                    $booking->range_id = $time->slot->request->course->id;
-                    $booking->booking_user_id = $GLOBALS['user_id'];
-                    $booking->description = 'Planung: ' . $time->slot->request->course->getFullname();
-                    $booking->begin = $range['begin'];
-                    $booking->end = $range['end'];
-                    $booking->booking_type = 3;
-                    if ($booking->store() !== false) {
-                        $tb = new WhakamahereTimeBooking();
-                        $tb->time_id = $time_id;
-                        $tb->booking_id = $booking->id;
-                        $tb->mkdate = date('Y-m-d H:i:s');;
-                        $time->bookings->append($tb);
-
-                        $booked[] = [
-                            'booking_id' => $booking->id,
-                            'room' => (string) $booking->resource->name,
-                            'begin' => (int) $range['begin'],
-                            'end' => (int) $range['end']
-                        ];
-                    } else {
-                        $failed[] = [
-                            'begin' => (int) $range['begin'],
-                            'end' => (int) $range['end']
-                        ];
-                    }
+            // First clear all existing bookings.
+            $time->clearBookings();
+            $time->bookings = new SimpleCollection();
+            // Try to book room.
+            foreach ($time->buildTimeRanges() as $range) {
+                if (($booking = $time->bookRoom($room, $range)) !== false) {
+                    $result['booked'][] = [
+                        'booking_id' => $booking->id,
+                        'room' => (string) $room->name,
+                        'begin' => (int) $range['begin'],
+                        'end' => (int) $range['end']
+                    ];
                 } else {
-                    $failed[] = [
+                    $result['failed'][] = [
+                        'room' => (string) $room->name,
                         'begin' => (int) $range['begin'],
                         'end' => (int) $range['end']
                     ];
                 }
             }
 
-            $time->chdate = date('Y-m-d H:i:s');
-            $time->store();
-
-            if (count($failed) == 0) {
+            if (count($result['failed']) == 0) {
                 $this->set_status(200);
-                $this->render_json($booked);
+                $this->render_json($result['booked']);
             } else {
                 $this->set_status(206);
                 $this->render_json([
-                    'booked' => $booked,
-                    'failed' => $failed
+                    'booked' => $result['booked'],
+                    'failed' => $result['failed']
                 ]);
             }
 

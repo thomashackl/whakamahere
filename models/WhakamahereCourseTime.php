@@ -316,4 +316,59 @@ class WhakamahereCourseTime extends SimpleORMap
         return $timeranges;
     }
 
+    /**
+     * Books the given room for the relevant time ranges. If the room is
+     * already occupied at some date, a corresponding entry will be returned.
+     *
+     * @param Room $room
+     * @param array $timeRange an array specifying the time range to book
+     *                         (['begin' => <begin>, 'end' => <end>])
+     *
+     * @return WhakamahereTimeBooking|false
+     */
+    public function bookRoom($room, $timeRange)
+    {
+        $success = false;
+
+        /*
+         * First check if room is already occupied at the current time,
+         * otherwise we don't need to try to book. We must do that
+         * before we create the ResourceBooking object because
+         * reservations are deleted automatically which we don't want.
+         */
+        if (count(ResourceBooking::findByResourceAndTimeRanges($room, [$timeRange])) == 0) {
+            $booking = new ResourceBooking();
+            $booking->resource_id = Request::option('room');
+            $booking->range_id = $this->slot->request->course->id;
+            $booking->booking_user_id = $GLOBALS['user_id'];
+            $booking->description = 'Planung: ' . $this->slot->request->course->getFullname();
+            $booking->begin = $timeRange['begin'];
+            $booking->end = $timeRange['end'];
+            $booking->booking_type = 3;
+            if ($booking->store() !== false) {
+                $tb = new WhakamahereTimeBooking();
+                $tb->time_id = $this->time_id;
+                $tb->booking_id = $booking->id;
+                $tb->mkdate = date('Y-m-d H:i:s');
+                $tb->chdate = date('Y-m-d H:i:s');
+                $tb->store();
+
+                $success = $tb;
+            }
+        }
+
+        return $success;
+    }
+
+    /**
+     * Deletes all assigned room bookings.
+     */
+    public function clearBookings()
+    {
+        // Remove all associated room bookings.
+        if (count($this->bookings) > 0) {
+            ResourceBooking::deleteBySQL("`id` IN (?)", [$this->bookings->pluck('booking_id')]);
+        }
+    }
+
 }

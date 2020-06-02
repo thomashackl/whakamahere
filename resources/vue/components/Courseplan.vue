@@ -329,12 +329,11 @@
                         data.event.remove()
                     }
                     response.json().then((json) => {
-                        course.time_id = json.time_id
                         this._data.plannedCourseList =
-                            this._data.plannedCourseList.filter((one) => one.slot_id != course.slot_id)
-                        this._data.plannedCourseList.push(course)
+                            this._data.plannedCourseList.filter((one) => one.slot_id != json.slot_id)
+                        this._data.plannedCourseList.push(json)
                         this._data.unplannedCourseList =
-                            this._data.unplannedCourseList.filter((one) => one.slot_id != course.slot_id)
+                            this._data.unplannedCourseList.filter((one) => one.slot_id != json.slot_id)
                     })
                 }).catch((error) => {
                     this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)

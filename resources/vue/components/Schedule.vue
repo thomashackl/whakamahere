@@ -5,7 +5,7 @@
                    :min-time="minTime" :max-time="maxTime" :default-date="lectureStart"
                    :valid-range="validRange" time-zone="local" :eventRender="renderEvent"
                    @eventReceive="dropCourse" @eventDragStart="markAvailableSlots"
-                   @eventDragStop="this.unmarkAvailableSlots" @eventDrop="dropCourse"/>
+                   @eventDragStop="this.unmarkAvailableSlots" @eventDrop="dropCourse" @eventResize="dropCourse"/>
 </template>
 
 <script>
@@ -200,7 +200,15 @@
                             end: '12:00',
                             duration: {
                                 minutes: eventEl.dataset.duration
-                            }
+                            },
+                            course_id: eventEl.dataset.courseId,
+                            course_number: eventEl.dataset.courseNumber,
+                            course_name: eventEl.dataset.courseName,
+                            slot_id: eventEl.dataset.slotId,
+                            bookings: [],
+                            turnout: eventEl.dataset.turnout,
+                            lecturer: eventEl.dataset.lecturer,
+                            lecturer_id: eventEl.dataset.lecturerId
                         }
                     }
                 })
@@ -219,6 +227,7 @@
                 }
 
                 // Check availability info for slot lecturer.
+                occupied = []
                 if (lecturerId != '') {
                     const response = await fetch(STUDIP.URLHelper.getURL(
                         this.$pluginBase + '/slot/availability/' + lecturerId))
