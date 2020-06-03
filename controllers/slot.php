@@ -44,22 +44,23 @@ class SlotController extends AuthenticatedController {
         $startDate = new DateTime(Request::get('start'));
         $endDate = new DateTime(Request::get('end'));
 
-        if (Request::option('room', '') == '') {
-            $oldWeekday = false;
-            if (Request::int('time_id', 0) != 0) {
-                $time = WhakamahereCourseTime::find(Request::int('time_id'));
-                $oldWeekday = $time->weekday;
-            } else {
-                $time = new WhakamahereCourseTime();
-                $time->course_id = Request::option('course');
-                $time->slot_id = Request::int('slot');
-                $time->mkdate = date('Y-m-d H:i:s');
-            }
-            $time->weekday = $startDate->format('N');
-            $time->start = $startDate->format('H:i');
-            $time->end = $endDate->format('H:i');
-            $time->chdate = date('Y-m-d H:i:s');
+        $oldWeekday = false;
+        if (Request::int('time_id', 0) != 0) {
+            $time = WhakamahereCourseTime::find(Request::int('time_id'));
+            $oldWeekday = $time->weekday;
+        } else {
+            $time = new WhakamahereCourseTime();
+            $time->course_id = Request::option('course');
+            $time->slot_id = Request::int('slot');
+            $time->mkdate = date('Y-m-d H:i:s');
+        }
+        $time->weekday = $startDate->format('N');
+        $time->start = $startDate->format('H:i');
+        $time->end = $endDate->format('H:i');
+        $time->chdate = date('Y-m-d H:i:s');
 
+        // No room set, keep room bookings if applicable.
+        if (Request::option('room', '') == '') {
             if (count($time->bookings) > 0) {
 
                 $newBookings = new SimpleCollection();
@@ -83,13 +84,42 @@ class SlotController extends AuthenticatedController {
                 $time->bookings = $newBookings;
             }
 
-            if ($time->store()) {
-                $this->set_status(200, 'Time assignment saved.');
-                $this->render_json($time->formatForSchedule());
-            } else {
-                $this->set_status(500, 'Could not save time assignment.');
-                $this->render_nothing();
+        // A room is given, try to book it.
+        } else {
+
+            $newBookings = new SimpleCollection();
+            $room = Room::find(Request::option('room'));
+
+            $ranges = $time->buildTimeRanges();
+
+            foreach ($ranges as $range) {
+
+                if (($booking = $time->bookRoom($room, $range)) !== false) {
+                    $result['booked'][] = [
+                        'booking_id' => $booking->id,
+                        'room' => (string) $room->name,
+                        'begin' => (int) $range['begin'],
+                        'end' => (int) $range['end']
+                    ];
+                    $newBookings->append($booking);
+                } else {
+                    $result['failed'][] = [
+                        'room' => (string) $room->name,
+                        'begin' => (int) $range['begin'],
+                        'end' => (int) $range['end']
+                    ];
+                }
             }
+
+            $time->bookings = $newBookings;
+        }
+
+        if ($time->store()) {
+            $this->set_status(200, 'Time assignment saved.');
+            $this->render_json($time->formatForSchedule());
+        } else {
+            $this->set_status(500, 'Could not save time assignment.');
+            $this->render_nothing();
         }
     }
 
@@ -299,7 +329,6 @@ class SlotController extends AuthenticatedController {
         if ($time && $room) {
 
             // First clear all existing bookings.
-            $time->clearBookings();
             $time->bookings = new SimpleCollection();
             // Try to book room.
             foreach ($time->buildTimeRanges() as $range) {

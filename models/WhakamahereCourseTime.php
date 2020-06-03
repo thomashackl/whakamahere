@@ -355,7 +355,10 @@ class WhakamahereCourseTime extends SimpleORMap
                 $tb->booking_id = $booking->id;
                 $tb->mkdate = date('Y-m-d H:i:s');
                 $tb->chdate = date('Y-m-d H:i:s');
-                $tb->store();
+
+                if ($this->time_id) {
+                    $tb->store();
+                }
 
                 $success = $tb;
             }

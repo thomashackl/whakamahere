@@ -262,7 +262,8 @@
                 let course = null
                 let startRaw = null
                 let endRaw = null
-                let add = true
+                let formData = new FormData()
+
                 /*
                  * We have a draggedEl -> drag & drop from unplanned courses.
                  */
@@ -286,6 +287,12 @@
                     }
                     startRaw = data.event.start
                     endRaw = data.event.end
+
+                    // Book room automatically if a room is selected via filters.
+                    if (this.theRoom != '') {
+                        formData.append('room', this.theRoom)
+                    }
+
                 } else {
                     /*
                      * data has extendedProps -> this is a regular Fullcalendar event.
@@ -334,9 +341,14 @@
                         }
                         startRaw = data.start
                         endRaw = data.end
+
+                        // Book room automatically if a room is selected via filters.
+                        if (this.theRoom != '') {
+                            formData.append('room', this.theRoom)
+                        }
+
                     }
                 }
-                let formData = new FormData()
                 if (course.time_id != null) {
                     formData.append('time_id', course.time_id)
                 }
