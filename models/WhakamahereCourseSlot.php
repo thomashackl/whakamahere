@@ -86,6 +86,11 @@ class WhakamahereCourseSlot extends SimpleORMap
             $params['lecturer'] = $filter['lecturer'];
         }
 
+        if ($filter['room'] != '') {
+            $where .= " AND r.`room_id` = :room";
+            $params['room'] = $filter['room'];
+        }
+
         if (is_array($filter['seats'])) {
 
             $select .= " JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = r.`request_id`)";

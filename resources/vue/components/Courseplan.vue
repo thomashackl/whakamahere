@@ -59,6 +59,10 @@
                 type: String,
                 default: ''
             },
+            room: {
+                type: String,
+                default: ''
+            },
             minSeats: {
                 type: Number,
                 default: 0
@@ -77,6 +81,7 @@
                 theSemester: this.semester,
                 theInstitute: this.institute,
                 theLecturer: this.lecturer,
+                theRoom: this.room,
                 theMinSeats: this.minSeats,
                 theMaxSeats: this.maxSeats
             }
@@ -96,6 +101,11 @@
             // Catch event for changed lecturer in sidebar
             bus.$on('updated-lecturer', (value) => {
                 this.theLecturer = value
+                this.updateData()
+            })
+            // Catch event for changed room in sidebar
+            bus.$on('updated-room', (value) => {
+                this.theRoom = value
                 this.updateData()
             })
             // Catch event for changed seats limits in sidebar
@@ -174,6 +184,10 @@
                     formData.append('lecturer', this.theLecturer)
                 }
 
+                if (this.theRoom != '') {
+                    formData.append('room', this.theRoom)
+                }
+
                 if (this.theMinSeats != 0 || this.theMaxSeats != 0) {
                     let seats = {}
                     if (this.theMinSeats != 0) {
@@ -185,7 +199,7 @@
                     formData.append('seats', JSON.stringify(seats))
                 }
 
-                const response = await fetch(
+                fetch(
                     STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/unplanned_courses'), {
                     method: 'post',
                     body: formData
@@ -216,6 +230,10 @@
                     formData.append('lecturer', this.theLecturer)
                 }
 
+                if (this.theRoom != '') {
+                    formData.append('room', this.theRoom)
+                }
+
                 if (this.theMinSeats != 0 || this.theMaxSeats != 0) {
                     let seats = {}
                     if (this.theMinSeats != 0) {
@@ -227,7 +245,7 @@
                     formData.append('seats', JSON.stringify(seats))
                 }
 
-                const response = await fetch(
+                fetch(
                     STUDIP.URLHelper.getURL(this.$pluginBase + '/planning/planned_courses'), {
                     method: 'post',
                     body: formData

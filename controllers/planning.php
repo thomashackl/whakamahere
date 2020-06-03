@@ -43,8 +43,8 @@ class PlanningController extends AuthenticatedController {
 
         $this->institutes = Institute::getMyInstitutes();
         $this->selectedInstitute = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE;
-
         $this->selectedLecturer = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_LECTURER;
+        $this->selectedRoom = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_ROOM;
 
     }
 
@@ -119,6 +119,11 @@ class PlanningController extends AuthenticatedController {
             $filter['institute'] = $this->selectedInstitute;
         }
 
+        // Room filter.
+        if ($this->selectedRoom != '') {
+            $filter['room'] = $this->selectedRoom;
+        }
+
         $this->lecturers = $this->getLecturers($filter);
 
         $this->setupSidebar();
@@ -134,6 +139,7 @@ class PlanningController extends AuthenticatedController {
             'semester' => Request::option('semester', null),
             'institute' => Request::get('institute'. null),
             'lecturer' => Request::option('lecturer', null),
+            'room' => Request::option('room', null),
             'seats' => (array) studip_json_decode(Request::get('seats'), null)
         ]);
 
@@ -150,6 +156,7 @@ class PlanningController extends AuthenticatedController {
             'semester' => Request::option('semester', null),
             'institute' => Request::get('institute'. null),
             'lecturer' => Request::option('lecturer', null),
+            'room' => Request::option('room', null),
             'seats' => (array) studip_json_decode(Request::get('seats'), null)
         ]);
 
@@ -267,8 +274,6 @@ class PlanningController extends AuthenticatedController {
          * Without other filter criteria, we don't load any courses and lecturers.
          */
         if (count($filter) > 1) {
-
-            $seatsId = WhakamaherePropertyRequest::getSeatsPropertyId();
 
             $entries = WhakamahereCourseTime::findFiltered($filter);
             foreach ($entries as $one) {

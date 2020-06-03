@@ -61,7 +61,7 @@ class WhakamahereCourseTime extends SimpleORMap
      */
     public static function findFiltered($filter = [])
     {
-        $query = "SELECT t.* FROM `whakamahere_course_times` t";
+        $query = "SELECT DISTINCT t.* FROM `whakamahere_course_times` t";
 
         $joins = [
             " JOIN `seminare` s ON (s.`Seminar_id` = t.`course_id`)"
@@ -99,6 +99,10 @@ class WhakamahereCourseTime extends SimpleORMap
                         $params['lecturer'] = $one;
                         break;
                     case 'room':
+                        $joins[] = "JOIN `whakamahere_time_bookings` tb ON (tb.`time_id` = t.`time_id`)";
+                        $joins[] = "JOIN `resource_bookings` rb ON (rb.`id` = tb.`booking_id`)";
+                        $where[] = "AND rb.`resource_id` = :room";
+                        $params['room'] = $one;
                         break;
                     case 'seats':
                         $joins[] = " JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = r.`request_id`)";

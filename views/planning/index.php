@@ -10,6 +10,9 @@
                 <?php if ($selectedLecturer) : ?>
                 :lecturer="'<?= $selectedLecturer ?>'"
                 <?php endif ?>
+                <?php if ($selectedRoom) : ?>
+                :room="'<?= $selectedRoom ?>'"
+                <?php endif ?>
                 <?php if ($minSeats) : ?>
                 :min-seats="<?= $minSeats ?>"
                 <?php endif ?>
