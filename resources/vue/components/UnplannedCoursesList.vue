@@ -88,16 +88,9 @@
             })
         },
         mounted() {
-            this.$el.style.maxHeight = (
-                window.innerHeight -
-                document.getElementById('barBottomContainer').offsetHeight -
-                document.getElementById('flex-header').offsetHeight -
-                document.querySelector('nav.secondary-navigation').offsetHeight -
-                document.getElementById('page_title_container').offsetHeight -
-                document.querySelector('.fc').offsetHeight -
-                25
-            ) + 'px'
-         },
+            this.$el.style.top = (document.querySelector('.fc-divider').offsetTop + 24) + 'px'
+            document.querySelector('div.fc').style.maxHeight = this.$el.style.top
+        },
         watch: {
             courses: function(value) {
                 this.courseList = this.courses
@@ -153,7 +146,11 @@
 <style lang="scss">
     #whakamahere-unplanned-courses {
         background-color: #ffffff;
+        flex: 0;
+        height: 180px;
         overflow-y: scroll;
+        position: absolute;
+        z-index: 999;
 
         table {
             caption {

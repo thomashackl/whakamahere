@@ -4,7 +4,7 @@
                                   reference-element="#whakamahere-courseplan"/>
         <schedule :min-time="minTime" :max-time="maxTime" :locale="locale"
                   :weekends="weekends" :lecture-start="lectureStart"
-                  :courses="plannedCourseList" :institute="institute"></schedule>
+                  :courses="plannedCourseList"></schedule>
         <unplanned-courses-list :courses="unplannedCourseList" :lectureStart="lectureStart"></unplanned-courses-list>
     </div>
 </template>
@@ -404,3 +404,11 @@
         }
     }
 </script>
+
+<style lang="scss">
+    #courseplan {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+</style>

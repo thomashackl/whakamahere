@@ -134,12 +134,6 @@
             }
         },
         mounted() {
-            // Adjust calendar height
-            const start = this.$el.querySelector('.fc-view-container').getBoundingClientRect().top
-            const end = this.$el.querySelector('.fc-divider').getBoundingClientRect().top
-            this.$refs.schedule.height = end - start
-            document.getElementsByClassName('fc')[0].style.maxHeight = (end - start) + 'px'
-
             // Re-initialize drag & drop after courses changed
             bus.$on('updated-courses', (value) => {
                 this.drag.destroy()
@@ -536,8 +530,9 @@
             border: 1px solid #000000;
             font-size: 90%;
             margin: 0;
+            overflow: hidden;
             position: absolute;
-            z-index: 999;
+            z-index: 998;
 
             header {
                 background-color: #d3dbe5;
