@@ -223,6 +223,28 @@ class SlotController extends AuthenticatedController {
         }
     }
 
+    public function manual_room_search_action($time_id)
+    {
+        $time = WhakamahereCourseTime::find($time_id);
+
+        $rooms = DBManager::get()->fetchAll(
+            "SELECT * FROM `resources` WHERE `name` LIKE :search",
+            ['search' => '%' . Request::get('search') . '%'],
+            'Room::buildExisting'
+        );
+
+        $props = $time->slot->request->property_requests;
+        $seatsId = WhakamaherePropertyRequest::getSeatsPropertyId();
+        $timeRanges = $time->buildTimeRanges();
+
+        $result = [];
+        foreach ($rooms as $room) {
+            $result[] = $time->scoreRoom($room, $timeRanges, $props, $seatsId);
+        }
+
+        $this->render_json($result);
+    }
+
     /**
      * Remove an already planned course from schedule.
      *

@@ -186,67 +186,15 @@ class WhakamahereCourseTime extends SimpleORMap
             'Room::buildExisting'
         );
 
+        $timeRanges = $this->buildTimeRanges();
+
         /*
          * Now iterate over found rooms and set a score according
          * to how good the room matches the request.
          */
         $rooms = [];
         foreach ($entries as $one) {
-            $room = [
-                'id' => $one->id,
-                'name' => $one->name,
-                'missing_properties' => [],
-                'score' => 100
-            ];
-            // Check if current room is already occupied anywhere in the semester.
-            $room['occupied'] = array_map(function($b) {
-                    return [
-                        'id' => $b->id,
-                        'begin' => $b->begin,
-                        'end' => $b->end,
-                        'type' => $b->booking_type
-                    ];
-                }, $this->checkForBookings($one->id, $this->buildTimeRanges()));
-
-            // The wished room is prioritized.
-            if ($one->id == $this->slot->request->room_id) {
-
-                $room['seats'] = (int) $one->properties->findOneBy('property_id', $seatsId)->state;
-                $room['score'] = 100.49;
-                $rooms[] = $room;
-
-            } else {
-
-                // Now increase score for each matching property.
-                foreach ($requestedProperties as $property) {
-
-                    $roomProperty = $one->properties->findOneBy('property_id', $property->property_id);
-
-                    // Seats are treated specially
-                    if ($property->property_id == $seatsId) {
-
-                        $room['seats'] = (int) $roomProperty->state;
-
-                        // Generate score depending on seats number difference
-                        if ($roomProperty->state >= $property->value) {
-                            $room['score'] *= $property->value / $roomProperty->state;
-                        } else {
-                            $room['score'] = 0.75 * $room['score'] * ($roomProperty->state / $property->value);
-                        }
-
-                    } else {
-
-                        // Add score points for each fulfilled property request.
-                        if (!$roomProperty || $roomProperty->state != $property->value) {
-                            $room['score'] *= 0.9;
-                            $room['missing_properties'][] = (string) $property->property->display_name;
-                        }
-
-                    }
-                }
-
-                $rooms[] = $room;
-            }
+            $rooms[] = $this->scoreRoom($one, $timeRanges, $requestedProperties, $seatsId);
         }
 
         // Sort found rooms by score.
@@ -432,6 +380,68 @@ class WhakamahereCourseTime extends SimpleORMap
         });
 
         return $result;
+    }
+
+    public function scoreRoom($room, $timeRanges, $requestedProperties, $seatsId)
+    {
+        $entry = [
+            'id' => $room->id,
+            'name' => $room->name,
+            'missing_properties' => [],
+            'score' => 100
+        ];
+        // Check if current room is already occupied anywhere in the semester.
+        $entry['occupied'] = array_map(function($b) {
+            return [
+                'id' => $b->id,
+                'begin' => $b->begin,
+                'end' => $b->end,
+                'type' => $b->booking_type
+            ];
+        }, $this->checkForBookings($room->id, $timeRanges));
+
+        // Mark room as "always occupied" if all dates are already booked.
+        $entry['always_occupied'] = (count($entry['occupied']) == count($timeRanges));
+
+        // The wished room is prioritized.
+        if ($room->id == $this->slot->request->room_id) {
+
+            $entry['seats'] = (int) $room->properties->findOneBy('property_id', $seatsId)->state;
+            $entry['score'] = 100.49;
+
+        } else {
+
+            // Now increase score for each matching property.
+            foreach ($requestedProperties as $property) {
+
+                $roomProperty = $room->properties->findOneBy('property_id', $property->property_id);
+
+                // Seats are treated specially
+                if ($property->property_id == $seatsId) {
+
+                    $entry['seats'] = (int) $roomProperty->state;
+
+                    // Generate score depending on seats number difference
+                    if ($roomProperty->state >= $property->value) {
+                        $entry['score'] *= $property->value / $roomProperty->state;
+                    } else {
+                        $entry['score'] = 0.75 * $entry['score'] * ($roomProperty->state / $property->value);
+                    }
+
+                } else {
+
+                    // Add score points for each fulfilled property request.
+                    if (!$roomProperty || $roomProperty->state != $property->value) {
+                        $entry['score'] *= 0.9;
+                        $entry['missing_properties'][] = (string) $property->property->display_name;
+                    }
+
+                }
+            }
+
+        }
+
+        return $entry;
     }
 
 }
