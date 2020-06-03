@@ -532,7 +532,7 @@
             margin: 0;
             overflow: hidden;
             position: absolute;
-            z-index: 998;
+            z-index: 997;
 
             header {
                 background-color: #d3dbe5;

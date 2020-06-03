@@ -1,6 +1,6 @@
 <template>
     <section id="whakamahere-lecturer-filter">
-        <studip-loading-indicator :is-loading="loading" :width="32" :height="32"
+        <studip-loading-indicator v-if="loading" :is-loading="loading" :width="32" :height="32"
                                   reference-element="#filters"/>
         <label for="lecturer">
             Lehrende

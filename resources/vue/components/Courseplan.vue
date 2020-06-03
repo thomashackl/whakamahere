@@ -1,7 +1,8 @@
 <template>
     <div id="courseplan">
-        <studip-loading-indicator :is-loading="loadingPlanned || loadingUnplanned" :width="128" :height="128"
-                                  reference-element="#whakamahere-courseplan"/>
+        <studip-loading-indicator v-if="loadingPlanned || loadingUnplanned"
+                                  :is-loading="loadingPlanned || loadingUnplanned"
+                                  :width="128" :height="128"/>
         <schedule :min-time="minTime" :max-time="maxTime" :locale="locale"
                   :weekends="weekends" :lecture-start="lectureStart"
                   :courses="plannedCourseList"></schedule>
@@ -410,5 +411,10 @@
         display: flex;
         flex-direction: column;
         position: relative;
+
+        .vld-parent {
+            left: 0 !important;
+            top: 0 !important;
+        }
     }
 </style>
