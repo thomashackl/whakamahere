@@ -478,10 +478,10 @@
                     menuItems.appendChild(entry)
                 }
                 // Adjust position so that the menu appears under the cursor.
-                contextMenu.style.left = (event.offsetX + 50) + 'px'
-                contextMenu.style.top = (event.offsetY + 25) + 'px'
+                contextMenu.style.left = event.clientX + 'px'
+                contextMenu.style.top = event.clientY + 'px'
                 contextMenu.appendChild(menuItems)
-                document.querySelector('#courseplan').appendChild(contextMenu)
+                document.querySelector('body').appendChild(contextMenu)
             }
         }
     }
