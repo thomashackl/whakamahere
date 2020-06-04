@@ -25,18 +25,12 @@
         },
         data() {
             return {
-                search: this.searchterm,
-                minLength: 3
+                search: this.searchterm
             }
         },
         methods: {
             doSearch() {
-                if (this.search.length >= this.minLength) {
-                    bus.$emit('updated-searchterm', this.search)
-                } else {
-                    this.showMessage('warning','Suchbegriff zu kurz',
-                        'Bitte geben Sie einen Suchbegriff mit mindestens 3 Zeichen an.')
-                }
+                bus.$emit('updated-searchterm', this.search)
             }
         }
     }

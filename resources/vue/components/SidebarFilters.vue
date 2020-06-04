@@ -1,22 +1,42 @@
 <template>
     <form class="default">
+        <studip-icon v-if="!allFiltersVisible" id="add-filter" shape="add" width="20" height="20"
+                     @click="showAllFilters(true)"/>
+        <studip-icon v-if="allFiltersVisible" id="remove-filter" shape="remove" width="20" height="20"
+                     @click="showAllFilters(false)"/>
         <semester-filter :semesters="semesters" :selected-semester="theSemester"/>
-        <text-filter :searchterm="theSearchterm"/>
-        <seats-filter :min-seats="theMinSeats" :max-seats="theMaxSeats"/>
-        <institute-filter :institutes="institutes" :selected-institute="theInstitute"/>
-        <lecturer-filter :lecturers="lecturers" :selected-lecturer="theLecturer"
+        <text-filter v-if="visibleFilters.searchterm" :searchterm="theSearchterm"/>
+        <seats-filter v-if="visibleFilters.seats" :min-seats="theMinSeats" :max-seats="theMaxSeats"/>
+        <institute-filter v-if="visibleFilters.institute" :institutes="institutes" :selected-institute="theInstitute"/>
+        <lecturer-filter v-if="visibleFilters.lecturer" :lecturers="lecturers" :selected-lecturer="theLecturer"
                          :get-lecturers-url="getLecturersUrl" :semester="theSemester"
                          :institute="theInstitute"/>
-        <room-filter :rooms="rooms" :selected-room="theRoom"/>
+        <room-filter v-if="visibleFilters.room" :rooms="rooms" :selected-room="theRoom"/>
     </form>
 </template>
 
 <script>
     import bus from 'jsassets/bus'
     import { globalfunctions } from './mixins/globalfunctions'
+    import StudipIcon from './StudipIcon'
+    import SemesterFilter from './SemesterFilter'
+    import TextFilter from './TextFilter'
+    import SeatsFilter from './SeatsFilter'
+    import InstituteFilter from './InstituteFilter'
+    import LecturerFilter from './LecturerFilter'
+    import RoomFilter from './RoomFilter'
 
     export default {
         name: 'SidebarFilters',
+        components: {
+            StudipIcon,
+            SemesterFilter,
+            TextFilter,
+            SeatsFilter,
+            InstituteFilter,
+            LecturerFilter,
+            RoomFilter
+        },
         mixins: [
             globalfunctions
         ],
@@ -82,7 +102,20 @@
                 theMaxSeats: this.maxSeats,
                 theInstitute: this.selectedInstitute,
                 theLecturer: this.selectedLecturer,
-                theRoom: this.selectedRoom
+                theRoom: this.selectedRoom,
+                allFiltersVisible: false
+            }
+        },
+        computed: {
+            visibleFilters: function() {
+                return {
+                    semester: true,
+                    searchterm: this.theSearchterm !== '' || this.allFiltersVisible ? true : false,
+                    seats: this.theMinSeats !== 0 || this.theMaxSeats || this.allFiltersVisible ? true : false,
+                    institute: this.theInstitute !== '' || this.allFiltersVisible ? true : false,
+                    lecturer: this.theLecturer !== '' || this.allFiltersVisible ? true : false,
+                    room: this.theRoom !== '' || this.allFiltersVisible ? true : false,
+                }
             }
         },
         mounted() {
@@ -125,9 +158,14 @@
                     if (!response.ok) {
                         throw response
                     }
+                    this.showAllFilters(false)
                 }).catch((error) => {
                     this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
+                    this.showAllFilters(false)
                 })
+            },
+            showAllFilters: function(state) {
+                this.allFiltersVisible = state
             }
         }
     }
@@ -138,6 +176,15 @@
         font-size: 12px;
 
         form.default {
+
+            position: relative;
+
+            #add-filter, #remove-filter {
+                left: 240px;
+                position: absolute;
+                top: -29px;
+            }
+
             section:not(.contentbox) {
                 padding-top: 0.5em;
 

@@ -102,7 +102,13 @@
             // Catch event for changed searchterm in sidebar
             bus.$on('updated-searchterm', (value) => {
                 this.theSearchterm = value
-                this.updateData()
+
+                if (value.length > 3) {
+                    this.updateData()
+                } else if (value.length > 0) {
+                    this.showMessage('warning', 'Suchbegriff zu kurz',
+                        'Bitte geben Sie einen Suchbegriff mit mindestens 3 Zeichen an.')
+                }
             })
             // Catch event for changed seats limits in sidebar
             bus.$on('updated-seats', (value) => {
