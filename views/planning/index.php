@@ -4,6 +4,15 @@
                 <?php if ($selectedSemester) : ?>
                 :semester="'<?= $selectedSemester ?>'"
                 <?php endif ?>
+                <?php if ($searchterm) : ?>
+                :searchterm="'<?= $searchterm ?>'"
+                <?php endif ?>
+                <?php if ($minSeats) : ?>
+                    :min-seats="<?= $minSeats ?>"
+                <?php endif ?>
+                <?php if ($maxSeats) : ?>
+                    :max-seats="<?= $maxSeats ?>"
+                <?php endif ?>
                 <?php if ($selectedInstitute) : ?>
                 :institute="'<?= $selectedInstitute ?>'"
                 <?php endif ?>
@@ -12,12 +21,6 @@
                 <?php endif ?>
                 <?php if ($selectedRoom) : ?>
                 :room="'<?= $selectedRoom ?>'"
-                <?php endif ?>
-                <?php if ($minSeats) : ?>
-                :min-seats="<?= $minSeats ?>"
-                <?php endif ?>
-                <?php if ($maxSeats) : ?>
-                :max-seats="<?= $maxSeats ?>"
                 <?php endif ?>
     ></courseplan>
 </div>

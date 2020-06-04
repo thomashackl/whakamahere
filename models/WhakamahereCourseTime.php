@@ -79,6 +79,26 @@ class WhakamahereCourseTime extends SimpleORMap
                         $where[] = "AND r.`semester_id` = :semester";
                         $params['semester'] = $one;
                         break;
+                    case 'searchterm':
+                        $where[] = "AND (s.`VeranstaltungsNummer` LIKE :search OR s.`Name` LIKE :search)";
+                        $params['search'] = '%' . $one . '%';
+                        break;
+                    case 'seats':
+                        $joins[] = " JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = r.`request_id`)";
+                        $qhere[] = " AND pr.`property_id` = :seats";
+                        $params['seats'] = WhakamaherePropertyRequest::getSeatsPropertyId();
+                        if ($filter['seats']['min'] && $filter['seats']['max']) {
+                            $where[] = " AND pr.`value` BETWEEN :min AND :max";
+                            $params['min'] = $one['min'];
+                            $params['max'] = $one['max'];
+                        } else if ($filter['seats']['min']) {
+                            $where[] = " AND pr.`value` >= :min";
+                            $params['min'] = $one['min'];
+                        } else if ($filter['seats']['max']) {
+                            $where[] = " AND pr.`value` <= :max";
+                            $params['max'] = $one['max'];
+                        }
+                        break;
                     case 'institute':
                         $sub = explode('+', $one);
                         if (count($sub) > 1) {
@@ -103,22 +123,6 @@ class WhakamahereCourseTime extends SimpleORMap
                         $joins[] = "JOIN `resource_bookings` rb ON (rb.`id` = tb.`booking_id`)";
                         $where[] = "AND rb.`resource_id` = :room";
                         $params['room'] = $one;
-                        break;
-                    case 'seats':
-                        $joins[] = " JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = r.`request_id`)";
-                        $qhere[] = " AND pr.`property_id` = :seats";
-                        $params['seats'] = WhakamaherePropertyRequest::getSeatsPropertyId();
-                        if ($filter['seats']['min'] && $filter['seats']['max']) {
-                            $where[] = " AND pr.`value` BETWEEN :min AND :max";
-                            $params['min'] = $one['min'];
-                            $params['max'] = $one['max'];
-                        } else if ($filter['seats']['min']) {
-                            $where[] = " AND pr.`value` >= :min";
-                            $params['min'] = $one['min'];
-                        } else if ($filter['seats']['max']) {
-                            $where[] = " AND pr.`value` <= :max";
-                            $params['max'] = $one['max'];
-                        }
                         break;
                 }
             }

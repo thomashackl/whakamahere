@@ -61,6 +61,19 @@ class FilterController extends AuthenticatedController {
                 $field = 'WHAKAMAHERE_SELECTED_SEMESTER';
                 $value = Request::get('value');
                 break;
+            case 'searchterm':
+                $field = 'WHAKAMAHERE_SEARCHTERM';
+                $value = Request::get('value');
+                break;
+            case 'seats':
+                $field = 'WHAKAMAHERE_MINMAX_SEATS';
+                $decoded = studip_json_decode(Request::get('value'));
+                if ($decoded['min'] || $decoded['max']) {
+                    $value = Request::get('value');
+                } else {
+                    $value = null;
+                }
+                break;
             case 'institute':
                 $field = 'WHAKAMAHERE_SELECTED_INSTITUTE';
                 $value = Request::get('value');
@@ -72,15 +85,6 @@ class FilterController extends AuthenticatedController {
             case 'room':
                 $field = 'WHAKAMAHERE_SELECTED_ROOM';
                 $value = Request::get('value');
-                break;
-            case 'seats':
-                $field = 'WHAKAMAHERE_MINMAX_SEATS';
-                $decoded = studip_json_decode(Request::get('value'));
-                if ($decoded['min'] || $decoded['max']) {
-                    $value = Request::get('value');
-                } else {
-                    $value = null;
-                }
                 break;
         }
 

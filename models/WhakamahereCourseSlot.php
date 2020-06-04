@@ -64,6 +64,38 @@ class WhakamahereCourseSlot extends SimpleORMap
             'semester' => $filter['semester']
         ];
 
+        // Search for course number or name
+        if ($filter['searchterm'] != '') {
+            $where .= " AND (s.`VeranstaltungsNummer` LIKE :search OR s.`Name` LIKE :search)";
+            $params['search'] = '%' . $filter['searchterm'] . '%';
+        }
+
+        // A range for turnout is given.
+        if (is_array($filter['seats'])) {
+
+            $select .= " JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = r.`request_id`)";
+            $where .= " AND pr.`property_id` = :seats";
+            $params['seats'] = WhakamaherePropertyRequest::getSeatsPropertyId();
+
+            if ($filter['seats']['min'] && $filter['seats']['max']) {
+
+                $where .= " AND pr.`value` BETWEEN :min AND :max";
+                $params['min'] = $filter['seats']['min'];
+                $params['max'] = $filter['seats']['max'];
+
+            } else if ($filter['seats']['min']) {
+
+                $where .= " AND pr.`value` >= :min";
+                $params['min'] = $filter['seats']['min'];
+
+            } else if ($filter['seats']['max']) {
+
+                $where .= " AND pr.`value` <= :max";
+                $params['max'] = $filter['seats']['max'];
+
+            }
+        }
+
         if ($filter['institute'] != '') {
 
             // Our institute_id is like '<id>+sub', so we need to get sub institutes, too
@@ -89,31 +121,6 @@ class WhakamahereCourseSlot extends SimpleORMap
         if ($filter['room'] != '') {
             $where .= " AND r.`room_id` = :room";
             $params['room'] = $filter['room'];
-        }
-
-        if (is_array($filter['seats'])) {
-
-            $select .= " JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = r.`request_id`)";
-            $where .= " AND pr.`property_id` = :seats";
-            $params['seats'] = WhakamaherePropertyRequest::getSeatsPropertyId();
-
-            if ($filter['seats']['min'] && $filter['seats']['max']) {
-
-                $where .= " AND pr.`value` BETWEEN :min AND :max";
-                $params['min'] = $filter['seats']['min'];
-                $params['max'] = $filter['seats']['max'];
-
-            } else if ($filter['seats']['min']) {
-
-                $where .= " AND pr.`value` >= :min";
-                $params['min'] = $filter['seats']['min'];
-
-            } else if ($filter['seats']['max']) {
-
-                $where .= " AND pr.`value` <= :max";
-                $params['max'] = $filter['seats']['max'];
-
-            }
         }
 
         if (Config::get()->IMPORTANT_SEMNUMBER) {

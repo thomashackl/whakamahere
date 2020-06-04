@@ -52,6 +52,18 @@
                 type: String,
                 default: ''
             },
+            searchterm: {
+                type: String,
+                default: ''
+            },
+            minSeats: {
+                type: Number,
+                default: 0
+            },
+            maxSeats: {
+                type: Number,
+                default: 0
+            },
             institute: {
                 type: String,
                 default: ''
@@ -63,14 +75,6 @@
             room: {
                 type: String,
                 default: ''
-            },
-            minSeats: {
-                type: Number,
-                default: 0
-            },
-            maxSeats: {
-                type: Number,
-                default: 0
             }
         },
         data() {
@@ -80,11 +84,12 @@
                 loadingPlanned: false,
                 loadingUnplanned: false,
                 theSemester: this.semester,
+                theSearchterm: this.searchterm,
+                theMinSeats: this.minSeats,
+                theMaxSeats: this.maxSeats,
                 theInstitute: this.institute,
                 theLecturer: this.lecturer,
-                theRoom: this.room,
-                theMinSeats: this.minSeats,
-                theMaxSeats: this.maxSeats
+                theRoom: this.room
             }
         },
         mounted() {
@@ -92,6 +97,18 @@
             // Catch event for changed semester in sidebar
             bus.$on('updated-semester', (element) => {
                 this.theSemester = element.value
+                this.updateData()
+            })
+            // Catch event for changed searchterm in sidebar
+            bus.$on('updated-searchterm', (value) => {
+                this.theSearchterm = value
+                this.updateData()
+            })
+            // Catch event for changed seats limits in sidebar
+            bus.$on('updated-seats', (value) => {
+                const seats = JSON.parse(value)
+                this.theMinSeats = seats.min
+                this.theMaxSeats = seats.max
                 this.updateData()
             })
             // Catch event for changed institute in sidebar
@@ -107,13 +124,6 @@
             // Catch event for changed room in sidebar
             bus.$on('updated-room', (value) => {
                 this.theRoom = value
-                this.updateData()
-            })
-            // Catch event for changed seats limits in sidebar
-            bus.$on('updated-seats', (value) => {
-                const seats = JSON.parse(value)
-                this.theMinSeats = seats.min
-                this.theMaxSeats = seats.max
                 this.updateData()
             })
 
@@ -166,7 +176,7 @@
             updateData() {
                 this.plannedCourseList = []
                 this.unplannedCourseList = []
-                if (this.theMinSeats != 0 || this.theMaxSeats != 0 ||
+                if (this.theSearchterm != '' || this.theMinSeats != 0 || this.theMaxSeats != 0 ||
                         this.theInstitute != '' || this.theLecturer != '' || this.theRoom != '') {
                     this.getPlannedCourses()
                     this.getUnplannedCourses()
@@ -177,16 +187,8 @@
                 let formData = new FormData()
                 formData.append('semester', this.theSemester)
 
-                if (this.theInstitute != '') {
-                    formData.append('institute', this.theInstitute)
-                }
-
-                if (this.theLecturer != '') {
-                    formData.append('lecturer', this.theLecturer)
-                }
-
-                if (this.theRoom != '') {
-                    formData.append('room', this.theRoom)
+                if (this.theSearchterm != '') {
+                    formData.append('searchterm', this.theSearchterm)
                 }
 
                 if (this.theMinSeats != 0 || this.theMaxSeats != 0) {
@@ -198,6 +200,18 @@
                         seats.max = this.theMaxSeats
                     }
                     formData.append('seats', JSON.stringify(seats))
+                }
+
+                if (this.theInstitute != '') {
+                    formData.append('institute', this.theInstitute)
+                }
+
+                if (this.theLecturer != '') {
+                    formData.append('lecturer', this.theLecturer)
+                }
+
+                if (this.theRoom != '') {
+                    formData.append('room', this.theRoom)
                 }
 
                 fetch(
@@ -223,16 +237,8 @@
                 let formData = new FormData()
                 formData.append('semester', this.theSemester)
 
-                if (this.theInstitute != '') {
-                    formData.append('institute', this.theInstitute)
-                }
-
-                if (this.theLecturer != '') {
-                    formData.append('lecturer', this.theLecturer)
-                }
-
-                if (this.theRoom != '') {
-                    formData.append('room', this.theRoom)
+                if (this.theSearchterm != '') {
+                    formData.append('searchterm', this.theSearchterm)
                 }
 
                 if (this.theMinSeats != 0 || this.theMaxSeats != 0) {
@@ -244,6 +250,18 @@
                         seats.max = this.theMaxSeats
                     }
                     formData.append('seats', JSON.stringify(seats))
+                }
+
+                if (this.theInstitute != '') {
+                    formData.append('institute', this.theInstitute)
+                }
+
+                if (this.theLecturer != '') {
+                    formData.append('lecturer', this.theLecturer)
+                }
+
+                if (this.theRoom != '') {
+                    formData.append('room', this.theRoom)
                 }
 
                 fetch(

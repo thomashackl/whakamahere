@@ -45,6 +45,7 @@ class PlanningController extends AuthenticatedController {
         $this->selectedInstitute = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE;
         $this->selectedLecturer = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_LECTURER;
         $this->selectedRoom = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_ROOM;
+        $this->searchterm = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SEARCHTERM;
 
     }
 
@@ -114,6 +115,11 @@ class PlanningController extends AuthenticatedController {
 
         }
 
+        // Text filter.
+        if ($this->searchterm != '') {
+            $filter['searchterm'] = $this->searchterm;
+        }
+
         // Institute filter.
         if ($this->selectedInstitute != '') {
             $filter['institute'] = $this->selectedInstitute;
@@ -137,10 +143,11 @@ class PlanningController extends AuthenticatedController {
     {
         $filter = array_filter([
             'semester' => Request::option('semester', null),
+            'searchterm' => Request::get('searchterm', null),
+            'seats' => (array) studip_json_decode(Request::get('seats'), null),
             'institute' => Request::get('institute'. null),
             'lecturer' => Request::option('lecturer', null),
-            'room' => Request::option('room', null),
-            'seats' => (array) studip_json_decode(Request::get('seats'), null)
+            'room' => Request::option('room', null)
         ]);
 
         $this->render_json($this->getPlannedCourses($filter));
@@ -151,13 +158,13 @@ class PlanningController extends AuthenticatedController {
      */
     public function unplanned_courses_action()
     {
-        // TODO: Set only options that are set.
         $filter = array_filter([
             'semester' => Request::option('semester', null),
+            'searchterm' => Request::get('searchterm', null),
+            'seats' => (array) studip_json_decode(Request::get('seats'), null),
             'institute' => Request::get('institute'. null),
             'lecturer' => Request::option('lecturer', null),
-            'room' => Request::option('room', null),
-            'seats' => (array) studip_json_decode(Request::get('seats'), null)
+            'room' => Request::option('room', null)
         ]);
 
         $this->render_json($this->getUnplannedCourses($filter));
@@ -246,14 +253,15 @@ class PlanningController extends AuthenticatedController {
             [
                 'semesters' => $semesters,
                 'selectedSemester' => $this->selectedSemester,
+                'searchterm' => $this->searchterm,
+                'minSeats' => $this->minSeats,
+                'maxSeats' => $this->maxSeats,
                 'institutes' => $this->institutes,
                 'selectedInstitute' => $this->selectedInstitute,
                 'lecturers' => $this->lecturers,
                 'selectedLecturer' => $this->selectedLecturer,
                 'rooms' => $buildings,
                 'selectedRoom' => $selectedRoom,
-                'minSeats' => $this->minSeats,
-                'maxSeats' => $this->maxSeats,
                 'controller' => $this
             ]
         ));

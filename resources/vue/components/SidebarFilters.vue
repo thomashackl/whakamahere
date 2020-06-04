@@ -1,6 +1,7 @@
 <template>
     <form class="default">
         <semester-filter :semesters="semesters" :selected-semester="theSemester"/>
+        <text-filter :searchterm="theSearchterm"/>
         <seats-filter :min-seats="theMinSeats" :max-seats="theMaxSeats"/>
         <institute-filter :institutes="institutes" :selected-institute="theInstitute"/>
         <lecturer-filter :lecturers="lecturers" :selected-lecturer="theLecturer"
@@ -27,6 +28,18 @@
             selectedSemester: {
                 type: String,
                 default: ''
+            },
+            searchterm: {
+                type: String,
+                default: ''
+            },
+            minSeats: {
+                type: Number,
+                default: 0
+            },
+            maxSeats: {
+                type: Number,
+                default: 0
             },
             institutes: {
                 type: Array,
@@ -56,14 +69,6 @@
                 type: String,
                 default: ''
             },
-            minSeats: {
-                type: Number,
-                default: 0
-            },
-            maxSeats: {
-                type: Number,
-                default: 0
-            },
             storeSelectionUrl: {
                 type: String,
                 default: ''
@@ -72,17 +77,28 @@
         data() {
             return {
                 theSemester: this.selectedSemester,
+                theSearchterm: this.searchterm,
+                theMinSeats: this.minSeats,
+                theMaxSeats: this.maxSeats,
                 theInstitute: this.selectedInstitute,
                 theLecturer: this.selectedLecturer,
-                theRoom: this.selectedRoom,
-                theMinSeats: this.minSeats,
-                theMaxSeats: this.maxSeats
+                theRoom: this.selectedRoom
             }
         },
         mounted() {
             bus.$on('updated-semester', (semester) => {
                 this.theSemester = semester.value
                 this.storeSelection('semester', semester.value)
+            })
+            bus.$on('updated-searchterm', (search) => {
+                this.theSearchterm = search
+                this.storeSelection('searchterm', search)
+            })
+            bus.$on('updated-seats', (seats) => {
+                const value = JSON.parse(seats)
+                this.theMinSeats = value.min
+                this.theMaxSeats = value.max
+                this.storeSelection('seats', seats)
             })
             bus.$on('updated-institute', (institute) => {
                 this.theInstitute = institute
@@ -95,12 +111,6 @@
             bus.$on('updated-room', (room) => {
                 this.theRoom = room
                 this.storeSelection('room', room)
-            })
-            bus.$on('updated-seats', (seats) => {
-                const value = JSON.parse(seats)
-                this.theMinSeats = value.min
-                this.theMaxSeats = value.max
-                this.storeSelection('seats', seats)
             })
         },
         methods: {
@@ -124,12 +134,16 @@
 </script>
 
 <style lang="scss">
-    form.default {
-        section:not(.contentbox) {
-            padding-top: 0.5em;
+    #filters {
+        font-size: 12px;
 
-            label:not(.undecorated) {
-                margin-bottom: 0;
+        form.default {
+            section:not(.contentbox) {
+                padding-top: 0.5em;
+
+                label:not(.undecorated) {
+                    margin-bottom: 0;
+                }
             }
         }
     }
