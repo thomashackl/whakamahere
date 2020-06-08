@@ -253,6 +253,13 @@ class WhakamahereCourseTime extends SimpleORMap
         $end->sub(new DateInterval('P1D'));
         $end->modify('next ' . $weekdays[$this->weekday] . ' ' . $this->end);
 
+        // Week offset if necessary
+        if ($request->startweek > 0) {
+            $startweekInterval = new DateInterval('P' . ($request->startweek - 1) . 'W');
+            $start->add($startweekInterval);
+            $end->add($startweekInterval);
+        }
+
         $interval = new DateInterval('P' . ($request->cycle * 7) . 'D');
 
         /*
