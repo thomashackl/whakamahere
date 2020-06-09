@@ -55,8 +55,9 @@ class WhakamahereCourseSlot extends SimpleORMap
         $select = "SELECT cs.*
             FROM `whakamahere_course_slots` cs
                 JOIN `whakamahere_requests` r ON (r.`request_id` = cs.`request_id`)
-                JOIN `seminare` s ON (s.`Seminar_id` = r.`course_id`)";
-        $where = "WHERE r.`semester_id` = :semester
+                JOIN `seminare` s ON (s.`Seminar_id` = r.`course_id`)
+                JOIN `semester_data` sem ON (s.`start_time` BETWEEN sem.`beginn` AND sem.`ende`)";
+        $where = "WHERE sem.`semester_id` = :semester
                 AND NOT EXISTS (
                     SELECT `slot_id` FROM `whakamahere_course_times` WHERE `slot_id` = cs.`slot_id`
                 )";

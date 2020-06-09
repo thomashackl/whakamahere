@@ -16,7 +16,6 @@
  *
  * @property int request_id database column
  * @property string course_id database column
- * @property string semester_id database column
  * @property string institute_id database column
  * @property string room_id database column
  * @property int cycle database column
@@ -37,11 +36,6 @@ class WhakamaherePlanningRequest extends SimpleORMap
             'class_name' => 'Course',
             'foreign_key' => 'course_id',
             'assoc_foreign_key' => 'seminar_id'
-        ];
-        $config['belongs_to']['semester'] = [
-            'class_name' => 'Semester',
-            'foreign_key' => 'semester_id',
-            'assoc_foreign_key' => 'semester_id'
         ];
         $config['has_many']['property_requests'] = [
             'class_name' => 'WhakamaherePropertyRequest',
@@ -70,9 +64,11 @@ class WhakamaherePlanningRequest extends SimpleORMap
     {
         $sql = "SELECT DISTINCT a.*
             FROM `auth_user_md5` a
-                JOIN `whakamahere_course_slots` s USING (`user_id`)
-                JOIN `whakamahere_requests` r USING (`request_id`)";
-        $where = " WHERE r.`semester_id` = :semester";
+                JOIN `whakamahere_course_slots` s ON (s.`user_id` = a.`user_id`)
+                JOIN `whakamahere_requests` r ON (r.`request_id` = s.`request_id`)
+                JOIN `seminare` sem ON (r.`course_id` = sem.`Seminar_id`)
+                JOIN `semester_data` sd ON (sem.`start_time` BETWEEN sd.`beginn` AND sd.`ende`)";
+        $where = " WHERE sd.`semester_id` = :semester";
         $params = [
             'semester' => $filter['semester']
         ];

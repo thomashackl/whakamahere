@@ -64,7 +64,7 @@ class WhakamahereCourseTime extends SimpleORMap
         $query = "SELECT DISTINCT t.* FROM `whakamahere_course_times` t";
 
         $joins = [
-            " JOIN `seminare` s ON (s.`Seminar_id` = t.`course_id`)"
+            " JOIN `seminare` s ON (s.`Seminar_id` = t.`course_id`)",
         ];
         $where = [
             " WHERE 1"
@@ -75,8 +75,8 @@ class WhakamahereCourseTime extends SimpleORMap
             if ($one) {
                 switch ($type) {
                     case 'semester':
-                        $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = t.`course_id`)";
-                        $where[] = "AND r.`semester_id` = :semester";
+                        $joins[] = "JOIN `semester_data` sem ON (s.`start_time` BETWEEN sem.`beginn` AND sem.`ende`)";
+                        $where[] = "AND sem.`semester_id` = :semester";
                         $params['semester'] = $one;
                         break;
                     case 'searchterm':
@@ -84,18 +84,19 @@ class WhakamahereCourseTime extends SimpleORMap
                         $params['search'] = '%' . $one . '%';
                         break;
                     case 'seats':
-                        $joins[] = " JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = r.`request_id`)";
-                        $qhere[] = " AND pr.`property_id` = :seats";
+                        $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = t.`course_id`)";
+                        $joins[] = "JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = r.`request_id`)";
+                        $qhere[] = "AND pr.`property_id` = :seats";
                         $params['seats'] = WhakamaherePropertyRequest::getSeatsPropertyId();
                         if ($filter['seats']['min'] && $filter['seats']['max']) {
-                            $where[] = " AND pr.`value` BETWEEN :min AND :max";
+                            $where[] = "AND pr.`value` BETWEEN :min AND :max";
                             $params['min'] = $one['min'];
                             $params['max'] = $one['max'];
                         } else if ($filter['seats']['min']) {
-                            $where[] = " AND pr.`value` >= :min";
+                            $where[] = "AND pr.`value` >= :min";
                             $params['min'] = $one['min'];
                         } else if ($filter['seats']['max']) {
-                            $where[] = " AND pr.`value` <= :max";
+                            $where[] = "AND pr.`value` <= :max";
                             $params['max'] = $one['max'];
                         }
                         break;
