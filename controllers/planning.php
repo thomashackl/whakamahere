@@ -37,16 +37,15 @@ class PlanningController extends AuthenticatedController {
         PageLayout::addStylesheet($this->plugin->getPluginURL() .
             '/assets/stylesheets/planning.css?v=' . $version);
 
-        $this->selectedSemester = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_SEMESTER != '' ?
-            UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_SEMESTER :
+        $this->selectedSemester = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_SEMESTER != '' ?
+            UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_SEMESTER :
             Semester::findNext()->id;
 
         $this->institutes = Institute::getMyInstitutes();
-        $this->selectedInstitute = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_INSTITUTE;
-        $this->selectedLecturer = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_LECTURER;
-        $this->selectedRoom = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_ROOM;
-        $this->searchterm = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SEARCHTERM;
-
+        $this->selectedInstitute = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_INSTITUTE;
+        $this->selectedLecturer = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_LECTURER;
+        $this->selectedRoom = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_ROOM;
+        $this->searchterm = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SEARCHTERM;
     }
 
     /**
@@ -61,6 +60,7 @@ class PlanningController extends AuthenticatedController {
         Navigation::activateItem('/resources/whakamahere/planning');
 
         PageLayout::setTitle(dgettext('whakamahere', 'Planung'));
+        PageLayout::allowFullscreenMode();
 
         if ($show == 'week') {
             PageLayout::postWarning(dgettext('whakamahere', 'Wochenansicht hamma noch ned.'));
@@ -241,8 +241,8 @@ class PlanningController extends AuthenticatedController {
             return strnatcasecmp($a['text'], $b['text']);
         });
 
-        $selectedRoom = UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_ROOM != '' ?
-            UserConfig::get($GLOBALS['user']->id)->WHAKAMAHERE_SELECTED_ROOM :
+        $selectedRoom = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_ROOM != '' ?
+            UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_ROOM :
             '';
 
         $factory = $this->get_template_factory();

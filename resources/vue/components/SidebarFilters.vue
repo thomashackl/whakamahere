@@ -4,7 +4,7 @@
                      @click="showAllFilters(true)"/>
         <studip-icon v-if="allFiltersVisible" id="remove-filter" shape="remove" width="20" height="20"
                      @click="showAllFilters(false)"/>
-        <semester-filter :semesters="semesters" :selected-semester="theSemester"/>
+        <semester-filter v-if="visibleFilters.semester" :semesters="semesters" :selected-semester="theSemester"/>
         <text-filter v-if="visibleFilters.searchterm" :searchterm="theSearchterm"/>
         <seats-filter v-if="visibleFilters.seats" :min-seats="theMinSeats" :max-seats="theMaxSeats"/>
         <institute-filter v-if="visibleFilters.institute" :institutes="institutes" :selected-institute="theInstitute"/>
@@ -103,18 +103,25 @@
                 theInstitute: this.selectedInstitute,
                 theLecturer: this.selectedLecturer,
                 theRoom: this.selectedRoom,
-                allFiltersVisible: false
+                allFiltersVisible: false,
+                fullscreenMode: document.querySelector('html').classList.contains('is-fullscreen')
             }
         },
         computed: {
             visibleFilters: function() {
                 return {
-                    semester: true,
-                    searchterm: this.theSearchterm !== '' || this.allFiltersVisible ? true : false,
-                    seats: this.theMinSeats !== 0 || this.theMaxSeats || this.allFiltersVisible ? true : false,
-                    institute: this.theInstitute !== '' || this.allFiltersVisible ? true : false,
-                    lecturer: this.theLecturer !== '' || this.allFiltersVisible ? true : false,
-                    room: this.theRoom !== '' || this.allFiltersVisible ? true : false,
+                    semester: this.fullscreenMode ?
+                        this.allFiltersVisible : (this.theSemester !== '' || this.allFiltersVisible),
+                    searchterm: this.fullscreenMode ?
+                        this.allFiltersVisible : (this.theSearchterm !== '' || this.allFiltersVisible),
+                    seats: this.fullscreenMode ?
+                        this.allFiltersVisible : (this.theMinSeats !== 0 || this.theMaxSeats !== 0 || this.allFiltersVisible),
+                    institute: this.fullscreenMode ?
+                        this.allFiltersVisible : (this.theInstitute !== '' || this.allFiltersVisible),
+                    lecturer: this.fullscreenMode ?
+                        this.allFiltersVisible : (this.theLecturer !== '' || this.allFiltersVisible),
+                    room: this.fullscreenMode ?
+                        this.allFiltersVisible : (this.theRoom !== '' || this.allFiltersVisible)
                 }
             }
         },
@@ -145,6 +152,15 @@
                 this.theRoom = room
                 this.storeSelection('room', room)
             })
+
+            // Listen for fullscreen mode and apply custom changes
+            STUDIP.domReady(() => {
+                this.fullscreenMode = (sessionStorage.getItem('studip-fullscreen') === 'on')
+                $('button.fullscreen-toggle').on('click', (event) => {
+                    this.fullscreenMode = !document.querySelector('html').classList.contains('is-fullscreen')
+                })
+            }, true)
+
         },
         methods: {
             storeSelection: function(type, value) {
@@ -166,6 +182,9 @@
             },
             showAllFilters: function(state) {
                 this.allFiltersVisible = state
+            },
+            isFullscreen: function() {
+                return sessionStorage.getItem('studip-fullscreen') === 'on'
             }
         }
     }
@@ -180,6 +199,7 @@
             position: relative;
 
             #add-filter, #remove-filter {
+                cursor: pointer;
                 left: 240px;
                 position: absolute;
                 top: -29px;

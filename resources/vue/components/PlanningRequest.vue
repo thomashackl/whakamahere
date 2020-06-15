@@ -88,7 +88,7 @@
                 <textarea name="comment" id="comment" cols="75" rows="3">{{ request.comment }}</textarea>
             </section>
         </fieldset>
-        <studip-messagebox :type="info"
+        <studip-messagebox v-if="regular == 0" :type="info"
                            message="Für unregelmäßige Veranstaltungen sind hier keine weiteren Angaben erforderlich. Bitte wenden Sie sich wegen Ihren benötigten Räumen direkt an die Raumvergabe.">
         </studip-messagebox>
     </div>

@@ -1,26 +1,26 @@
 <div id="whakamahere-courseplan">
-    <courseplan :min-time="'<?= $minTime ?>'" :max-time="'<?= $maxTime ?>'" :locale="'<?= $locale ?>'"
-                :weekends="<?= $weekends ?>" :lecture-start="'<?= $semesterStart->format('Y-m-d') ?>'"
+    <courseplan :min-time="'<?php echo $minTime ?>'" :max-time="'<?php echo $maxTime ?>'" :locale="'<?php echo $locale ?>'"
+                :weekends="<?php echo $weekends ?>" :lecture-start="'<?php echo $semesterStart->format('Y-m-d') ?>'"
                 <?php if ($selectedSemester) : ?>
-                :semester="'<?= $selectedSemester ?>'"
+                :semester="'<?php echo $selectedSemester ?>'"
                 <?php endif ?>
                 <?php if ($searchterm) : ?>
-                :searchterm="'<?= $searchterm ?>'"
+                :searchterm="'<?php echo $searchterm ?>'"
                 <?php endif ?>
                 <?php if ($minSeats) : ?>
-                    :min-seats="<?= $minSeats ?>"
+                    :min-seats="<?php echo $minSeats ?>"
                 <?php endif ?>
                 <?php if ($maxSeats) : ?>
-                    :max-seats="<?= $maxSeats ?>"
+                    :max-seats="<?php echo $maxSeats ?>"
                 <?php endif ?>
                 <?php if ($selectedInstitute) : ?>
-                :institute="'<?= $selectedInstitute ?>'"
+                :institute="'<?php echo $selectedInstitute ?>'"
                 <?php endif ?>
                 <?php if ($selectedLecturer) : ?>
-                :lecturer="'<?= $selectedLecturer ?>'"
+                :lecturer="'<?php echo $selectedLecturer ?>'"
                 <?php endif ?>
                 <?php if ($selectedRoom) : ?>
-                :room="'<?= $selectedRoom ?>'"
+                :room="'<?php echo $selectedRoom ?>'"
                 <?php endif ?>
     ></courseplan>
 </div>

@@ -177,6 +177,17 @@
                 this._data.plannedCourseList.push(course)
             })
 
+            // Listen for fullscreen mode and apply custom changes
+            STUDIP.domReady(() => {
+                if (sessionStorage.getItem('studip-fullscreen') === 'on') {
+                    this.repositionFilterWidget()
+                }
+
+                $('button.fullscreen-toggle').on('click', (event) => {
+                    this.repositionFilterWidget()
+                })
+            }, true)
+
         },
         methods: {
             updateData() {
@@ -413,6 +424,23 @@
                     hour12: false
                 }
                 return new Intl.DateTimeFormat('de-DE', options).format(date)
+            },
+            repositionFilterWidget: function() {
+                const filters = document.querySelector('#layout-sidebar section.sidebar ' +
+                    'div.sidebar-widget div.sidebar-widget-content #filters')
+                const widget = filters.parentNode.parentNode
+
+                // We are in fullscreen (class list is checked somewhat crosswise)
+                if (!document.querySelector('html').classList.contains('is-fullscreen')) {
+                    widget.style.visibility = 'visible'
+                    widget.style.position = 'fixed'
+                    widget.style.left = '27px'
+                    widget.style.top = '-5px'
+                    widget.style.width = '270px'
+                } else {
+                    widget.style.visibility = widget.style.position =
+                        widget.style.left = widget.style.top = widget.style.width = null
+                }
             }
         },
         watch: {
@@ -431,14 +459,43 @@
 </script>
 
 <style lang="scss">
-    #courseplan {
-        display: flex;
-        flex-direction: column;
-        position: relative;
+    html {
+        body {
+            #whakamahere-courseplan {
+                #courseplan {
+                    display: flex;
+                    flex-direction: column;
+                    position: relative;
 
-        .vld-parent {
-            left: 0 !important;
-            top: 0 !important;
+                    .vld-parent {
+                        left: 0 !important;
+                        top: 0 !important;
+                    }
+                }
+            }
+        }
+
+        &.is-fullscreen {
+            #studip-logo, #upa-logo {
+                display: none;
+            }
+
+            #layout-sidebar {
+                opacity: 1;
+                visibility: hidden;
+            }
+
+            button.fullscreen-toggle {
+                background-size: 32px;
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                width: 32px;
+            }
+
+            #whakamahere-courseplan {
+                margin-top: 35px;
+            }
         }
     }
 </style>
