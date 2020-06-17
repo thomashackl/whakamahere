@@ -1,6 +1,6 @@
 <template>
     <div class="vld-parent">
-        <loading :active="isLoading" :can-cancel="false" :is-full-page="fullPage" loader="dots"
+        <loading :active="isLoading" :can-cancel="false" :is-full-page="fullPage" loader="spinner"
                  :width="width" :height="height" color="#fff"/>
     </div>
 </template>
