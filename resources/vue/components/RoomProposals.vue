@@ -138,6 +138,10 @@
                     classes = 'manual '
                 }
 
+                if (room.always_occupied) {
+                    classes += 'always-occupied '
+                }
+
                 if (room.score > 100) {
                     classes += 'room-preference'
                 } else if (room.score >= 85) {
@@ -257,6 +261,9 @@
                 tr {
                     &.manual {
                         font-style: italic;
+                    }
+                    &.always-occupied {
+                        text-decoration: line-through;
                     }
                     &.room-preference {
                         background-color: #008512;
