@@ -327,7 +327,7 @@ class SlotController extends AuthenticatedController {
                     ];
                 }),
                 'room' => $request->room_id ? $request->room->name : dgettext('whakamahere', 'nicht angegeben'),
-                'semester' => (string) $request->semester->name,
+                'semester' => (string) $request->course->start_semester->name,
                 'startweek' => (int) $request->startweek,
                 'time' => $slot->time,
                 'weekday' => (int) $slot->weekday
