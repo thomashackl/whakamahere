@@ -89,8 +89,6 @@ class CourseController extends AuthenticatedController {
                 }
             }
 
-            PageLayout::postInfo('<pre>' . print_r($this->flash, 1) . '</pre>');
-
         } else {
             $request = WhakamaherePlanningRequest::findOneByCourse_id($this->course->id);
         }
@@ -211,7 +209,20 @@ class CourseController extends AuthenticatedController {
             $slots = new SimpleCollection();
             foreach (Request::getArray('slots') as $slot) {
                 if ($slot['slot_id']) {
-                    $one = $request->slots->find('slot_id', $slot['slot_id']);
+                    $one = $request->slots->findOneBy('slot_id', $slot['slot_id']);
+
+                    /*
+                     * Check if the time preference has been changed
+                     * -> create new slot, discard old one
+                     */
+                    // Create DateTime objects because of appended seconds in database entry.
+                    $t1 = new DateTime($slot['time']);
+                    $t2 = new DateTime($one->time);
+                    if ($one->planned_time && ($slot['weekday'] != $one->weekday || $t1 != $t2)) {
+                        $one->planned_time->delete();
+                    }
+                    $one->chdate = date('Y-m-d H:i:s');
+
                 } else {
                     $one = new WhakamahereCourseSlot();
 

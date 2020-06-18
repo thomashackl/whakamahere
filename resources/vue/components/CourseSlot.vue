@@ -3,7 +3,8 @@
         <header>
             Regelmäßiger Termin {{ internalNumber }}
             <studip-icon shape="trash" size="20" role="info_alt" @click="removeMe"></studip-icon>
-            <input v-if="data.slot_id != null" type="hidden" name="slot_id" :value="data.slot_id">
+            <input v-if="data.slot_id != null" type="hidden" :name="'slots[' + internalNumber + '][slot_id]'"
+                   :value="data.slot_id">
         </header>
         <section>
             <label :for="'lecturer-' + internalNumber">
