@@ -45,7 +45,7 @@ const WhakamahereTimeline = {
                         element.append(ul);
 
                         element.timeline({
-                            startDatetime: '2019-10-01',
+                            startDatetime: '2020-04-01',
                             type: 'bar',
                             range: 6,
                             rows: 1,
