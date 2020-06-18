@@ -11,9 +11,9 @@
                 <span class="required">Dozent/in</span>
             </label>
             <select :id="'lecturer-' + internalNumber" :name="'slots[' + internalNumber + '][user_id]'">
-                <option value="">N. N.</option>
                 <option v-for="person in lecturers" :key="person.id" :value="person.id"
                         :selected="person.id == data.user_id">{{ person.name }}</option>
+                <option value="">N. N.</option>
             </select>
         </section>
         <section>
