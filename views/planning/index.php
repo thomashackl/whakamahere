@@ -1,6 +1,8 @@
 <div id="whakamahere-courseplan">
-    <courseplan :min-time="'<?php echo $minTime ?>'" :max-time="'<?php echo $maxTime ?>'" :locale="'<?php echo $locale ?>'"
-                :weekends="<?php echo $weekends ?>" :lecture-start="'<?php echo $semesterStart->format('Y-m-d') ?>'"
+    <courseplan :min-time="'<?php echo $minTime ?>'" :max-time="'<?php echo $maxTime ?>'"
+                :locale="'<?php echo $locale ?>'" mode="<?php echo $view ?>" :show-weekends="<?php echo $weekends ?>"
+                lecture-start="<?php echo $semesterStart->format('Y-m-d') ?>"
+                :semester-weeks='<?php echo json_encode($weeks) ?>'
                 <?php if ($selectedSemester) : ?>
                 :semester="'<?php echo $selectedSemester ?>'"
                 <?php endif ?>

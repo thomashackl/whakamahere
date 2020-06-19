@@ -10,9 +10,13 @@
 
 <script>
     import bus from 'jsassets/bus'
+    import Select2 from './Select2'
 
     export default {
         name: 'InstituteFilter',
+        components: {
+            Select2
+        },
         props: {
             institutes: Array,
             selectedInstitute: String

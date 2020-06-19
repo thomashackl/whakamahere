@@ -3,19 +3,32 @@
         <studip-loading-indicator v-if="loadingPlanned || loadingUnplanned"
                                   :is-loading="loadingPlanned || loadingUnplanned"
                                   :width="128" :height="128"/>
-        <schedule :min-time="minTime" :max-time="maxTime" :locale="locale"
-                  :weekends="weekends" :lecture-start="lectureStart"
+        <schedule v-if="mode == 'semester'" :min-time="minTime" :max-time="maxTime" :locale="locale"
+                  :show-weekends="showWeekends" :lecture-start="lectureStart"
                   :courses="plannedCourseList"></schedule>
-        <unplanned-courses-list :courses="unplannedCourseList" :lectureStart="lectureStart"></unplanned-courses-list>
+        <week-schedule v-if="mode == 'week'" :min-time="minTime" :max-time="maxTime" :locale="locale"
+                       :weeks="semesterWeeks" :show-weekends="showWeekends"></week-schedule>
+        <unplanned-courses-list v-if="mode == 'semester'" :courses="unplannedCourseList"
+                                :lectureStart="lectureStart"></unplanned-courses-list>
     </div>
 </template>
 
 <script>
     import bus from 'jsassets/bus'
     import { globalfunctions } from './mixins/globalfunctions'
+    import StudipLoadingIndicator from './StudipLoadingIndicator'
+    import Schedule from './Schedule'
+    import WeekSchedule from './WeekSchedule'
+    import UnplannedCoursesList from './UnplannedCoursesList'
 
     export default {
         name: 'Courseplan',
+        components: {
+            StudipLoadingIndicator,
+            Schedule,
+            WeekSchedule,
+            UnplannedCoursesList
+        },
         mixins: [
             globalfunctions
         ],
@@ -23,6 +36,10 @@
             locale: {
                 type: String,
                 default: 'de'
+            },
+            mode: {
+                type: String,
+                default: 'semester'
             },
             minTime: {
                 type: String,
@@ -32,13 +49,17 @@
                 type: String,
                 default: '22:00'
             },
-            weekends: {
+            showWeekends: {
                 type: Boolean,
                 default: false
             },
             lectureStart: {
                 type: String,
                 default: ''
+            },
+            semesterWeeks: {
+                type: Array,
+                default: () => []
             },
             plannedCourses: {
                 type: Array,

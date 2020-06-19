@@ -12,9 +12,13 @@
 
 <script>
     import bus from 'jsassets/bus'
+    import Select2 from './Select2'
 
     export default {
         name: 'LecturerFilter',
+        components: {
+            Select2
+        },
         props: {
             lecturers: {
                 type: Array,

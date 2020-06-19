@@ -53,11 +53,15 @@
 
 <script>
     import bus from 'jsassets/bus'
-    import interactionPlugin from "@fullcalendar/interaction";
-    import timeGridWeekPlugin from "@fullcalendar/timegrid";
+    import StudipIcon from './StudipIcon'
+    import StudipMessagebox from './StudipMessagebox'
 
     export default {
         name: 'UnplannedCoursesList',
+        components: {
+            StudipIcon,
+            StudipMessagebox
+        },
         props: {
             courses: {
                 type: Array,

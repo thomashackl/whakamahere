@@ -62,10 +62,6 @@ class PlanningController extends AuthenticatedController {
         PageLayout::setTitle(dgettext('whakamahere', 'Planung'));
         PageLayout::allowFullscreenMode();
 
-        if ($show == 'week') {
-            PageLayout::postWarning(dgettext('whakamahere', 'Wochenansicht hamma noch ned.'));
-        }
-
         $this->view = $show;
 
         // Schedule view start and end hours.
@@ -81,6 +77,8 @@ class PlanningController extends AuthenticatedController {
         $semester = Semester::find($this->selectedSemester);
         $this->semesterStart = new DateTime();
         $this->semesterStart->setTimestamp($semester->vorles_beginn);
+
+        $this->weeks = WhakamaherePlanningRequest::getStartWeeks($semester);
 
         // Show weekends?
         $this->weekends = Config::get()->WHAKAMAHERE_PLANNING_SHOW_WEEKENDS ? 'true' : 'false';

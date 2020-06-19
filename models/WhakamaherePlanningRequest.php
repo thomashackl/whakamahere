@@ -112,18 +112,31 @@ class WhakamaherePlanningRequest extends SimpleORMap
      */
     public static function getStartWeeks($semester)
     {
-        // Available start weeks for given semester.
-        $startWeeks = [];
-        $firstWeek = $semester->first_sem_week;
-        $currentWeek = $firstWeek;
-        $i = 1;
-        $start = $semester->vorles_beginn;
-        while ($start < $semester->vorles_ende) {
-            $startWeeks[$i-1] = sprintf(dgettext('whakamahere', '%s. Semesterwoche (ab %s)'),
-                $i, date('d.m.Y', $start));
-            $currentWeek++;
-            $start += (7*24*60*60);
-            $i++;
+        $cache = StudipCacheFactory::getCache();
+
+        // Use cached entry if available.
+        if ($startWeeks = $cache->read('start-weeks-semester-' . $semester->id)) {
+
+            return studip_json_decode($startWeeks);
+
+        } else {
+
+            // Available start weeks for given semester.
+            $startWeeks = [];
+            $firstWeek = $semester->first_sem_week;
+            $currentWeek = $firstWeek;
+            $i = 1;
+            $start = $semester->vorles_beginn;
+            while ($start < $semester->vorles_ende) {
+                $startWeeks[$i-1] = sprintf(dgettext('whakamahere', '%s. Semesterwoche (ab %s)'),
+                    $i, date('d.m.Y', $start));
+                $currentWeek++;
+                $start += (7*24*60*60);
+                $i++;
+            }
+
+            $cache->write('start-weeks-semester-' . $semester->id, studip_json_encode($startWeeks));
+
         }
 
         return $startWeeks;
@@ -136,37 +149,50 @@ class WhakamaherePlanningRequest extends SimpleORMap
      */
     public static function getEndWeeks($semester)
     {
-        $weeks = [];
-        $firstWeek = $semester->first_sem_week;
-        $currentWeek = $firstWeek;
-        $i = 1;
+        $cache = StudipCacheFactory::getCache();
 
-        /*
-         * Since the last day of lecturing period is not necessarily a Sunday,
-         * we need this in ordner to show the correct end day for last semester week.
-         */
-        $semEnd = new DateTime();
-        $semEnd->setTimestamp($semester->vorles_ende);
+        // Use cached entry if available.
+        if ($endWeeks = $cache->read('end-weeks-semester-' . $semester->id)) {
 
-        $start = $semester->vorles_beginn;
-        $endDay = new DateTime();
-        $endDay->setTimestamp($semester->vorles_beginn);
-        $endDay->modify('next Sunday');
+            return studip_json_decode($endWeeks);
 
-        $oneweek = new DateInterval('P1W');
+        } else {
 
-        while ($start < $semester->vorles_ende) {
-            $weekEndDay = min($endDay, $semEnd);
+            $weeks = [];
+            $firstWeek = $semester->first_sem_week;
+            $currentWeek = $firstWeek;
+            $i = 1;
 
-            $weeks[$i-1] = sprintf(dgettext('whakamahere', '%s. Semesterwoche (bis %s)'),
-                $i, $weekEndDay->format('d.m.Y'));
-            $currentWeek++;
-            $start += (7*24*60*60);
-            $endDay->add($oneweek);
-            $i++;
+            /*
+             * Since the last day of lecturing period is not necessarily a Sunday,
+             * we need this in ordner to show the correct end day for last semester week.
+             */
+            $semEnd = new DateTime();
+            $semEnd->setTimestamp($semester->vorles_ende);
+
+            $start = $semester->vorles_beginn;
+            $endDay = new DateTime();
+            $endDay->setTimestamp($semester->vorles_beginn);
+            $endDay->modify('next Sunday');
+
+            $oneweek = new DateInterval('P1W');
+
+            while ($start < $semester->vorles_ende) {
+                $weekEndDay = min($endDay, $semEnd);
+
+                $endWeeks[$i - 1] = sprintf(dgettext('whakamahere', '%s. Semesterwoche (bis %s)'),
+                    $i, $weekEndDay->format('d.m.Y'));
+                $currentWeek++;
+                $start += (7 * 24 * 60 * 60);
+                $endDay->add($oneweek);
+                $i++;
+            }
+
+            $cache->write('end-weeks-semester-' . $semester->id, studip_json_encode(array_reverse($endWeeks)));
+
+            return array_reverse($endWeeks);
         }
 
-        return array_reverse($weeks);
     }
 
 }

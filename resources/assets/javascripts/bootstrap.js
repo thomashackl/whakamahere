@@ -15,7 +15,7 @@ Vue.prototype.$pluginBase = 'plugins.php/whakamahereplugin'
  * Eg. ./components/ExampleComponent.vue -> <example-component></example-component>
  */
 
-const files = require.context('../../vue/components', true, /\.vue$/i)
+const files = require.context('../../vue/components', true, /Courseplan|SidebarFilters$/i)
 
 files.keys().map(key =>
     Vue.component(

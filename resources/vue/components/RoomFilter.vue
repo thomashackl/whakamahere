@@ -9,9 +9,13 @@
 
 <script>
     import bus from 'jsassets/bus'
+    import Select2 from './Select2'
 
     export default {
         name: 'RoomFilter',
+        components: {
+            Select2
+        },
         props: {
             rooms: Array,
             selectedRoom: String
