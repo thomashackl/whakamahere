@@ -10,7 +10,8 @@
                           seats-id="<?= $seats ?>"
                           :lecturers='<?= studip_json_encode($lecturers) ?>'
                           :rooms='<?= studip_json_encode($rooms) ?>'
-                          :weeks='<?= studip_json_encode($weeks) ?>'
+                          :start-weeks='<?= studip_json_encode($start_weeks) ?>'
+                          :end-weeks='<?= studip_json_encode($end_weeks) ?>'
                           :request='<?= studip_json_encode($request) ?>'></planning-request>
     </div>
 

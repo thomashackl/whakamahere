@@ -20,6 +20,7 @@
  * @property string room_id database column
  * @property int cycle database column
  * @property int startweek database column
+ * @property int end_offset database column
  * @property string comment database column
  * @property string internal_comment database column
  * @property string mkdate database column
@@ -103,23 +104,69 @@ class WhakamaherePlanningRequest extends SimpleORMap
         );
     }
 
+    /**
+     * Gets all available start weeks for the given semester.
+     *
+     * @param Semester $semester
+     * @return array Numbered weeks, 0 is first week in lecturing period.
+     */
     public static function getStartWeeks($semester)
     {
         // Available start weeks for given semester.
-        $start_weeks = [];
-        $first_week = $semester->first_sem_week;
-        $current_week = $first_week;
+        $startWeeks = [];
+        $firstWeek = $semester->first_sem_week;
+        $currentWeek = $firstWeek;
         $i = 1;
         $start = $semester->vorles_beginn;
         while ($start < $semester->vorles_ende) {
-            $start_weeks[$i-1] = sprintf(dgettext('whakamahere', '%s. Semesterwoche (ab %s)'),
+            $startWeeks[$i-1] = sprintf(dgettext('whakamahere', '%s. Semesterwoche (ab %s)'),
                 $i, date('d.m.Y', $start));
-            $current_week++;
+            $currentWeek++;
             $start += (7*24*60*60);
             $i++;
         }
 
-        return $start_weeks;
+        return $startWeeks;
+    }
+
+    /**
+     * Get possible end weeks for the given semester.
+     *
+     * @param Semester $semester
+     */
+    public static function getEndWeeks($semester)
+    {
+        $weeks = [];
+        $firstWeek = $semester->first_sem_week;
+        $currentWeek = $firstWeek;
+        $i = 1;
+
+        /*
+         * Since the last day of lecturing period is not necessarily a Sunday,
+         * we need this in ordner to show the correct end day for last semester week.
+         */
+        $semEnd = new DateTime();
+        $semEnd->setTimestamp($semester->vorles_ende);
+
+        $start = $semester->vorles_beginn;
+        $endDay = new DateTime();
+        $endDay->setTimestamp($semester->vorles_beginn);
+        $endDay->modify('next Sunday');
+
+        $oneweek = new DateInterval('P1W');
+
+        while ($start < $semester->vorles_ende) {
+            $weekEndDay = min($endDay, $semEnd);
+
+            $weeks[$i-1] = sprintf(dgettext('whakamahere', '%s. Semesterwoche (bis %s)'),
+                $i, $weekEndDay->format('d.m.Y'));
+            $currentWeek++;
+            $start += (7*24*60*60);
+            $endDay->add($oneweek);
+            $i++;
+        }
+
+        return array_reverse($weeks);
     }
 
 }

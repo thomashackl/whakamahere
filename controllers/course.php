@@ -67,7 +67,8 @@ class CourseController extends AuthenticatedController {
         }
 
         $this->rooms = WhakamaherePlanningRequest::getAvailableRooms();
-        $this->weeks = WhakamaherePlanningRequest::getStartWeeks($this->course->start_semester);
+        $this->start_weeks = WhakamaherePlanningRequest::getStartWeeks($this->course->start_semester);
+        $this->end_weeks = WhakamaherePlanningRequest::getEndWeeks($this->course->start_semester);
 
         if ($this->flash['request']) {
 
@@ -182,6 +183,7 @@ class CourseController extends AuthenticatedController {
             $request->room_id = Request::option('room_id', null);
             $request->cycle = Request::int('cycle');
             $request->startweek = Request::int('startweek');
+            $request->end_offset = Request::int('end_offset');
             $request->comment = Request::get('comment');
             $request->internal_comment = '';
 

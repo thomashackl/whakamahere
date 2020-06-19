@@ -20,6 +20,16 @@
             <section class="col-3">
                 <div class="label">Startwoche:</div>
                 startet in der {{ details.startweek + 1 }}. Vorlesungswoche
+                <div class="label">Ende:</div>
+                <template v-if="details.end_offset == 0">
+                    endet zum Vorlesungsende
+                </template>
+                <template v-else-if="details.end_offset == 1">
+                    endet eine Woche vor Vorlesungsende
+                </template>
+                <template v-else>
+                    endet {{ details.end_offset }} Wochen vor Vorlesungsende
+                </template>
             </section>
             <section class="col-3">
                 <div class="label">Lehrende(r):</div>

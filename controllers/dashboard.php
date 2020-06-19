@@ -53,7 +53,7 @@ class DashboardController extends AuthenticatedController {
 
         foreach (Semester::getAll() as $semester) {
             if ($phases = WhakamaherePlanningPhase::findBySemester_id($semester->id, "ORDER BY `start`, `end`")) {
-                $this->timelines[$semester->name] = $phases;
+                $this->timelines[(string) $semester->name] = $phases;
             }
         }
 

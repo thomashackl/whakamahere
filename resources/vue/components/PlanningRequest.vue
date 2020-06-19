@@ -77,8 +77,17 @@
                     In welcher Woche der Vorlesungszeit beginnt die Veranstaltung?
                 </label>
                 <select name="startweek" id="startweek">
-                    <option v-for="(week, index) in weeks" :key="index" :value="index"
+                    <option v-for="(week, index) in startWeeks" :key="index" :value="index"
                             :selected="index == request.startweek">{{ week }}</option>
+                </select>
+            </section>
+            <section>
+                <label for="end-offset">
+                    In welcher Woche der Vorlesungszeit endet die Veranstaltung?
+                </label>
+                <select name="end_offset" id="end-offset">
+                    <option v-for="(week, index) in endWeeks" :key="index" :value="index"
+                            :selected="index == request.end_offset">{{ week }}</option>
                 </select>
             </section>
             <section>
@@ -128,7 +137,10 @@
             rooms: {
                 type: Array
             },
-            weeks: {
+            startWeeks: {
+                type: Array
+            },
+            endWeeks: {
                 type: Array
             },
             request: {
