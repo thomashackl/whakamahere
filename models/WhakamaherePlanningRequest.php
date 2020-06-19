@@ -135,7 +135,7 @@ class WhakamaherePlanningRequest extends SimpleORMap
                 $i++;
             }
 
-            $cache->write('start-weeks-semester-' . $semester->id, studip_json_encode($startWeeks));
+            $cache->write('start-weeks-semester-' . $semester->id, studip_json_encode($startWeeks), 86400);
 
         }
 
@@ -146,6 +146,7 @@ class WhakamaherePlanningRequest extends SimpleORMap
      * Get possible end weeks for the given semester.
      *
      * @param Semester $semester
+     * @return array Numbered weeks, index represents offset from last lecturing period week.
      */
     public static function getEndWeeks($semester)
     {
@@ -188,7 +189,7 @@ class WhakamaherePlanningRequest extends SimpleORMap
                 $i++;
             }
 
-            $cache->write('end-weeks-semester-' . $semester->id, studip_json_encode(array_reverse($endWeeks)));
+            $cache->write('end-weeks-semester-' . $semester->id, studip_json_encode(array_reverse($endWeeks)), 86400);
 
             return array_reverse($endWeeks);
         }
