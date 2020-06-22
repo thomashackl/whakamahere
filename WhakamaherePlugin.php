@@ -56,6 +56,8 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
             }
 
             Navigation::addItem('/resources/whakamahere', $navigation);
+
+            NotificationCenter::addObserver($this, 'removeDeletedBooking', 'ResourceBookingDidDelete');
         }
 
         // Create navigation for resource requirements in courses
@@ -117,6 +119,11 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
 
         $dispatcher->plugin = $this;
         $dispatcher->dispatch($unconsumed_path);
+    }
+
+    public function removeDeletedBooking($event, $affected, $data)
+    {
+        WhakamahereTimeBooking::deleteByBooking_id($affected->id);
     }
 
 }
