@@ -24,6 +24,9 @@
                 <?php if ($selectedRoom) : ?>
                 :room="'<?php echo $selectedRoom ?>'"
                 <?php endif ?>
+                <?php if ($selectedWeek) : ?>
+                :selected-week="'<?php echo $selectedWeek ?>'"
+                <?php endif ?>
     ></courseplan>
 </div>
 <script>

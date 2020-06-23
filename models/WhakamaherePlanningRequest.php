@@ -126,12 +126,26 @@ class WhakamaherePlanningRequest extends SimpleORMap
             $firstWeek = $semester->first_sem_week;
             $currentWeek = $firstWeek;
             $i = 1;
-            $start = $semester->vorles_beginn;
-            while ($start < $semester->vorles_ende) {
-                $startWeeks[$i-1] = sprintf(dgettext('whakamahere', '%s. Semesterwoche (ab %s)'),
-                    $i, date('d.m.Y', $start));
+            $tz = new DateTimeZone('Europe/Berlin');
+            $start = new DateTime('now', $tz);
+            $start->setTimestamp($semester->vorles_beginn);
+            $end = new DateTime('now', $tz);
+            $end->setTimestamp($semester->vorles_ende);
+            $oneWeek = new DateInterval('P1W');
+            $sixDays = new DateInterval('P6D');
+            while ($start < $end) {
+                $sixDaysLater = new DateTime('now', $tz);
+                $sixDaysLater->setTimestamp($start->getTimestamp());
+                $sixDaysLater->add($sixDays);
+                $startWeeks[$i-1] = [
+                    'text' => sprintf(dgettext('whakamahere', '%s. Semesterwoche (ab %s)'),
+                        $i, $start->format('d.m.Y')),
+                    'startDate' => $start->format('Y-m-d'),
+                    'endDate' => $sixDaysLater->format('Y-m-d')
+
+                ];
                 $currentWeek++;
-                $start += (7*24*60*60);
+                $start->add($oneWeek);
                 $i++;
             }
 

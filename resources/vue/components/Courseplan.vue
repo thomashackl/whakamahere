@@ -7,7 +7,8 @@
                   :show-weekends="showWeekends" :lecture-start="lectureStart"
                   :courses="plannedCourseList"></schedule>
         <week-schedule v-if="mode == 'week'" :min-time="minTime" :max-time="maxTime" :locale="locale"
-                       :weeks="semesterWeeks" :show-weekends="showWeekends"></week-schedule>
+                       :weeks="semesterWeeks" :selectedWeek="selectedWeek" :show-weekends="showWeekends"
+                       :courses="plannedCourseList"></week-schedule>
         <unplanned-courses-list v-if="mode == 'semester'" :courses="unplannedCourseList"
                                 :lectureStart="lectureStart"></unplanned-courses-list>
     </div>
@@ -61,6 +62,14 @@
                 type: Array,
                 default: () => []
             },
+            selectedWeek: {
+                type: Number,
+                default: 0
+            },
+            lastSemesterWeek: {
+                type: Number,
+                default: 0
+            },
             plannedCourses: {
                 type: Array,
                 default: () => []
@@ -110,7 +119,8 @@
                 theMaxSeats: this.maxSeats,
                 theInstitute: this.institute,
                 theLecturer: this.lecturer,
-                theRoom: this.room
+                theRoom: this.room,
+                theWeek: this.selectedWeek
             }
         },
         mounted() {
@@ -151,6 +161,11 @@
             // Catch event for changed room in sidebar
             bus.$on('updated-room', (value) => {
                 this.theRoom = value
+                this.updateData()
+            })
+            // Catch event for changed week in week view
+            bus.$on('updated-week', (value) => {
+                this.theWeek = value
                 this.updateData()
             })
 
@@ -217,7 +232,9 @@
                 if (this.theSearchterm != '' || this.theMinSeats != 0 || this.theMaxSeats != 0 ||
                         this.theInstitute != '' || this.theLecturer != '' || this.theRoom != '') {
                     this.getPlannedCourses()
-                    this.getUnplannedCourses()
+                    if (this.mode == 'semester') {
+                        this.getUnplannedCourses()
+                    }
                 }
             },
             async getUnplannedCourses() {
@@ -300,6 +317,11 @@
 
                 if (this.theRoom != '') {
                     formData.append('room', this.theRoom)
+                }
+
+                if (this.mode == 'week') {
+                    formData.append('week', this.theWeek)
+                    formData.append('lastweek', this.semesterWeeks.length)
                 }
 
                 fetch(

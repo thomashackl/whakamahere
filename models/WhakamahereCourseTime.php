@@ -72,60 +72,67 @@ class WhakamahereCourseTime extends SimpleORMap
         $params = [];
 
         foreach ($filter as $type => $one) {
-            if ($one) {
-                switch ($type) {
-                    case 'semester':
-                        $joins[] = "JOIN `semester_data` sem ON (s.`start_time` BETWEEN sem.`beginn` AND sem.`ende`)";
-                        $where[] = "AND sem.`semester_id` = :semester";
-                        $params['semester'] = $one;
-                        break;
-                    case 'searchterm':
-                        $where[] = "AND (s.`VeranstaltungsNummer` LIKE :search OR s.`Name` LIKE :search)";
-                        $params['search'] = '%' . $one . '%';
-                        break;
-                    case 'seats':
-                        $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = t.`course_id`)";
-                        $joins[] = "JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = r.`request_id`)";
-                        $qhere[] = "AND pr.`property_id` = :seats";
-                        $params['seats'] = WhakamaherePropertyRequest::getSeatsPropertyId();
-                        if ($filter['seats']['min'] && $filter['seats']['max']) {
-                            $where[] = "AND pr.`value` BETWEEN :min AND :max";
-                            $params['min'] = $one['min'];
-                            $params['max'] = $one['max'];
-                        } else if ($filter['seats']['min']) {
-                            $where[] = "AND pr.`value` >= :min";
-                            $params['min'] = $one['min'];
-                        } else if ($filter['seats']['max']) {
-                            $where[] = "AND pr.`value` <= :max";
-                            $params['max'] = $one['max'];
-                        }
-                        break;
-                    case 'institute':
-                        $sub = explode('+', $one);
-                        if (count($sub) > 1) {
-                            $institutes = DBManager::get()->fetchFirst(
-                                "SELECT `Institut_id` FROM `Institute` WHERE `fakultaets_id` = :institute",
-                                ['institute' => $sub[0]]
-                            );
-                        } else {
-                            $institutes = [$one];
-                        }
+            switch ($type) {
+                case 'semester':
+                    $joins[] = "JOIN `semester_data` sem ON (s.`start_time` BETWEEN sem.`beginn` AND sem.`ende`)";
+                    $where[] = "AND sem.`semester_id` = :semester";
+                    $params['semester'] = $one;
+                    break;
+                case 'searchterm':
+                    $where[] = "AND (s.`VeranstaltungsNummer` LIKE :search OR s.`Name` LIKE :search)";
+                    $params['search'] = '%' . $one . '%';
+                    break;
+                case 'seats':
+                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = t.`course_id`)";
+                    $joins[] = "JOIN `whakamahere_property_requests` pr ON (pr.`request_id` = r.`request_id`)";
+                    $qhere[] = "AND pr.`property_id` = :seats";
+                    $params['seats'] = WhakamaherePropertyRequest::getSeatsPropertyId();
+                    if ($filter['seats']['min'] && $filter['seats']['max']) {
+                        $where[] = "AND pr.`value` BETWEEN :min AND :max";
+                        $params['min'] = $one['min'];
+                        $params['max'] = $one['max'];
+                    } else if ($filter['seats']['min']) {
+                        $where[] = "AND pr.`value` >= :min";
+                        $params['min'] = $one['min'];
+                    } else if ($filter['seats']['max']) {
+                        $where[] = "AND pr.`value` <= :max";
+                        $params['max'] = $one['max'];
+                    }
+                    break;
+                case 'institute':
+                    $sub = explode('+', $one);
+                    if (count($sub) > 1) {
+                        $institutes = DBManager::get()->fetchFirst(
+                            "SELECT `Institut_id` FROM `Institute` WHERE `fakultaets_id` = :institute",
+                            ['institute' => $sub[0]]
+                        );
+                    } else {
+                        $institutes = [$one];
+                    }
 
-                        $where[] = "AND s.`Institut_id` IN (:institutes)";
-                        $params['institutes'] = $institutes;
-                        break;
-                    case 'lecturer':
-                        $joins[] = "JOIN `whakamahere_course_slots` cs ON (cs.`slot_id` = t.`slot_id`)";
-                        $where[] = "AND cs.`user_id` = :lecturer";
-                        $params['lecturer'] = $one;
-                        break;
-                    case 'room':
-                        $joins[] = "JOIN `whakamahere_time_bookings` tb ON (tb.`time_id` = t.`time_id`)";
-                        $joins[] = "JOIN `resource_bookings` rb ON (rb.`id` = tb.`booking_id`)";
-                        $where[] = "AND rb.`resource_id` = :room";
-                        $params['room'] = $one;
-                        break;
-                }
+                    $where[] = "AND s.`Institut_id` IN (:institutes)";
+                    $params['institutes'] = $institutes;
+                    break;
+                case 'lecturer':
+                    $joins[] = "JOIN `whakamahere_course_slots` cs ON (cs.`slot_id` = t.`slot_id`)";
+                    $where[] = "AND cs.`user_id` = :lecturer";
+                    $params['lecturer'] = $one;
+                    break;
+                case 'room':
+                    $joins[] = "JOIN `whakamahere_time_bookings` tb ON (tb.`time_id` = t.`time_id`)";
+                    $joins[] = "JOIN `resource_bookings` rb ON (rb.`id` = tb.`booking_id`)";
+                    $where[] = "AND rb.`resource_id` = :room";
+                    $params['room'] = $one;
+                    break;
+                case 'week':
+                    $joins[] = "JOIN `whakamahere_requests` wr ON (wr.`course_id` = t.`course_id`)";
+                    $where[] = "AND (
+                            :week >= wr.`startweek` + 1
+                            AND :week <= :lastweek - wr.`end_offset`
+                            AND MOD(:week - wr.`startweek` + 1, wr.`cycle`) = 0
+                        )";
+                    $params['week'] = $one + 1;
+                    $params['lastweek'] = $filter['lastweek'];
             }
         }
 
@@ -153,6 +160,17 @@ class WhakamahereCourseTime extends SimpleORMap
                 AND `whakamahere_requests`.`semester_id` = :semester
             ORDER BY `weekday`, `start`, `end`",
             ['user' => $user_id, 'semester' => $semester_id]);
+    }
+
+    /**
+     * Checks if this CourseTime has a date in the given week
+     * (depending on start and end week and turnus).
+     *
+     * @param int $week week number, 0 is first week of lecturing period
+     */
+    public function takesPlaceInWeek($week)
+    {
+
     }
 
     /**

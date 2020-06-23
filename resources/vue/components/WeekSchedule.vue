@@ -1,17 +1,15 @@
 <template>
-    <div>
-        <select name="week" id="whakamahere-schedule-week">
+    <div id="week-schedule">
+        <select id="week" v-model="theWeek" @change="setWeek">
             <option v-for="(week, index) in weeks" :key="index" :value="index">
-                {{ week }}
+                {{ week.text }}
             </option>
         </select>
         <full-calendar ref="schedule" :plugins="calendarPlugins" default-view="timeGridWeek" :locale="locale"
-                       :all-day-slot="false" :header="header" :weekends="showWeekends" :editable="false"
+                       :all-day-slot="false" :weekends="showWeekends" :editable="false" :header="header"
                        :column-header-format="columnHeaderFormat" week-number-calculation="ISO" :events="events"
-                       :min-time="minTime" :max-time="maxTime" :default-date="lectureStart"
-                       :valid-range="validRange" time-zone="local" :eventRender="renderEvent"
-                       @eventReceive="dropCourse" @eventDragStart="markAvailableSlots"
-                       @eventDragStop="this.unmarkAvailableSlots" @eventDrop="dropCourse" @eventResize="dropCourse"/>
+                       :min-time="minTime" :max-time="maxTime" :default-date="startDate" :now-indicator="false"
+                       :valid-range="validRange" time-zone="local" :eventRender="renderEvent"/>
     </div>
 </template>
 
@@ -27,7 +25,7 @@
     var SlotDetailsClass = Vue.extend(SlotDetails)
 
     export default {
-        name: 'WeekSchedule',
+        name: 'schedule',
         components: {
             FullCalendar
         },
@@ -55,6 +53,10 @@
                 Type: Array,
                 required: true
             },
+            selectedWeek: {
+                type: Number,
+                default: 0
+            },
             courses: {
                 type: Array,
                 default: () => []
@@ -66,13 +68,14 @@
                 header: {
                     left: '',
                     center: '',
-                    right: ''
+                    right: 'title'
                 },
                 columnHeaderFormat: {
                     weekday: 'long'
                 },
-                drag: null,
-                lectureStart: '2020-10-12'
+                startDate: this.weeks[this.selectedWeek].startDate,
+                endDate: this.weeks[this.selectedWeek].endDate,
+                theWeek: this.selectedWeek
             }
         },
         computed: {
@@ -80,16 +83,10 @@
              * Calculate a valid date range for the current calendar view
              */
             validRange: function() {
-                const start = this.lectureStart
-                let end = new Date(this.lectureStart)
-                end.setDate(end.getDate() + (this.weekend ? 6 : 4))
-
-                const range = {
-                    start: start + ' 00:00:00',
-                    end: end.getFullYear() + '-' + (end.getMonth() + 1) + '-' + end.getDate() + ' 23:59:59'
+                return {
+                    start: this.startDate + ' 00:00:00',
+                    end: this.endDate + ' 23:59:59'
                 }
-
-                return range
             },
             /*
              * Re-structure the given course data: we need a "dummy" day
@@ -106,7 +103,7 @@
                     }
 
                     // The virtual begin of our semester view - place dates there.
-                    let lStart = new Date(this.lectureStart)
+                    let lStart = new Date(this.startDate)
                     lStart.setDate(lStart.getDate() + (this.courses[i].weekday - 1))
 
                     let month = ('0' + (lStart.getMonth() + 1)).slice(-2)
@@ -144,11 +141,7 @@
         mounted() {
             // Set drag element width to day column width.
             bus.$on('start-drag-course', (data) => {
-                this.$nextTick(() => {
-                    document.getElementsByClassName('gu-mirror')[0].style.width =
-                        document.getElementsByClassName('fc-day-header')[0].offsetWidth + 'px'
-                    this.markAvailableSlots(data)
-                })
+                this.markAvailableSlots(data)
             })
 
             // Unmark slots on drag cancel event
@@ -156,13 +149,12 @@
                 this.unmarkAvailableSlots()
             })
 
-            /*
-             * Some trick to defeat the nasty error about "isWithinClipping".
-             */
-            this.$refs.schedule.getApi().prev()
-            this.$nextTick(() => {
-                this.$refs.schedule.getApi().prev()
-            })
+            this.$el.style.height = (
+                document.querySelector('.fc-divider').getBoundingClientRect().top -
+                document.querySelector('#week').getBoundingClientRect().top +
+                5
+            ) + 'px'
+
         },
         methods: {
             // When a course is dropped, we store the time assignment to database.
@@ -172,7 +164,7 @@
             // Mark slots where a course can or cannot be dropped.
             async markAvailableSlots(info) {
                 // The virtual begin of our semester view - place dates there.
-                let lStart = new Date(this.lectureStart)
+                let lStart = new Date(this.startDate)
 
                 let month = ('0' + (lStart.getMonth() + 1)).slice(-2)
 
@@ -215,20 +207,6 @@
                 if (source != null) {
                     source.remove()
                 }
-            },
-            async unplan(event) {
-                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/slot/unplan/' + event.extendedProps.slotId))
-                    .then(response => {
-                        if (!response.ok) {
-                            throw response
-                        }
-                        bus.$emit('remove-planned-course', event.extendedProps.slotId)
-                        bus.$emit('add-unplanned-course', event)
-                    })
-                    .catch((error) => {
-                        this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
-                    })
-                return false
             },
             async pin(event, jsEvent) {
                 fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/slot/setpin/' + event.extendedProps.slotId))
@@ -285,6 +263,12 @@
                     })
 
                 return false
+            },
+            setWeek: function() {
+                this.startDate = this.weeks[this.theWeek].startDate
+                this.endDate = this.weeks[this.theWeek].endDate
+                this.$refs.schedule.getApi().gotoDate(this.startDate)
+                bus.$emit('updated-week', this.theWeek)
             },
             getRoomProposals: function(timeId) {
                 const proposals = new RoomProposalsClass({
@@ -448,38 +432,41 @@
 
 <style lang="scss">
     body {
-        div.fc {
+        #week-schedule {
             font-size: 11px;
             overflow: hidden;
 
-            .fc-event {
-                background-color: #28497c;
-                color: #ffffff;
-                display: inline-block !important;
+            div.fc {
 
-                .fc-time {
-                    background-color: #3f72b4;
-                }
+                .fc-event {
+                    background-color: #28497c;
+                    color: #ffffff;
+                    display: inline-block !important;
 
-                &.no-room {
                     .fc-time {
-                        background-color: #d60000;
+                        background-color: #3f72b4;
+                    }
+
+                    &.no-room {
+                        .fc-time {
+                            background-color: #d60000;
+                        }
+                    }
+
+                    &.partially-booked {
+                        .fc-time {
+                            background-color: #ffbd33;
+                            color: #28497c;
+                        }
+                    }
+
+                    &.pinned {
+                        background-color: #a9b6cb;
                     }
                 }
 
-                &.partially-booked {
-                    .fc-time {
-                        background-color: #ffbd33;
-                        color: #28497c;
-                    }
+                a {
                 }
-
-                &.pinned {
-                    background-color: #a9b6cb;
-                }
-            }
-
-            a {
             }
         }
 

@@ -37,15 +37,19 @@ class PlanningController extends AuthenticatedController {
         PageLayout::addStylesheet($this->plugin->getPluginURL() .
             '/assets/stylesheets/planning.css?v=' . $version);
 
-        $this->selectedSemester = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_SEMESTER != '' ?
-            UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_SEMESTER :
+        $me = User::findCurrent()->id;
+        $config = UserConfig::get($me);
+
+        $this->selectedSemester = $config->WHAKAMAHERE_SELECTED_SEMESTER != '' ?
+            $config->WHAKAMAHERE_SELECTED_SEMESTER :
             Semester::findNext()->id;
 
         $this->institutes = Institute::getMyInstitutes();
-        $this->selectedInstitute = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_INSTITUTE;
-        $this->selectedLecturer = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_LECTURER;
-        $this->selectedRoom = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_ROOM;
-        $this->searchterm = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SEARCHTERM;
+        $this->selectedInstitute = $config->WHAKAMAHERE_SELECTED_INSTITUTE;
+        $this->selectedLecturer = $config->WHAKAMAHERE_SELECTED_LECTURER;
+        $this->selectedRoom = $config->WHAKAMAHERE_SELECTED_ROOM;
+        $this->searchterm = $config->WHAKAMAHERE_SEARCHTERM;
+        $this->selectedWeek = (int) $config->WHAKAMAHERE_SELECTED_WEEK;
     }
 
     /**
@@ -145,8 +149,12 @@ class PlanningController extends AuthenticatedController {
             'seats' => (array) studip_json_decode(Request::get('seats'), null),
             'institute' => Request::get('institute'. null),
             'lecturer' => Request::option('lecturer', null),
-            'room' => Request::option('room', null)
-        ]);
+            'room' => Request::option('room', null),
+            'week' => Request::int('week', null),
+            'lastweek' => Request::int('lastweek', null)
+        ], function($entry) {
+            return (is_array($entry) && count($entry) != 0) || (!is_array($entry) && $entry !== null);
+        });
 
         $this->render_json($this->getPlannedCourses($filter));
     }
