@@ -130,9 +130,11 @@ class WhakamahereCourseTime extends SimpleORMap
                             :week >= wr.`startweek` + 1
                             AND :week <= :lastweek - wr.`end_offset`
                             AND MOD(:week - wr.`startweek` + 1, wr.`cycle`) = 0
+                            AND t.`weekday` IN (:weekdays)
                         )";
                     $params['week'] = $one + 1;
                     $params['lastweek'] = $filter['lastweek'];
+                    $params['weekdays'] = self::getNonHolidayWeekdays($filter['semester'], $one);
             }
         }
 
@@ -246,15 +248,7 @@ class WhakamahereCourseTime extends SimpleORMap
     public function buildTimeRanges()
     {
         // Weekday numbers and names for calculation.
-        $weekdays = [
-            0 => 'Sunday',
-            1 => 'Monday',
-            2 => 'Tuesday',
-            3 => 'Wednesday',
-            4 => 'Thursday',
-            5 => 'Friday',
-            6 => 'Saturday',
-        ];
+        $weekdays = $this->getWeekdays();
 
         // Timeranges to check for bookings.
         $timeranges = [];
@@ -460,7 +454,7 @@ class WhakamahereCourseTime extends SimpleORMap
 
                 } else {
 
-                    // Add score points for each fulfilled property request.
+                    // Lower score points for each unfulfilled property request.
                     if (!$roomProperty || $roomProperty->state != $property->value) {
                         $entry['score'] *= 0.9;
                         $entry['missing_properties'][] = (string) $property->property->display_name;
@@ -472,6 +466,48 @@ class WhakamahereCourseTime extends SimpleORMap
         }
 
         return $entry;
+    }
+
+    /**
+     * Fetch all weekdays in a given week that are no holidays.
+     *
+     * @param string $semester_id semester ID
+     * @param int $week week number relative to lecturing period start
+     */
+    public static function getNonHolidayWeekdays($semester_id, $week)
+    {
+        $weekdays = [];
+
+        $weeks = WhakamaherePlanningRequest::getStartWeeks(Semester::find($semester_id));
+        $weekData = $weeks[$week];
+        $tz = new DateTimeZone('Europe/Berlin');
+        $start = new DateTime($weekData['startDate'], $tz);
+        $end = new DateTime($weekData['endDate'], $tz);
+        $oneDay = new DateInterval('P1D');
+
+        while ($start <= $end) {
+            if (!SemesterHoliday::isHoliday($start->getTimestamp())) {
+                $weekday = $start->format('N');
+
+                $weekdays[] = $weekday == 7 ? 0 : $weekday;
+            }
+            $start->add($oneDay);
+        }
+
+        return $weekdays;
+    }
+
+    private function getWeekdays()
+    {
+        return [
+            0 => 'Sunday',
+            1 => 'Monday',
+            2 => 'Tuesday',
+            3 => 'Wednesday',
+            4 => 'Thursday',
+            5 => 'Friday',
+            6 => 'Saturday',
+        ];
     }
 
 }
