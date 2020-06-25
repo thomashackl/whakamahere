@@ -89,6 +89,10 @@
                 type: String,
                 default: ''
             },
+            noRoom: {
+                type: Boolean,
+                default: false
+            },
             storeSelectionUrl: {
                 type: String,
                 default: ''
@@ -103,6 +107,7 @@
                 theInstitute: this.selectedInstitute,
                 theLecturer: this.selectedLecturer,
                 theRoom: this.selectedRoom,
+                showNoRoom: this.noRoom,
                 allFiltersVisible: false,
                 fullscreenMode: document.querySelector('html').classList.contains('is-fullscreen')
             }
@@ -121,7 +126,9 @@
                     lecturer: this.fullscreenMode ?
                         this.allFiltersVisible : (this.theLecturer !== '' || this.allFiltersVisible),
                     room: this.fullscreenMode ?
-                        this.allFiltersVisible : (this.theRoom !== '' || this.allFiltersVisible)
+                        this.allFiltersVisible : (this.theRoom !== '' || this.allFiltersVisible),
+                    noRoom: this.fullscreenMode ?
+                        this.allFiltersVisible : (this.showNoRoom || this.allFiltersVisible)
                 }
             }
         },
@@ -151,6 +158,11 @@
             bus.$on('updated-room', (room) => {
                 this.theRoom = room
                 this.storeSelection('room', room)
+            })
+            bus.$on('updated-no-room', (state) => {
+                this.showNoRoom = state
+                console.log('Show without room only: ' + state)
+                this.storeSelection('no_room', state)
             })
 
             // Listen for fullscreen mode and apply custom changes

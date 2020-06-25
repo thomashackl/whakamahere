@@ -126,10 +126,16 @@ class WhakamahereCourseTime extends SimpleORMap
                     $params['lecturer'] = $one;
                     break;
                 case 'room':
-                    $joins[] = "JOIN `whakamahere_time_bookings` tb ON (tb.`time_id` = t.`time_id`)";
-                    $joins[] = "JOIN `resource_bookings` rb ON (rb.`id` = tb.`booking_id`)";
-                    $where[] = "AND rb.`resource_id` = :room";
-                    $params['room'] = $one;
+                    if ($one != 'without-room') {
+                        $joins[] = "JOIN `whakamahere_time_bookings` tb ON (tb.`time_id` = t.`time_id`)";
+                        $joins[] = "JOIN `resource_bookings` rb ON (rb.`id` = tb.`booking_id`)";
+                        $where[] = "AND rb.`resource_id` = :room";
+                        $params['room'] = $one;
+                    } else {
+                        $where[] = "AND NOT EXISTS (
+                            SELECT `booking_id` FROM `whakamahere_time_bookings` WHERE `time_id` = t.`time_id`
+                        )";
+                    }
                     break;
                 case 'week':
                     $joins[] = "JOIN `whakamahere_requests` wr ON (wr.`course_id` = t.`course_id`)";

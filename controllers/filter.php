@@ -86,6 +86,10 @@ class FilterController extends AuthenticatedController {
                 $field = 'WHAKAMAHERE_SELECTED_ROOM';
                 $value = Request::get('value');
                 break;
+            case 'no_room':
+                $field = 'WHAKAMAHERE_SHOW_NO_ROOM';
+                $value = Request::get('value');
+                break;
             case 'week':
                 $field = 'WHAKAMAHERE_SELECTED_WEEK';
                 $value = Request::get('value') + 1;

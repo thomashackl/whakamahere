@@ -3,7 +3,8 @@
         <label for="room">
             Raum
         </label>
-        <select2 :options="myRooms" :id="'room'" :name="'room'" :value="selectedRoom" @change="onChange($event)"></select2>
+        <select2 :options="myRooms" :id="'room'" :name="'room'" :value="selectedRoom"
+                 @change="onChange($event)"></select2>
     </section>
 </template>
 
@@ -32,11 +33,18 @@
         },
         computed: {
             myRooms: function() {
-                let options = [{
-                    id: '',
-                    text: '-- alle --',
-                    children: []
-                }]
+                let options = [
+                    {
+                        id: '',
+                        text: '-- alle --',
+                        children: []
+                    },
+                    {
+                        id: 'without-room',
+                        text: '-- kein gebuchter Raum --',
+                        children: []
+                    }
+                ]
 
                 for (const building in this.rooms) {
                     options.push({

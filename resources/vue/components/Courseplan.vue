@@ -265,7 +265,7 @@
                     formData.append('lecturer', this.theLecturer)
                 }
 
-                if (this.theRoom != '') {
+                if (this.theRoom != '' && this.theRoom != 'without-room') {
                     formData.append('room', this.theRoom)
                 }
 
@@ -438,7 +438,7 @@
                 if (typeof week !== 'undefined') {
                     formData.append('week', week)
                 }
-                /*fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/slot/store_time'), {
+                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/slot/store_time'), {
                     method: 'post',
                     body: formData
                 }).then((response) => {
@@ -457,7 +457,7 @@
                     })
                 }).catch((error) => {
                     this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
-                })*/
+                })
             },
             // Format a given date object according to German locale.
             formatDate: function(date) {

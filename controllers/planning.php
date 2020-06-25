@@ -149,7 +149,7 @@ class PlanningController extends AuthenticatedController {
             'seats' => (array) studip_json_decode(Request::get('seats'), null),
             'institute' => Request::get('institute'. null),
             'lecturer' => Request::option('lecturer', null),
-            'room' => Request::option('room', null),
+            'room' => Request::get('room', null),
             'week' => Request::int('week', null),
             'lastweek' => Request::int('lastweek', null)
         ], function($entry) {
