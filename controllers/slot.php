@@ -45,6 +45,7 @@ class SlotController extends AuthenticatedController {
         $endDate = new DateTime(Request::get('end'));
 
         $oldWeekday = false;
+
         if (Request::int('time_id', 0) != 0) {
             $time = WhakamahereCourseTime::find(Request::int('time_id'));
             $oldWeekday = $time->weekday;
@@ -117,6 +118,50 @@ class SlotController extends AuthenticatedController {
         if ($time->store()) {
             $this->set_status(200, 'Time assignment saved.');
             $this->render_json($time->formatForSchedule());
+        } else {
+            $this->set_status(500, 'Could not save time assignment.');
+            $this->render_nothing();
+        }
+    }
+
+    /**
+     * Stores an exception to a regular CourseTime in a given week.
+     */
+    public function store_exception_action()
+    {
+        $startDate = new DateTime(Request::get('start'));
+        $endDate = new DateTime(Request::get('end'));
+
+        $oldWeekday = false;
+
+        $time = WhakamahereCourseTime::find(Request::int('time_id'));
+
+        if (Request::int('exception_id', 0) != 0) {
+            $exception = WhakamahereCourseTimeException::find(Request::int('exception_id'));
+            $oldWeekday = $exception->weekday;
+        } else {
+            $exception = new WhakamahereCourseTimeException();
+            $exception->time_id = Request::int('time_id');
+            $exception->mkdate = date('Y-m-d H:i:s');
+        }
+        $exception->start = $startDate->format('Y-m-d H:i');
+        $exception->end = $endDate->format('Y-m-d H:i');
+        $exception->chdate = date('Y-m-d H:i:s');
+
+        // No room set, keep room bookings if applicable.
+        if (Request::option('room', '') == '') {
+            if ($exception->booking != null) {
+
+            }
+
+        // A room is given, try to book it.
+        } else {
+
+        }
+
+        if ($exception->store()) {
+            $this->set_status(200, 'Time assignment saved.');
+            $this->render_json($exception->formatForSchedule());
         } else {
             $this->set_status(500, 'Could not save time assignment.');
             $this->render_nothing();

@@ -183,8 +183,8 @@
             })
 
             // Saved course data to database
-            bus.$on('save-course', (course) => {
-                this.saveCourse(course)
+            bus.$on('save-course', (course, week) => {
+                this.saveCourse(course, week)
             })
 
             // Pinned or unpinned a slot
@@ -337,7 +337,7 @@
                         })
                 })
             },
-            saveCourse(data) {
+            saveCourse(data, week) {
                 let course = null
                 let startRaw = null
                 let endRaw = null
@@ -435,7 +435,10 @@
                 formData.append('slot', course.slot_id)
                 formData.append('start', this.formatDate(startRaw))
                 formData.append('end', this.formatDate(endRaw))
-                fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/slot/store_time'), {
+                if (typeof week !== 'undefined') {
+                    formData.append('week', week)
+                }
+                /*fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/slot/store_time'), {
                     method: 'post',
                     body: formData
                 }).then((response) => {
@@ -454,7 +457,7 @@
                     })
                 }).catch((error) => {
                     this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
-                })
+                })*/
             },
             // Format a given date object according to German locale.
             formatDate: function(date) {

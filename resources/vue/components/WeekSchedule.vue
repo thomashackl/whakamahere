@@ -1,21 +1,24 @@
 <template>
-    <div id="week-schedule">
+    <studip-messagebox v-if="disabled" type="warning"
+                       message="Die Wochenansicht ist noch nicht fertig."></studip-messagebox>
+    <div v-else id="week-schedule">
         <select id="week" v-model="theWeek" @change="setWeek">
             <option v-for="(week, index) in weeks" :key="index" :value="index">
                 {{ week.text }}
             </option>
         </select>
         <full-calendar ref="schedule" :plugins="calendarPlugins" default-view="timeGridWeek" :locale="locale"
-                       :all-day-slot="false" :weekends="showWeekends" :editable="false" :header="header"
+                       :all-day-slot="false" :weekends="showWeekends" :editable="true" :header="header"
                        :column-header-format="columnHeaderFormat" week-number-calculation="ISO" :events="events"
                        :min-time="minTime" :max-time="maxTime" :default-date="startDate" :now-indicator="false"
-                       :valid-range="validRange" time-zone="local" :eventRender="renderEvent"/>
+                       :valid-range="validRange" time-zone="local" :eventRender="renderEvent" @eventDrop="dropCourse"/>
     </div>
 </template>
 
 <script>
     import bus from 'jsassets/bus'
     import { globalfunctions } from './mixins/globalfunctions'
+    import StudipMessagebox from './StudipMessagebox'
     import FullCalendar from '@fullcalendar/vue'
     import interactionPlugin from '@fullcalendar/interaction'
     import timeGridWeekPlugin from '@fullcalendar/timegrid'
@@ -27,6 +30,7 @@
     export default {
         name: 'schedule',
         components: {
+            StudipMessagebox,
             FullCalendar
         },
         mixins: [
@@ -64,6 +68,7 @@
         },
         data() {
             return {
+                disabled: true,
                 calendarPlugins: [ interactionPlugin, timeGridWeekPlugin ],
                 header: {
                     left: '',
@@ -139,27 +144,28 @@
             }
         },
         mounted() {
-            // Set drag element width to day column width.
-            bus.$on('start-drag-course', (data) => {
-                this.markAvailableSlots(data)
-            })
+            if (!this.disabled) {
+                // Set drag element width to day column width.
+                bus.$on('start-drag-course', (data) => {
+                    this.markAvailableSlots(data)
+                })
 
-            // Unmark slots on drag cancel event
-            bus.$on('cancel-drag-course', (data) => {
-                this.unmarkAvailableSlots()
-            })
+                // Unmark slots on drag cancel event
+                bus.$on('cancel-drag-course', (data) => {
+                    this.unmarkAvailableSlots()
+                })
 
-            this.$el.style.height = (
-                document.querySelector('.fc-divider').getBoundingClientRect().top -
-                document.querySelector('#week').getBoundingClientRect().top +
-                5
-            ) + 'px'
-
+                this.$el.style.height = (
+                    document.querySelector('.fc-divider').getBoundingClientRect().top -
+                    document.querySelector('#week').getBoundingClientRect().top +
+                    5
+                ) + 'px'
+            }
         },
         methods: {
             // When a course is dropped, we store the time assignment to database.
             dropCourse: function(info) {
-                bus.$emit('save-course', info)
+                bus.$emit('save-course', info, this.theWeek)
             },
             // Mark slots where a course can or cannot be dropped.
             async markAvailableSlots(info) {
@@ -371,15 +377,6 @@
                     })
                 }
 
-                items.push({
-                    icon: 'trash',
-                    label: 'Aus der Planung entfernen',
-                    click: (clickEvent) => {
-                        clickEvent.preventDefault()
-                        this.unplan(calendarEvent)
-                        contextMenu.remove()
-                    }
-                })
                 items.push({
                     icon: 'place',
                     label: editable ? 'Anheften' : 'Lösen',

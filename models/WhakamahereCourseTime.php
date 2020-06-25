@@ -47,6 +47,13 @@ class WhakamahereCourseTime extends SimpleORMap
             'on_store' => 'store',
             'on_delete' => 'delete'
         ];
+        $config['has_many']['exceptions'] = [
+            'class_name' => 'WhakamahereCourseTimeException',
+            'foreign_key' => 'time_id',
+            'assoc_foreign_key' => 'time_id',
+            'on_store' => 'store',
+            'on_delete' => 'delete'
+        ];
 
         parent::configure($config);
     }
@@ -162,17 +169,6 @@ class WhakamahereCourseTime extends SimpleORMap
                 AND `whakamahere_requests`.`semester_id` = :semester
             ORDER BY `weekday`, `start`, `end`",
             ['user' => $user_id, 'semester' => $semester_id]);
-    }
-
-    /**
-     * Checks if this CourseTime has a date in the given week
-     * (depending on start and end week and turnus).
-     *
-     * @param int $week week number, 0 is first week of lecturing period
-     */
-    public function takesPlaceInWeek($week)
-    {
-
     }
 
     /**
@@ -487,9 +483,7 @@ class WhakamahereCourseTime extends SimpleORMap
 
         while ($start <= $end) {
             if (!SemesterHoliday::isHoliday($start->getTimestamp())) {
-                $weekday = $start->format('N');
-
-                $weekdays[] = $weekday == 7 ? 0 : $weekday;
+                $weekdays[] = $start->format('N');
             }
             $start->add($oneDay);
         }

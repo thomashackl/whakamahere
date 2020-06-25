@@ -25,7 +25,7 @@ class StoreRoomWithCourseTime extends Migration {
         DBManager::get()->execute("CREATE TABLE IF NOT EXISTS `whakamahere_time_bookings`
         (
             `id` INT NOT NULL AUTO_INCREMENT,
-            `time_id` INT NOT NULL REFERENCES `whakamahere_course_times`,
+            `time_id` INT NOT NULL REFERENCES `whakamahere_course_times`.`time_id`,
             `booking_id` VARCHAR(32) COLLATE latin1_bin NOT NULL REFERENCES `resource_bookings`.`id`,
             `mkdate` DATETIME NOT NULL,
             PRIMARY KEY (`id`),
