@@ -7,9 +7,10 @@
         </select>
         <full-calendar ref="schedule" :plugins="calendarPlugins" default-view="timeGridWeek" :locale="locale"
                        :all-day-slot="false" :weekends="showWeekends" :editable="false" :header="header"
-                       :column-header-format="columnHeaderFormat" week-number-calculation="ISO" :events="events"
-                       :min-time="minTime" :max-time="maxTime" :default-date="startDate" :now-indicator="false"
-                       :valid-range="validRange" time-zone="local" :eventRender="renderEvent" @eventDrop="dropCourse"/>
+                       :custom-buttons="viewButtons" :column-header-format="columnHeaderFormat"
+                       week-number-calculation="ISO" :events="events" :min-time="minTime" :max-time="maxTime"
+                       :default-date="startDate" :now-indicator="false" :valid-range="validRange" time-zone="local"
+                       :eventRender="renderEvent" @eventDrop="dropCourse"/>
     </div>
 </template>
 
@@ -66,16 +67,40 @@
             return {
                 calendarPlugins: [ interactionPlugin, timeGridWeekPlugin ],
                 header: {
-                    left: '',
-                    center: '',
-                    right: 'title'
+                    left: 'dayViewButton',
+                    center: 'title',
+                    right: ''
                 },
                 columnHeaderFormat: {
                     weekday: 'long'
                 },
                 startDate: this.weeks[this.selectedWeek].startDate,
                 endDate: this.weeks[this.selectedWeek].endDate,
-                theWeek: this.selectedWeek
+                theWeek: this.selectedWeek,
+                viewButtons: {
+                    weekViewButton: {
+                        text: 'Woche',
+                        click: () => {
+                            this.header = {
+                                left: 'dayViewButton',
+                                center: 'title',
+                                right: ''
+                            }
+                            this.$refs.schedule.getApi().changeView('timeGridWeek')
+                        }
+                    },
+                    dayViewButton: {
+                        text: 'Tag',
+                        click: () => {
+                            this.header = {
+                                left: 'weekViewButton',
+                                center: 'title',
+                                right: 'prev next'
+                            }
+                            this.$refs.schedule.getApi().changeView('timeGridDay')
+                        }
+                    }
+                }
             }
         },
         computed: {
