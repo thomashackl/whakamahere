@@ -134,7 +134,7 @@
             bus.$on('updated-searchterm', (value) => {
                 this.theSearchterm = value
 
-                if (value.length > 3) {
+                if (value.length == 0 || value.length >= 3) {
                     this.updateData()
                 } else if (value.length > 0) {
                     this.showMessage('warning', 'Suchbegriff zu kurz',

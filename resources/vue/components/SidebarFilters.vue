@@ -138,8 +138,10 @@
                 this.storeSelection('semester', semester.value)
             })
             bus.$on('updated-searchterm', (search) => {
-                this.theSearchterm = search
-                this.storeSelection('searchterm', search)
+                if (search.length == 0 || search.length >= 3) {
+                    this.theSearchterm = search
+                    this.storeSelection('searchterm', search)
+                }
             })
             bus.$on('updated-seats', (seats) => {
                 const value = JSON.parse(seats)
