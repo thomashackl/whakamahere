@@ -10,7 +10,7 @@
 
 <script>
     import bus from 'jsassets/bus'
-    import { globalfunctions } from './mixins/globalfunctions'
+    import { globalfunctions } from '../mixins/globalfunctions'
     import FullCalendar from '@fullcalendar/vue'
     import interactionPlugin, { ThirdPartyDraggable } from '@fullcalendar/interaction'
     import timeGridWeekPlugin from '@fullcalendar/timegrid'

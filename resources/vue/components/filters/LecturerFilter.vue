@@ -12,7 +12,7 @@
 
 <script>
     import bus from 'jsassets/bus'
-    import Select2 from './Select2'
+    import Select2 from '../common/Select2'
 
     export default {
         name: 'LecturerFilter',

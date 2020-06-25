@@ -46,8 +46,8 @@
 
 <script>
     import bus from 'jsassets/bus'
-    import { globalfunctions } from './mixins/globalfunctions'
-    import StudipIcon from './StudipIcon'
+    import { globalfunctions } from '../mixins/globalfunctions'
+    import StudipIcon from '../studip/StudipIcon'
 
     export default {
         name: 'CourseSlot',

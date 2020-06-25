@@ -10,7 +10,7 @@
 
 <script>
     import bus from 'jsassets/bus'
-    import { globalfunctions } from './mixins/globalfunctions'
+    import { globalfunctions } from '../mixins/globalfunctions'
 
     export default {
         name: 'TextFilter',

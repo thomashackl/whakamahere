@@ -75,7 +75,7 @@
 </template>
 
 <script>
-    import { globalfunctions } from './mixins/globalfunctions'
+    import { globalfunctions } from '../mixins/globalfunctions'
 
     export default {
         name: 'SlotDetails',

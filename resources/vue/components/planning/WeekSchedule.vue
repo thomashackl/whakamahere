@@ -15,7 +15,7 @@
 
 <script>
     import bus from 'jsassets/bus'
-    import { globalfunctions } from './mixins/globalfunctions'
+    import { globalfunctions } from '../mixins/globalfunctions'
     import FullCalendar from '@fullcalendar/vue'
     import interactionPlugin from '@fullcalendar/interaction'
     import timeGridWeekPlugin from '@fullcalendar/timegrid'
@@ -310,11 +310,6 @@
                     } else {
                         info.el.classList.remove('pinned')
                     }
-
-                    info.el.addEventListener('contextmenu', (event) => {
-                        event.preventDefault()
-                        this.showContextMenu(event, info.event)
-                    }, true)
                 }
             },
             showContextMenu(event, calendarEvent) {

@@ -53,8 +53,8 @@
 
 <script>
     import bus from 'jsassets/bus'
-    import StudipIcon from './StudipIcon'
-    import StudipMessagebox from './StudipMessagebox'
+    import StudipIcon from '../studip/StudipIcon'
+    import StudipMessagebox from '../studip/StudipMessagebox'
 
     export default {
         name: 'UnplannedCoursesList',

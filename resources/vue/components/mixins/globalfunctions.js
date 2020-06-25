@@ -1,4 +1,4 @@
-import StudipMessagebox from '../StudipMessagebox'
+import StudipMessagebox from '../studip/StudipMessagebox'
 var MessageboxClass = Vue.extend(StudipMessagebox)
 
 export const globalfunctions = {

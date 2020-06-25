@@ -16,8 +16,8 @@
 
 <script>
     import bus from 'jsassets/bus'
-    import { globalfunctions } from './mixins/globalfunctions'
-    import StudipLoadingIndicator from './StudipLoadingIndicator'
+    import { globalfunctions } from '../mixins/globalfunctions'
+    import StudipLoadingIndicator from '../studip/StudipLoadingIndicator'
     import Schedule from './Schedule'
     import WeekSchedule from './WeekSchedule'
     import UnplannedCoursesList from './UnplannedCoursesList'

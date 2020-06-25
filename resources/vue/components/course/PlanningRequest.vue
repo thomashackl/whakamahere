@@ -105,10 +105,10 @@
 
 <script>
     import bus from 'jsassets/bus'
-    import CourseSlot from './CourseSlot'
-    import Select2 from './Select2'
-    import StudipButton from './StudipButton'
-    import StudipMessagebox from './StudipMessagebox'
+    import CourseSlot from '../planning/CourseSlot'
+    import Select2 from '../common/Select2'
+    import StudipButton from '../studip/StudipButton'
+    import StudipMessagebox from '../studip/StudipMessagebox'
     var SlotClass = Vue.extend(CourseSlot)
 
     export default {

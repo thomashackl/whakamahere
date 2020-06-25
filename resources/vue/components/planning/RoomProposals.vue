@@ -83,9 +83,9 @@
 
 <script>
     import bus from 'jsassets/bus'
-    import StudipIcon from './StudipIcon'
-    import StudipMessagebox from './StudipMessagebox'
-    import { globalfunctions } from './mixins/globalfunctions'
+    import StudipIcon from '../studip/StudipIcon'
+    import StudipMessagebox from '../studip/StudipMessagebox'
+    import { globalfunctions } from '../mixins/globalfunctions'
 
     export default {
         name: 'RoomProposals',

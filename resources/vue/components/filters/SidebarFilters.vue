@@ -17,8 +17,8 @@
 
 <script>
     import bus from 'jsassets/bus'
-    import { globalfunctions } from './mixins/globalfunctions'
-    import StudipIcon from './StudipIcon'
+    import { globalfunctions } from '../mixins/globalfunctions'
+    import StudipIcon from '../studip/StudipIcon'
     import SemesterFilter from './SemesterFilter'
     import TextFilter from './TextFilter'
     import SeatsFilter from './SeatsFilter'
