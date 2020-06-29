@@ -27,7 +27,7 @@ class WhakamahereCourseTimeException extends SimpleORMap
 
     protected static function configure($config = [])
     {
-        $config['db_table'] = 'whakamahere_course_time_exceptionss';
+        $config['db_table'] = 'whakamahere_course_time_exceptions';
         $config['belongs_to']['time'] = [
             'class_name' => 'WhakamahereCourseTime',
             'foreign_key' => 'time_id',
