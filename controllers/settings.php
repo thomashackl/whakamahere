@@ -54,6 +54,15 @@ class SettingsController extends AuthenticatedController {
             6 => dgettext('whakamahere', 'Samstag'),
             0 => dgettext('whakamahere', 'Sonntag'),
         ];
+
+        $this->selectedInstitutes = Config::get()->WHAKAMAHERE_DASHBOARD_STATISTICS_INSTITUTES;
+        $this->institutes = [];
+        foreach (Institute::getInstitutes() as $one) {
+            $this->institutes[] = [
+                'id' => $one['Institut_id'],
+                'name' => $one['is_fak'] ? (string) $one['Name'] : '&nbsp;&nbsp;' . ((string) $one['Name'])
+            ];
+        }
     }
 
     public function store_action() {
@@ -84,6 +93,10 @@ class SettingsController extends AuthenticatedController {
             'occupation_days' => [
                     'type' => 'array',
                     'config' => 'WHAKAMAHERE_OCCUPATION_DAYS'
+                ],
+            'statistics_institutes' => [
+                    'type' => 'array',
+                    'config' => 'WHAKAMAHERE_DASHBOARD_STATISTICS_INSTITUTES'
                 ]
         ];
 
@@ -92,17 +105,16 @@ class SettingsController extends AuthenticatedController {
             switch ($mapping['type']) {
                 case 'string':
                     $value = Request::get($name);
-                    $success = $success && Config::get()->store($mapping['config'], $value);
                     break;
                 case 'bool':
                     $value = Request::int($name, 0);
-                    $success = $success && Config::get()->store($mapping['config'], $value);
                     break;
                 case 'array':
                     $value = Request::getArray($name);
-                    $success = $success && Config::get()->store($mapping['config'], $value);
                     break;
             }
+
+            Config::get()->store($mapping['config'], $value) !== false;
         }
 
         if ($success) {

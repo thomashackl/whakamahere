@@ -39,7 +39,7 @@
     </fieldset>
     <fieldset>
         <legend>
-            <?= dgettext('whakamahere', 'Raumauslastungsstatistik') ?>
+            <?= dgettext('whakamahere', 'Dashboard-Statistik') ?>
         </legend>
         <section class="col-2">
             <label for="plan-start-time">
@@ -75,6 +75,19 @@
                 <?php foreach ($days as $number => $name) : ?>
                     <option value="<?= $number ?>"<?= in_array($number, Config::get()->WHAKAMAHERE_OCCUPATION_DAYS) ? ' selected' : '' ?>>
                         <?= htmlReady($name) ?>
+                    </option>
+                <?php endforeach ?>
+            </select>
+        </section>
+        <section>
+            <label for="institutes">
+                <?= dgettext('whakamahere', 'Welche Einrichtungen (inklusive Untereinrichtungen) ' .
+                    'sollen in der Dashboard-Statistik berücksichtigt werden?') ?>
+            </label>
+            <select id="institutes" name="statistics_institutes[]" class="nested-select" multiple>
+                <?php foreach ($institutes as $one) : ?>
+                    <option value="<?= $one['id'] ?>"<?= in_array($one['id'], $selectedInstitutes) ? ' selected' : '' ?>>
+                        <?= $one['name'] ?>
                     </option>
                 <?php endforeach ?>
             </select>

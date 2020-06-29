@@ -35,6 +35,10 @@ class DashboardController extends AuthenticatedController {
         $this->sidebar->setImage('sidebar/schedule-sidebar.png');
 
         $this->flash = Trails_Flash::instance();
+
+        $semesterId = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_SEMESTER;
+
+        $this->semester = $semesterId ? Semester::find($semesterId) : Semester::findNext();
     }
 
     /**
@@ -47,7 +51,9 @@ class DashboardController extends AuthenticatedController {
 
         PageLayout::setTitle(dgettext('whakamahere', 'Dashboard'));
 
-        $this->container = Widgets\Container::findOneByRange_id('whakamahere') ?: new Widgets\Container();
+        $version = $this->plugin->getVersion();
+        PageLayout::addScript($this->plugin->getPluginURL() .
+            '/assets/javascripts/dashboard.js?v=' . $version);
 
         $this->timelines = [];
 
@@ -58,7 +64,79 @@ class DashboardController extends AuthenticatedController {
         }
 
         $this->status = WhakamahereSemesterStatus::getStatusValues();
-        $this->semester = Semester::findCurrent();
+
+        $this->selectedSemester = [
+            'id' => $this->semester->id,
+            'name' => (string) $this->semester->name
+        ];
+    }
+
+    public function statistics_action()
+    {
+        $statistics = [];
+
+        $cache = StudipCacheFactory::getCache();
+
+        if ($data = $cache->read('planning-statistics-' . $this->semester->id)) {
+
+            $statistics = studip_json_decode($data);
+
+        } else {
+
+            $courseIdsQuery = "SELECT DISTINCT s.`Seminar_id`
+                FROM `semester_data` sem
+                    JOIN `seminare` s ON (s.`start_time` BETWEEN sem.`beginn` AND sem.`ende`)
+                    JOIN `Institute` i ON (i.`institut_id` = s.`Institut_id`)
+                    JOIN `whakamahere_requests` r ON (r.`course_id` = s.`Seminar_id`)
+                WHERE sem.`semester_id` = :semester
+                    AND i.`fakultaets_id` = :institute";
+
+            $slotsCountQuery = "SELECT COUNT(DISTINCT `slot_id`)
+                FROM `whakamahere_course_slots` s
+                    JOIN `whakamahere_requests` r ON (r.`request_id` = s.`request_id`)
+                WHERE r.`course_id` IN (:ids)";
+
+            $timePlannedCountQuery = "SELECT COUNT(DISTINCT `time_id`)
+                FROM `whakamahere_course_times` t
+                    JOIN `whakamahere_course_slots` s ON (s.`slot_id` = t.`slot_id`)
+                    JOIN `whakamahere_requests` r ON (r.`request_id` = s.`request_id`)
+                WHERE r.`course_id` IN (:ids)";
+
+            $timeAndRoomPlannedCountQuery = "SELECT COUNT(DISTINCT `time_id`)
+                FROM `whakamahere_course_times` t
+                    JOIN `whakamahere_course_slots` s ON (s.`slot_id` = t.`slot_id`)
+                    JOIN `whakamahere_requests` r ON (r.`request_id` = s.`request_id`)
+                WHERE r.`course_id` IN (:ids)
+                    AND EXISTS (SELECT `booking_id` FROM `whakamahere_time_bookings` WHERE `time_id` = t.`time_id`)";
+
+            $fulfilledCountQuery = "SELECT COUNT(DISTINCT `time_id`)
+                FROM `whakamahere_course_times` t
+                    JOIN `whakamahere_course_slots` s ON (s.`slot_id` = t.`slot_id`)
+                    JOIN `whakamahere_requests` r ON (r.`request_id` = s.`request_id`)
+                WHERE r.`course_id` IN (:ids)
+                    AND t.`weekday` = s.`weekday`
+                    AND t.`start` = s.`time`";
+
+            foreach (Config::get()->WHAKAMAHERE_DASHBOARD_STATISTICS_INSTITUTES as $institute) {
+                $ids = DBManager::get()->fetchFirst(
+                    $courseIdsQuery,
+                    ['semester' => $this->semester->id, 'institute' => $institute]
+                );
+                $statistics[] = [
+                    'institute' => (string)Institute::find($institute)->name,
+                    'courses' => count($ids),
+                    'slots' => DBManager::get()->fetchColumn($slotsCountQuery, ['ids' => $ids]),
+                    'timePlanned' => DBManager::get()->fetchColumn($timePlannedCountQuery, ['ids' => $ids]),
+                    'timeAndRoomPlanned' => DBManager::get()->fetchColumn($timeAndRoomPlannedCountQuery, ['ids' => $ids]),
+                    'fulfilled' => DBManager::get()->fetchColumn($fulfilledCountQuery, ['ids' => $ids]),
+                ];
+            }
+
+            $cache->write('planning-statistics-' . $this->semester->id, studip_json_encode($statistics), 86400);
+
+        }
+
+        $this->render_json($statistics);
     }
 
 }
