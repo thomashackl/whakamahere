@@ -448,7 +448,9 @@ class WhakamahereCourseTime extends SimpleORMap
                     $entry['seats'] = (int) $roomProperty->state;
 
                     // Generate score depending on seats number difference
-                    if ($roomProperty->state >= $property->value) {
+                    if ($roomProperty->state == 0) {
+                        $entry['score'] = 0;
+                    } else if ($roomProperty->state >= $property->value) {
                         $entry['score'] *= $property->value / $roomProperty->state;
                     } else {
                         $entry['score'] = 0.75 * $entry['score'] * ($roomProperty->state / $property->value);
