@@ -8,19 +8,29 @@
                 <th>Regelmäßige Zeiten</th>
                 <th>Zeit geplant</th>
                 <th>Zeit und Raum geplant</th>
-                <th>Erfüllte Wünsche</th>
+                <th>Erfüllte Zeitwünsche</th>
             </tr>
         </thead>
         <tbody>
             <tr v-for="row in statistics">
                 <td>{{ row.institute }}</td>
-                <td>{{ row.courses }}</td>
-                <td>{{ row.slots }}</td>
-                <td>{{ row.timePlanned }}</td>
-                <td>{{ row.timeAndRoomPlanned }}</td>
-                <td>{{ getPercentage(row.fulfilled, row.timePlanned) }} %</td>
+                <td class="number">{{ row.courses }}</td>
+                <td class="number">{{ row.slots }}</td>
+                <td class="number">{{ row.timePlanned }}</td>
+                <td class="number">{{ row.timeAndRoomPlanned }}</td>
+                <td class="number">{{ getPercentage(row.fulfilled, row.timePlanned) }} %</td>
             </tr>
         </tbody>
+        <tfoot>
+            <tr>
+                <td>Gesamt</td>
+                <td class="number">{{ sum.courses }}</td>
+                <td class="number">{{ sum.slots }}</td>
+                <td class="number">{{ sum.timePlanned }}</td>
+                <td class="number">{{ sum.timeAndRoomPlanned }}</td>
+                <td class="number">{{ sum.percentage }} %</td>
+            </tr>
+        </tfoot>
     </table>
 </template>
 
@@ -43,12 +53,43 @@
                 statistics: []
             }
         },
+        computed: {
+            sum: function() {
+                let summed = {
+                    courses: 0,
+                    slots: 0,
+                    timePlanned: 0,
+                    timeAndRoomPlanned: 0,
+                    fulfilled: 0
+                }
+                let percentages = []
+
+                for (let i = 0 ; i < this.statistics.length ; i++) {
+                    summed.courses += this.statistics[i].courses
+                    summed.slots += this.statistics[i].slots
+                    summed.timePlanned += this.statistics[i].timePlanned
+                    summed.timeAndRoomPlanned += this.statistics[i].timeAndRoomPlanned
+                    percentages.push(this.statistics[i].timePlanned != 0 ?
+                        this.statistics[i].fulfilled / this.statistics[i].timePlanned :
+                        0
+                    )
+                }
+
+                summed.percentage = this.getPercentage(percentages.reduce((pv, cv) => pv + cv, 0), percentages.length)
+
+                return summed
+            }
+        },
         mounted() {
             this.loadStatistics()
         },
         methods: {
             getPercentage(num, den) {
-                return Math.round(((num / den) * 10000)) / 100
+                if (den != 0) {
+                    return Math.round(((num / den) * 10000)) / 100
+                } else {
+                    return 0
+                }
             },
             loadStatistics: function() {
                 fetch(
@@ -68,3 +109,23 @@
         }
     }
 </script>
+
+<style lang="scss">
+    table.default {
+        tr {
+            td {
+                text-align: right;
+            }
+        }
+
+        tfoot {
+            font-weight: bold;
+
+            tr {
+                td {
+                    padding: 5px;
+                }
+            }
+        }
+    }
+</style>

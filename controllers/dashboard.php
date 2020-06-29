@@ -124,11 +124,11 @@ class DashboardController extends AuthenticatedController {
                 );
                 $statistics[] = [
                     'institute' => (string)Institute::find($institute)->name,
-                    'courses' => count($ids),
-                    'slots' => DBManager::get()->fetchColumn($slotsCountQuery, ['ids' => $ids]),
-                    'timePlanned' => DBManager::get()->fetchColumn($timePlannedCountQuery, ['ids' => $ids]),
-                    'timeAndRoomPlanned' => DBManager::get()->fetchColumn($timeAndRoomPlannedCountQuery, ['ids' => $ids]),
-                    'fulfilled' => DBManager::get()->fetchColumn($fulfilledCountQuery, ['ids' => $ids]),
+                    'courses' => (int) count($ids),
+                    'slots' => (int) DBManager::get()->fetchColumn($slotsCountQuery, ['ids' => $ids]),
+                    'timePlanned' => (int) DBManager::get()->fetchColumn($timePlannedCountQuery, ['ids' => $ids]),
+                    'timeAndRoomPlanned' => (int) DBManager::get()->fetchColumn($timeAndRoomPlannedCountQuery, ['ids' => $ids]),
+                    'fulfilled' => (int) DBManager::get()->fetchColumn($fulfilledCountQuery, ['ids' => $ids]),
                 ];
             }
 
