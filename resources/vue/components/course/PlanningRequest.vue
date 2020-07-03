@@ -78,7 +78,7 @@
                 </label>
                 <select name="startweek" id="startweek">
                     <option v-for="(week, index) in startWeeks" :key="index" :value="index"
-                            :selected="index == request.startweek">{{ week }}</option>
+                            :selected="index == request.startweek">{{ week.text }}</option>
                 </select>
             </section>
             <section>
