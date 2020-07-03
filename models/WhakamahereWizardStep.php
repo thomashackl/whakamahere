@@ -75,7 +75,10 @@ class WhakamahereWizardStep implements CourseWizardStep
 
         // Available start weeks for given semester.
         $start_weeks = WhakamaherePlanningRequest::getStartWeeks($semester);
-        $tpl->set_attribute('weeks', $start_weeks);
+        $tpl->set_attribute('start_weeks', $start_weeks);
+        // Available start weeks for given semester.
+        $end_weeks = WhakamaherePlanningRequest::getEndWeeks($semester);
+        $tpl->set_attribute('end_weeks', $end_weeks);
 
         // Model a WhakamaherePlanningRequest structure for passing the values.
         $values = $values[__CLASS__];
