@@ -1,31 +1,38 @@
 <template>
     <div>
-        <a href="" @click="publishNow">
+        <a v-if="!loading && !processing" href="" @click="publishNow">
             <studip-button label="Jetzt veröffentlichen" class="whakamahere-publish"></studip-button>
         </a>
-        <div>
-            <template v-if="!loading && courseIds.length > 0">
-                {{ courseIds.length }} Veranstaltungen
-            </template>
+        <div id="publish-details">
             <template v-if="loading">
-                Daten werden geladen...
+                <vue-simple-spinner size="32" message="Veranstaltungen werden geladen..."></vue-simple-spinner>
             </template>
-            <template v-if="processing && courseIds.length > 0">
+            <div v-if="!loading && courseIds.length > 0">
+                {{ courseIds.length }} Veranstaltungen werden veröffentlicht.
+            </div>
+            <div v-if="processing && courseIds.length > 0">
                 <progress :value="processed" :max="courseIds.length"></progress>
                 <br>
-                {{ processed }} / {{ courseIds.length }}
-            </template>
+                {{ processed }} / {{ courseIds.length }} abgeschlossen
+                <ul v-if="messages.length > 0">
+                    <li v-for="(message, index) in messages" :key="index">
+                        {{ message }}
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
     import StudipButton from '../studip/StudipButton'
+    import VueSimpleSpinner from 'vue-simple-spinner'
 
     export default {
         name: 'PublishPlanning',
         components: {
-            StudipButton
+            StudipButton,
+            VueSimpleSpinner
         },
         props: {
             semester: {
@@ -38,7 +45,8 @@
                 courseIds: [],
                 loading: false,
                 processing: false,
-                processed: 0
+                processed: 0,
+                messages : []
             }
         },
         methods: {
@@ -49,25 +57,35 @@
             getCourses: function() {
                 this.loading = true
                 fetch(
-                    STUDIP.URLHelper.getURL(this.$pluginBase + '/dashboard/courses')
+                    STUDIP.URLHelper.getURL(this.$pluginBase + '/publish/get_courses')
                 ).then((response) => {
+                    this.loading = false
                     if (!response.ok) {
                         throw response
                     }
                     response.json()
                         .then((json) => {
                             this.courseIds = json
-                            this.loading = false
                             this.processing = true
                             this.processed = 0
                             json.forEach((course) => {
                                 fetch(
-                                    STUDIP.URLHelper.getURL(this.$pluginBase + '/dashboard/publish/' + course)
+                                    STUDIP.URLHelper.getURL(this.$pluginBase + '/publish/course/' + course)
                                 ).then((response) => {
                                     if (!response.ok) {
                                         throw response
                                     }
                                     this.processed++
+
+                                    if (response.status == 206) {
+                                        response.json().then((json) => {
+                                            let date = new Date()
+                                            date.setTime(json.failedDate)
+                                            this.messages.push(
+                                                json.course_name + ': ' + date.toISOString()
+                                            )
+                                        })
+                                    }
                                 })
                             })
                         })
@@ -81,9 +99,33 @@
 </script>
 
 <style lang="scss">
-    button.button.whakamahere-publish {
-        background-color: #d60000;
-        color: #ffffff;
-        font-size: x-large;
+    a {
+        button.button.whakamahere-publish {
+            background-color: #d60000;
+            color: #ffffff;
+            font-size: x-large;
+        }
+    }
+
+    #publish-details {
+        div {
+            padding: 10px;
+
+            progress {
+                border: 1px solid #28497c;
+                border-radius: 0;
+                height: 25px;
+                max-width: 800px;
+                min-width: 400px;
+                width: 80%;
+            }
+
+            progress::-webkit-progress-bar {
+                background-color: #ffffff;
+            }
+            progress::-webkit-progress-value {
+                background-color: #28497c;
+            }
+        }
     }
 </style>

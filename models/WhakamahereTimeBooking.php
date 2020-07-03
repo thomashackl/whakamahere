@@ -41,4 +41,15 @@ class WhakamahereTimeBooking extends SimpleORMap
         parent::configure($config);
     }
 
+    public static function findByTimeAndDate($timeId, $start, $end)
+    {
+        return self::findOneBySQL(
+            "JOIN `resource_bookings` ON (`resource_bookings`.`id` = `whakamahere_time_bookings`.`booking_id`)
+            WHERE `whakamahere_time_bookings`.`time_id` = :time_id
+                AND `resource_bookings`.`begin` = :start
+                AND `resource_bookings`.`end` = :end",
+            ['time_id' => $timeId, 'start' => $start, 'end' => $end]
+        );
+    }
+
 }

@@ -1,6 +1,5 @@
 <template>
     <table v-if="statistics.length > 0" class="default">
-        <caption>Statistik für das {{ semester.name }}</caption>
         <thead>
             <tr>
                 <th>Einrichtung</th>
