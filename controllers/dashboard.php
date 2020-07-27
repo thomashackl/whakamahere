@@ -1,7 +1,5 @@
 <?php
 
-use Widgets\Container;
-
 /**
  * Class DashboardController
  * Controller for dashboard.
@@ -31,14 +29,27 @@ class DashboardController extends AuthenticatedController {
 
         $this->set_layout(Request::isXhr() ? null : $GLOBALS['template_factory']->open('layouts/base'));
 
-        $this->sidebar = Sidebar::get();
-        $this->sidebar->setImage('sidebar/schedule-sidebar.png');
-
         $this->flash = Trails_Flash::instance();
 
         $semesterId = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_SEMESTER;
 
+        $options = [];
+        foreach (Semester::getAll() as $one) {
+            $options[$one->id] = (string) $one->name;
+        }
+        $options = array_reverse($options);
+
         $this->semester = $semesterId ? Semester::find($semesterId) : Semester::findNext();
+
+        $this->sidebar = Sidebar::get();
+        $this->sidebar->setImage('sidebar/schedule-sidebar.png');
+        $widget = new SelectWidget(
+            dgettext('whakamahere', 'Semester'),
+            $this->link_for('filter/store_selection', ['type' => 'semester']),
+            'value'
+        );
+        $widget->setOptions($options, $this->semester->id);
+        $this->sidebar->addWidget($widget);
     }
 
     /**
@@ -64,6 +75,7 @@ class DashboardController extends AuthenticatedController {
         }
 
         $this->status = WhakamahereSemesterStatus::getStatusValues();
+        $this->semesterStatus = WhakamahereSemesterStatus::find($this->semester->id)->status;
 
         $this->selectedSemester = [
             'id' => $this->semester->id,

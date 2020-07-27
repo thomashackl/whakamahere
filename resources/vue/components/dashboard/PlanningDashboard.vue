@@ -13,7 +13,11 @@
             <header>
                 Planung veröffentlichen
             </header>
-            <publish-planning :semester="semester"></publish-planning>
+            <publish-planning v-if="isInPlanning" :semester="semester"></publish-planning>
+            <studip-messagebox v-if="planningInactive" type="error"
+                               message="Die Planung für das gewählte Semester wurde bereits veröffentlicht."></studip-messagebox>
+            <studip-messagebox v-if="planningNotYet" type="warning"
+                               message="Die Planung für das gewählte Semester hat noch nicht begonnen."></studip-messagebox>
         </section>
     </article>
 </template>
@@ -21,17 +25,38 @@
 <script>
     import ShortStatistics from './ShortStatistics'
     import PublishPlanning from './PublishPlanning'
+    import StudipMessagebox from '../studip/StudipMessagebox'
 
     export default {
         name: 'PlanningDashboard',
         components: {
             ShortStatistics,
-            PublishPlanning
+            PublishPlanning,
+            StudipMessagebox
         },
         props: {
             semester: {
                 type: Object,
                 required: true
+            },
+            semesterStatus: {
+                type: String,
+                required: true
+            },
+            allStatus: {
+                type: Object,
+                required: true
+            }
+        },
+        computed: {
+            isInPlanning: function() {
+                return ['planning', 'review'].includes(this.semesterStatus)
+            },
+            planningInactive: function() {
+                return ['closed', 'finished'].includes(this.semesterStatus)
+            },
+            planningNotYet: function() {
+                return ['input', 'prepare'].includes(this.semesterStatus)
             }
         }
     }

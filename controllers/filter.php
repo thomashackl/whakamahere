@@ -110,7 +110,11 @@ class FilterController extends AuthenticatedController {
             $this->set_status(404, 'Could not save selection: unknown field.');
         }
 
-        $this->render_nothing();
+        if (Request::isXhr()) {
+            $this->render_nothing();
+        } else {
+            $this->relocate('dashboard');
+        }
     }
 
 }

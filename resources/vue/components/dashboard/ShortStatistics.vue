@@ -109,7 +109,6 @@
                         .then((json) => {
                             this.statistics = json.institutes
                             this.unplanned = json.unplanned.length
-                            console.log(this.unplanned)
                         })
                 }).catch((error) => {
                     this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
