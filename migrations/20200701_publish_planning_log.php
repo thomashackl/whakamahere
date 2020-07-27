@@ -13,7 +13,7 @@
  * @category    Whakamahere
  */
 
-class TimeWeekExceptions extends Migration {
+class PublishPlanningLog extends Migration {
 
     public function description()
     {
@@ -31,6 +31,7 @@ class TimeWeekExceptions extends Migration {
             `exception_id` INT NULL REFERENCES `whakamahere_course_time_exceptions`. `exception_id`, 
             `date_id` VARCHAR(32) NULL REFERENCES `termine`.`termin_id`,
             `booking_id` VARCHAR(32) NULL REFERENCES `resource_bookings`.`id`,
+            `user_id` VARCHAR(32) NULL REFERENCES `auth_user_md5`.`user_id`,
             `state` TINYINT UNSIGNED NOT NULL DEFAULT 0,
             `note` VARCHAR(255) NULL DEFAULT NULL,
             `mkdate` DATETIME NOT NULL,

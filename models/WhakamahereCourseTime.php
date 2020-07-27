@@ -270,7 +270,7 @@ class WhakamahereCourseTime extends SimpleORMap
 
         // Week offset if necessary
         if ($request->startweek > 0) {
-            $startweekInterval = new DateInterval('P' . ($request->startweek - 1) . 'W');
+            $startweekInterval = new DateInterval('P' . ($request->startweek) . 'W');
             $start->add($startweekInterval);
             $end->add($startweekInterval);
         }
@@ -316,7 +316,7 @@ class WhakamahereCourseTime extends SimpleORMap
          */
         if (count(ResourceBooking::findByResourceAndTimeRanges($room, [$timeRange])) == 0) {
             $booking = new ResourceBooking();
-            $booking->resource_id = Request::option('room');
+            $booking->resource_id = $room->id;
             $booking->range_id = $this->slot->request->course->id;
             $booking->booking_user_id = $GLOBALS['user_id'];
             $booking->description = 'Planung: ' . $this->slot->request->course->getFullname();

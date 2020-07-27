@@ -13,12 +13,16 @@
             <div v-if="processing && courseIds.length > 0">
                 <progress :value="processed" :max="courseIds.length"></progress>
                 <br>
-                {{ processed }} / {{ courseIds.length }} abgeschlossen
-                <ul v-if="messages.length > 0">
-                    <li v-for="(message, index) in messages" :key="index">
-                        {{ message }}
-                    </li>
-                </ul>
+                {{ processed }} / {{ courseIds.length }} abgeschlossen,
+                <div v-if="successful > 0" class="publish-success">
+                    {{ successful }} Veranstaltungen erfolgreich gebucht.
+                </div>
+                <div v-if="warning > 0" class="publish-warning">
+                    {{ warning }} Veranstaltungen teilweise erfolgreich gebucht.
+                </div>
+                <div v-if="error > 0" class="publish-error">
+                    {{ error }} Veranstaltungen nicht gebucht.
+                </div>
             </div>
         </div>
     </div>
@@ -46,7 +50,10 @@
                 loading: false,
                 processing: false,
                 processed: 0,
-                messages : []
+                successful: 0,
+                warning: 0,
+                error: 0,
+                errors : []
             }
         },
         methods: {
@@ -77,15 +84,22 @@
                                     }
                                     this.processed++
 
-                                    if (response.status == 206) {
-                                        response.json().then((json) => {
-                                            let date = new Date()
-                                            date.setTime(json.failedDate)
-                                            this.messages.push(
-                                                json.course_name + ': ' + date.toISOString()
-                                            )
-                                        })
-                                    }
+                                    response.json().then((json) => {
+                                        switch (json.status) {
+                                            case 'success':
+                                                console.log('Successful++')
+                                                this.successful++
+                                                break;
+                                            case 'warning':
+                                                console.log('Warning++')
+                                                this.warning++
+                                                break;
+                                            case 'error':
+                                                console.log('Error++')
+                                                this.error++
+                                                break;
+                                        }
+                                    })
                                 })
                             })
                         })
@@ -125,6 +139,27 @@
             }
             progress::-webkit-progress-value {
                 background-color: #28497c;
+            }
+
+            div.publish-success {
+                color: #038511;
+            }
+
+            div.publish-warning {
+                color: #ffbd33;
+                font-style: italic;
+                font-weight: bold;
+            }
+
+            div.publish-error {
+                color: #d60000;
+                font-weight: bold;
+            }
+
+            div.errors {
+                color: #d60000;
+                font-weight: bold;
+                text-align: left;
             }
         }
     }

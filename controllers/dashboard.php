@@ -73,8 +73,6 @@ class DashboardController extends AuthenticatedController {
 
     public function statistics_action()
     {
-        $statistics = [];
-
         $cache = StudipCacheFactory::getCache();
 
         if ($data = $cache->read('planning-statistics-' . $this->semester->id)) {
@@ -136,7 +134,30 @@ class DashboardController extends AuthenticatedController {
 
         }
 
-        $this->render_json($statistics);
+        if ($data = $cache->read('planning-unplanned-' . $this->semester->id)) {
+
+            $unplanned = studip_json_decode($data);
+
+        } else {
+
+            $unplanned = DBManager::get()->fetchAll("SELECT DISTINCT sl.`slot_id`
+                FROM `semester_data` sem
+                    JOIN `seminare` c ON (c.`start_time` BETWEEN sem.`beginn` AND sem.`ende`)
+                    JOIN `whakamahere_requests` r ON (r.`course_id` = c.`Seminar_id`)
+                    JOIN `whakamahere_course_slots` sl ON (sl.`request_id` = r.`request_id`)                    
+                WHERE sem.`semester_id` = :semester
+                    AND NOT EXISTS(SELECT `time_id` FROM `whakamahere_course_times` WHERE `slot_id` = sl.`slot_id`)",
+                ['semester' => $this->semester->id]
+            );
+
+            $cache->write('planning-unplanned-' . $this->semester->id, studip_json_encode($unplanned), 86400);
+
+        }
+
+        $this->render_json([
+            'institutes' => $statistics,
+            'unplanned' => $unplanned
+        ]);
     }
 
 }
