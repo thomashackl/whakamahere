@@ -41,8 +41,25 @@ class DashboardController extends AuthenticatedController {
 
         $this->semester = $semesterId ? Semester::find($semesterId) : Semester::findNext();
 
+        // Semester selector widget
         $this->sidebar = Sidebar::get();
         $this->sidebar->setImage('sidebar/schedule-sidebar.png');
+
+        // Views widget if necessary
+        if (WhakamaherePublishLogEntry::countBySemester_id($this->semester->id)) {
+            $views = new ViewsWidget();
+            $views->setTitle(dgettext('whakamahere', 'Dashboard'));
+            $views->addLink(
+                dgettext('whakamahere', 'Übersicht'),
+                $this->link_for('dashboard')
+            )->setActive(true);
+            $views->addLink(
+                dgettext('whakamahere', 'Veröffentlichungslog'),
+                $this->link_for('log/view', $this->semester->id)
+            )->setActive(false);
+            $this->sidebar->addWidget($views);
+        }
+
         $widget = new SelectWidget(
             dgettext('whakamahere', 'Semester'),
             $this->link_for('filter/store_selection', ['type' => 'semester']),
@@ -57,6 +74,7 @@ class DashboardController extends AuthenticatedController {
      */
     public function index_action()
     {
+
         // Navigation handling.
         Navigation::activateItem('/resources/whakamahere/dashboard');
 

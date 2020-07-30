@@ -85,6 +85,8 @@ class PublishController extends AuthenticatedController {
         // Delete all course cycles in this course - planning takes precedence.
         SeminarCycleDate::deleteBySeminar_id($course_id);
 
+        $status = WhakamaherePublishLogEntry::getStatusMessages();
+
         $errors = 0;
 
         foreach ($request->slots as $slot) {
@@ -116,6 +118,9 @@ class PublishController extends AuthenticatedController {
                  * converting the planned bookings to real ones.
                  */
                 if (count($cycle->dates) > 0) {
+
+                    $failedDates = [];
+
                     foreach ($cycle->dates as $date) {
                         $log->date_id = $date->id;
 
@@ -137,13 +142,15 @@ class PublishController extends AuthenticatedController {
                                     'date' => $date->date
                                 ];
 
-                                $log->state = WhakamaherePublishLogEntry::$SUCCESS;
+                                $log->state = 'success';
 
                             } else {
 
-                                $log->state = WhakamaherePublishLogEntry::$ERROR_BOOKING_STORE;
+                                $failedDates[] = [
+                                    'date' => $date->date,
+                                    'error' => $status['ERROR_STORE_BOOKING']
+                                ];
 
-                                $this->set_status(206);
                                 $result['slots'][] = [
                                     'slot_id' => $slot->id,
                                     'status' => 'error_store_booking',
@@ -154,8 +161,10 @@ class PublishController extends AuthenticatedController {
                             }
 
                         } else {
-                            $log->state = WhakamaherePublishLogEntry::$ERROR_BOOKING_NOT_FOUND;
-                            $this->set_status(206);
+                            $failedDates[] = [
+                                'date' => $date->date,
+                                'error' => $status['ERROR_BOOKING_NOT_FOUND']
+                            ];
                             $result['slots'][] = [
                                 'slot_id' => $slot->id,
                                 'status' => 'error_booking_not_found',
@@ -164,6 +173,18 @@ class PublishController extends AuthenticatedController {
                             $errors++;
                         }
                     }
+
+                    if (count($failedDates) > 0) {
+                        if (count($failedDates) < count($cycle->dates)) {
+                            $log->state = 'warning';
+                            $log->note = implode("\n", array_map(function($entry) {
+                                return date('d.m.Y H:i', $entry['date']) . ': ' . $entry['error'];
+                            }, $failedDates));
+                        } else {
+                            $log->state = 'error';
+                        }
+                    }
+
                 } else {
                     $result['slots'][] = [
                         'slot_id' => $slot->id,
@@ -171,7 +192,8 @@ class PublishController extends AuthenticatedController {
                     ];
                     $errors++;
 
-                    $log->state = WhakamaherePublishLogEntry::$ERROR_NO_DATES_GENERATED;
+                    $log->state = 'error';
+                    $log->note = $status['ERROR_NO_DATES'];
                 }
 
             }

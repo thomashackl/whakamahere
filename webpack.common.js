@@ -11,6 +11,7 @@ module.exports = {
     entry: {
         "planning": assetsPath + "/javascripts/entry-planning.js",
         "dashboard": assetsPath + "/javascripts/entry-dashboard.js",
+        "log": assetsPath + "/javascripts/entry-log.js",
         "semesterstatus": assetsPath + "/javascripts/entry-semesterstatus.js",
         "planningrequest": assetsPath + "/javascripts/entry-planningrequest.js"
     },

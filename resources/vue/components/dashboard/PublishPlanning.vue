@@ -13,7 +13,7 @@
             <div v-if="processing && courseIds.length > 0">
                 <progress :value="processed" :max="courseIds.length"></progress>
                 <br>
-                {{ processed }} / {{ courseIds.length }} abgeschlossen,
+                {{ processed }} / {{ courseIds.length }} abgeschlossen
                 <div v-if="successful > 0" class="publish-success">
                     {{ successful }} Veranstaltungen erfolgreich gebucht.
                 </div>
@@ -87,15 +87,12 @@
                                     response.json().then((json) => {
                                         switch (json.status) {
                                             case 'success':
-                                                console.log('Successful++')
                                                 this.successful++
                                                 break;
                                             case 'warning':
-                                                console.log('Warning++')
                                                 this.warning++
                                                 break;
                                             case 'error':
-                                                console.log('Error++')
                                                 this.error++
                                                 break;
                                         }

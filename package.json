@@ -44,6 +44,7 @@
         "vue-simple-spinner": "^1.2.10",
         "vue-template-compiler": "^2.6.11",
         "vue2-dragula": "^2.5.4",
+        "vuejs-paginate": "^2.1.0",
         "webpack": "4.29.6",
         "webpack-cli": "^3.3.11",
         "webpack-dev-server": "^3.11.0",

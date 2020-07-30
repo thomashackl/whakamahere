@@ -94,6 +94,10 @@ class FilterController extends AuthenticatedController {
                 $field = 'WHAKAMAHERE_SELECTED_WEEK';
                 $value = Request::get('value') + 1;
                 break;
+            case 'log_status':
+                $field = 'WHAKAMAHERE_LOG_STATUS';
+                $value = Request::get('value');
+                break;
         }
 
         if ($field !== '') {
