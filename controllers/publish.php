@@ -113,6 +113,8 @@ class PublishController extends AuthenticatedController {
                 // Real dates are generated on store.
                 $cycle->store();
 
+                $log->cycle_id = $cycle->id;
+
                 /*
                  * Now assign the "reserved" rooms to every generated date,
                  * converting the planned bookings to real ones.
@@ -122,56 +124,217 @@ class PublishController extends AuthenticatedController {
                     $failedDates = [];
 
                     foreach ($cycle->dates as $date) {
+                        // If a room is booked, it is the same for all dates.
+                        $room = null;
+
                         $log->date_id = $date->id;
 
                         $booking = WhakamahereTimeBooking::findByTimeAndDate(
                             $slot->planned_time->time_id, $date->date, $date->end_time);
 
-                        $log->booking_id = $booking->booking_id;
+                        if ($booking) {
+                            $log->booking_id = $booking->booking_id;
 
-                        if ($booking->booking) {
+                            if ($booking->booking) {
 
-                            $booking->booking->booking_type = 0;
-                            $booking->booking->range_id = $date->id;
-                            $booking->booking->description = '';
-                            if ($booking->booking->store() !== false) {
+                                if ($room === null) {
+                                    $room = Room::find($booking->booking->resource_id);
+                                }
 
-                                $result['slots'][] = [
-                                    'slot_id' => $slot->id,
-                                    'status' => 'success',
-                                    'date' => $date->date
+                                $booking->booking->booking_type = 0;
+                                $booking->booking->range_id = $date->id;
+                                $booking->booking->description = '';
+                                if ($booking->booking->store() !== false) {
+
+                                    $result['slots'][] = [
+                                        'slot_id' => $slot->id,
+                                        'status' => 'success',
+                                        'date' => $date->date
+                                    ];
+
+                                    $log->state = 'success';
+
+                                } else {
+
+                                    $failedDates[] = [
+                                        'date' => $date->date,
+                                        'error' => $status['ERROR_STORE_BOOKING']
+                                    ];
+
+                                    $result['slots'][] = [
+                                        'slot_id' => $slot->id,
+                                        'status' => 'error_store_booking',
+                                        'date' => $date->date
+                                    ];
+                                    $errors++;
+
+                                }
+
+                            } else {
+
+                                /*
+                                 * Booking with the given ID does not exist, try to
+                                 * create a new one.
+                                 */
+                                $timeRange = [
+                                    'begin' => $date->date,
+                                    'end' => $date->end_time
                                 ];
 
-                                $log->state = 'success';
+                                /*
+                                 * Some other date already has a room,
+                                 * try to book it for this date as well.
+                                 */
+                                if ($room !== null) {
+                                    if (count(ResourceBooking::findByResourceAndTimeRanges($room, [$timeRange])) == 0) {
+                                        $rb = new ResourceBooking();
+                                        $rb->resource_id = $room->id;
+                                        $rb->range_id = $date->id;
+                                        $rb->booking_user_id = $GLOBALS['user_id'];
+                                        $rb->description = '';
+                                        $rb->begin = $timeRange['begin'];
+                                        $rb->end = $timeRange['end'];
+                                        $rb->booking_type = 0;
+                                        if ($rb->store() !== false) {
 
+                                            $booking->id = $rb->id;
+                                            $booking->chdate = date('Y-m-d H:i:s');
+                                            $booking->store();
+
+                                            $result['slots'][] = [
+                                                'slot_id' => $slot->id,
+                                                'status' => 'success',
+                                                'date' => $date->date
+                                            ];
+
+                                            $log->state = 'success';
+
+                                        } else {
+                                            $failedDates[] = [
+                                                'date' => $date->date,
+                                                'error' => $status['ERROR_BOOKING_NOT_FOUND']
+                                            ];
+                                            $result['slots'][] = [
+                                                'slot_id' => $slot->id,
+                                                'status' => 'error_booking_not_found',
+                                                'date' => $date->date
+                                            ];
+                                            $errors++;
+                                        }
+                                    } else {
+                                        $failedDates[] = [
+                                            'date' => $date->date,
+                                            'error' => $status['ERROR_BOOKING_NOT_FOUND']
+                                        ];
+                                        $result['slots'][] = [
+                                            'slot_id' => $slot->id,
+                                            'status' => 'error_booking_not_found',
+                                            'date' => $date->date
+                                        ];
+                                        $errors++;
+                                    }
+                                } else {
+                                    $booking->delete();
+
+                                    $failedDates[] = [
+                                        'date' => $date->date,
+                                        'error' => $status['ERROR_BOOKING_NOT_FOUND']
+                                    ];
+                                    $result['slots'][] = [
+                                        'slot_id' => $slot->id,
+                                        'status' => 'error_booking_not_found',
+                                        'date' => $date->date
+                                    ];
+                                    $errors++;
+                                }
+
+                            }
+
+                        // This date has no room booked.
+                        } else {
+
+                            /*
+                             * Booking with the given ID does not exist, try to
+                             * create a new one.
+                             */
+                            $timeRange = [
+                                'begin' => $date->date,
+                                'end' => $date->end_time
+                            ];
+
+                            /*
+                             * Some other date already has a room,
+                             * try to book it for this date as well.
+                             */
+                            if ($room !== null) {
+                                if (count(ResourceBooking::findByResourceAndTimeRanges($room, [$timeRange])) == 0) {
+                                    $rb = new ResourceBooking();
+                                    $rb->resource_id = $room->id;
+                                    $rb->range_id = $date->id;
+                                    $rb->booking_user_id = $GLOBALS['user_id'];
+                                    $rb->description = '';
+                                    $rb->begin = $timeRange['begin'];
+                                    $rb->end = $timeRange['end'];
+                                    $rb->booking_type = 0;
+
+                                    // Now create a matching WhakamahereTimeBooking.
+                                    if ($rb->store() !== false) {
+
+                                        $tb = new WhakamahereTimeBooking();
+                                        $tb->time_id = $slot->planned_time->time_id;
+                                        $tb->booking_id = $rb->id;
+                                        $tb->mkdate = date('Y-m-d H:i:s');
+                                        $tb->chdate = date('Y-m-d H:i:s');
+                                        $tb->store();
+
+                                        $result['slots'][] = [
+                                            'slot_id' => $slot->id,
+                                            'status' => 'success',
+                                            'date' => $date->date
+                                        ];
+
+                                        $log->state = 'success';
+
+                                    } else {
+                                        $failedDates[] = [
+                                            'date' => $date->date,
+                                            'error' => $status['ERROR_NO_BOOKING_ASSIGNED']
+                                        ];
+                                        $result['slots'][] = [
+                                            'slot_id' => $slot->id,
+                                            'status' => 'error_no_booking_assigned',
+                                            'date' => $date->date
+                                        ];
+                                        $errors++;
+                                    }
+                                } else {
+                                    $failedDates[] = [
+                                        'date' => $date->date,
+                                        'error' => $status['ERROR_NO_BOOKING_ASSIGNED']
+                                    ];
+                                    $result['slots'][] = [
+                                        'slot_id' => $slot->id,
+                                        'status' => 'error_no_booking_assigned',
+                                        'date' => $date->date
+                                    ];
+                                    $errors++;
+                                }
                             } else {
 
                                 $failedDates[] = [
                                     'date' => $date->date,
-                                    'error' => $status['ERROR_STORE_BOOKING']
+                                    'error' => $status['ERROR_NO_BOOKING_ASSIGNED']
                                 ];
-
                                 $result['slots'][] = [
                                     'slot_id' => $slot->id,
-                                    'status' => 'error_store_booking',
+                                    'status' => 'error_no_booking_assigned',
                                     'date' => $date->date
                                 ];
                                 $errors++;
-
                             }
 
-                        } else {
-                            $failedDates[] = [
-                                'date' => $date->date,
-                                'error' => $status['ERROR_BOOKING_NOT_FOUND']
-                            ];
-                            $result['slots'][] = [
-                                'slot_id' => $slot->id,
-                                'status' => 'error_booking_not_found',
-                                'date' => $date->date
-                            ];
-                            $errors++;
                         }
+
                     }
 
                     if (count($failedDates) > 0) {
@@ -182,6 +345,7 @@ class PublishController extends AuthenticatedController {
                             }, $failedDates));
                         } else {
                             $log->state = 'error';
+                            $log->note = 'Fehler bei allen Terminen aufgetreten.';
                         }
                     }
 

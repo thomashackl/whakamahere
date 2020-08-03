@@ -140,17 +140,19 @@
 
             div.publish-success {
                 color: #038511;
+                padding: 2px;
             }
 
             div.publish-warning {
                 color: #ffbd33;
-                font-style: italic;
                 font-weight: bold;
+                padding: 2px;
             }
 
             div.publish-error {
                 color: #d60000;
                 font-weight: bold;
+                padding: 2px;
             }
 
             div.errors {

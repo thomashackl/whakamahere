@@ -52,7 +52,7 @@ class LogController extends AuthenticatedController {
         )->setActive(false);
         $views->addLink(
             dgettext('whakamahere', 'Veröffentlichungslog'),
-            $this->link_for('log/view')
+            $this->link_for('log/view', $semester_id)
         )->setActive(true);
         $sidebar->addWidget($views);
 
@@ -64,7 +64,7 @@ class LogController extends AuthenticatedController {
         ];
         $widget = new SelectWidget(
             dgettext('whakamahere', 'Status'),
-            $this->link_for('filter/store_selection', ['type' => 'log_status']),
+            $this->link_for('filter/store_selection', ['semester' => $semester_id, 'type' => 'log_status']),
             'value'
         );
         $widget->setOptions($options, UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_LOG_STATUS);

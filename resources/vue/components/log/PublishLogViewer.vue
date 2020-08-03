@@ -5,7 +5,7 @@
                   :page-count="numberOfPages" :click-handler="changePage"
                   container-class="whakamahere-paginate" page-class="whakamahere-page"></paginate>
         <table class="default">
-            <caption>Veröffentlichungsprotokoll ({{ start }} - {{ end }}/{{ total }})</caption>
+            <caption>Veröffentlichungsprotokoll ({{ start }} - {{ Math.min(end, total) }}/{{ total }})</caption>
             <colgroup>
                 <col width="20">
                 <col>
@@ -34,9 +34,7 @@
                     <td>{{ entry.booking.room }}</td>
                     <td>
                         <studip-icon v-if="entry.state === 'success'" shape="accept"></studip-icon>
-                        <template v-else :class="entry.state === 'warning' ? 'publish-warning' : 'publish-error'">
-                            {{ entry.note }}
-                        </template>
+                        <span v-else-if="entry.note != null" v-html="makeList(entry.note)"></span>
                     </td>
                     <td>{{ entry.mkdate }}</td>
                 </tr>
@@ -97,10 +95,10 @@
             }
         },
         methods: {
-            changePage: function(pageNum) {
+            changePage: function (pageNum) {
                 fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/log/get_entries/' +
                     this.semester + '/' +
-                    ((pageNum - 1) * this.entriesPerPage) + '/' + this.entriesPerPage))
+                        ((pageNum - 1) * this.entriesPerPage) + '/' + this.entriesPerPage))
                 .then((response) => {
                     if (!response.ok) {
                         throw response
@@ -118,10 +116,10 @@
                     this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
                 })
             },
-            getCourseUrl: function(id) {
-                return STUDIP.URLHelper.getURL('dispatch.php/course/timesrooms', { cid: id })
+            getCourseUrl: function (id) {
+                return STUDIP.URLHelper.getURL('dispatch.php/course/timesrooms', {cid: id})
             },
-            getClass: function(state) {
+            getClass: function (state) {
                 switch (state) {
                     case 'success':
                         return 'publish-success';
@@ -131,8 +129,29 @@
                         return 'publish-error';
                 }
             },
-            getWeekdayName: function(number) {
+            getWeekdayName: function (number) {
                 return this.weekdays[number]
+            },
+            makeList: function(string) {
+                const parts = string.split('\n')
+                console.log(parts)
+
+                if (parts.length < 2) {
+
+                    return string
+
+                } else {
+
+                    let list = '<ul>'
+
+                    for (let i = 0 ; i < parts.length ; i++) {
+                        list += '<li>' + parts[i] + '</li>'
+                    }
+
+                    list += '</ul>'
+
+                    return list
+                }
             }
         }
     }

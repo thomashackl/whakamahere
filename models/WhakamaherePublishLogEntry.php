@@ -18,6 +18,7 @@
  * @property string course_id database column
  * @property string time_id database column
  * @property string exception_id database column
+ * @property string cycle_id database column
  * @property string date_id database column
  * @property string booking_id database column
  * @property string user_id database column
@@ -51,6 +52,11 @@ class WhakamaherePublishLogEntry extends SimpleORMap
             'class_name' => 'WhakamahereCourseTimeException',
             'foreign_key' => 'exception_id',
             'assoc_foreign_key' => 'exception_id'
+        ];
+        $config['belongs_to']['cycle'] = [
+            'class_name' => 'SeminarCycleDate',
+            'foreign_key' => 'cycle_id',
+            'assoc_foreign_key' => 'metadate_id'
         ];
         $config['belongs_to']['date'] = [
             'class_name' => 'CourseDate',
@@ -107,7 +113,7 @@ class WhakamaherePublishLogEntry extends SimpleORMap
                 'lastname' => $this->creator->nachname,
                 'fullname' => $this->creator->getFullname()
             ],
-            'state' => (int) $this->state,
+            'state' => $this->state,
             'note' => $this->note,
             'mkdate' => $this->mkdate,
         ];
@@ -150,7 +156,8 @@ class WhakamaherePublishLogEntry extends SimpleORMap
             'WARNING' => 'Teilweise erfolgreich.',
             'ERROR_NO_DATES' => 'Es wurden keine Termine erzeugt.',
             'ERROR_STORE_BOOKING' => 'Die Raumbuchung konnte nicht gespeichert werden.',
-            'ERROR_BOOKING_NOT_FOUND' => 'Die verknüpfte Raumbuchung wurde nicht gefunden.'
+            'ERROR_BOOKING_NOT_FOUND' => 'Die verknüpfte Raumbuchung wurde nicht gefunden.',
+            'ERROR_NO_BOOKING_ASSIGNED' => 'Es wurde kein Raum gebucht.'
         ];
     }
 
