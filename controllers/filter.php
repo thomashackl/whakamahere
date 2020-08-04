@@ -60,10 +60,12 @@ class FilterController extends AuthenticatedController {
             case 'semester':
                 $field = 'WHAKAMAHERE_SELECTED_SEMESTER';
                 $value = Request::get('value');
+                $target = Request::isXhr() ? null : 'dashboard';
                 break;
             case 'searchterm':
                 $field = 'WHAKAMAHERE_SEARCHTERM';
                 $value = Request::get('value');
+                $target = 'planning';
                 break;
             case 'seats':
                 $field = 'WHAKAMAHERE_MINMAX_SEATS';
@@ -73,26 +75,37 @@ class FilterController extends AuthenticatedController {
                 } else {
                     $value = null;
                 }
+                $target = 'planning';
                 break;
             case 'institute':
                 $field = 'WHAKAMAHERE_SELECTED_INSTITUTE';
                 $value = Request::get('value');
+                $target = 'planning';
                 break;
             case 'lecturer':
                 $field = 'WHAKAMAHERE_SELECTED_LECTURER';
                 $value = Request::get('value');
+                $target = 'planning';
                 break;
             case 'room':
                 $field = 'WHAKAMAHERE_SELECTED_ROOM';
                 $value = Request::get('value');
+                $target = 'planning';
                 break;
             case 'no_room':
                 $field = 'WHAKAMAHERE_SHOW_NO_ROOM';
                 $value = Request::get('value');
+                $target = 'planning';
                 break;
             case 'week':
                 $field = 'WHAKAMAHERE_SELECTED_WEEK';
                 $value = Request::get('value') + 1;
+                $target = 'planning';
+                break;
+            case 'log_status':
+                $field = 'WHAKAMAHERE_LOG_STATUS';
+                $value = Request::get('value');
+                $target = 'log/view/' . Request::option('semester');
                 break;
         }
 
@@ -110,7 +123,11 @@ class FilterController extends AuthenticatedController {
             $this->set_status(404, 'Could not save selection: unknown field.');
         }
 
-        $this->render_nothing();
+        if ($target === null) {
+            $this->render_nothing();
+        } else {
+            $this->relocate($target);
+        }
     }
 
 }

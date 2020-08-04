@@ -4,7 +4,7 @@
             Veranstaltungsnummer oder Name
         </label>
         <input type="text" name="searchterm" id="searchterm" v-model="search"
-               placeholder="Suchbegriff mit mehr als drei Zeichen" @change="doSearch">
+               placeholder="Suchbegriff mit mehr als drei Zeichen" @change="doSearch" @keypress="checkEnter">
     </section>
 </template>
 
@@ -29,8 +29,14 @@
             }
         },
         methods: {
-            doSearch() {
+            doSearch: function(event) {
                 bus.$emit('updated-searchterm', this.search)
+            },
+            checkEnter: function(event) {
+                if (event.which == 13) {
+                    event.preventDefault()
+                    this.doSearch(event)
+                }
             }
         }
     }

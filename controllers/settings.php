@@ -100,6 +100,8 @@ class SettingsController extends AuthenticatedController {
                 ]
         ];
 
+        $oldInstitutes = Config::get()->WHAKAMAHERE_DASHBOARD_STATISTICS_INSTITUTES;
+
         $success = true;
         foreach ($entries as $name => $mapping) {
             switch ($mapping['type']) {
@@ -115,6 +117,16 @@ class SettingsController extends AuthenticatedController {
             }
 
             Config::get()->store($mapping['config'], $value) !== false;
+        }
+
+        // Clear cache for semester statistics if institutes have changed.
+        if ($oldInstitutes != Request::getArray('statistics_institutes')) {
+            PageLayout::postInfo('Institutes have changed, clearing cache.');
+            $cache = StudipCacheFactory::getCache();
+
+            foreach (Semester::getAll() as $semester) {
+                $cache->expire('planning-statistics-' . $semester->id);
+            }
         }
 
         if ($success) {

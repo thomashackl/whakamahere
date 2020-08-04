@@ -1,6 +1,6 @@
 {
     "name": "@studip/whakamahere",
-    "version": "0.13.4",
+    "version": "1.0.0",
     "description": "Stud.IP semester course time and room planning plugin",
     "private": true,
     "scripts": {
@@ -41,8 +41,10 @@
         "vue-context": "^5.1.0",
         "vue-loader": "^15.9.2",
         "vue-loading-overlay": "^3.3.2",
+        "vue-simple-spinner": "^1.2.10",
         "vue-template-compiler": "^2.6.11",
         "vue2-dragula": "^2.5.4",
+        "vuejs-paginate": "^2.1.0",
         "webpack": "4.29.6",
         "webpack-cli": "^3.3.11",
         "webpack-dev-server": "^3.11.0",

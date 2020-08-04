@@ -22,7 +22,8 @@
                 type: String
             },
             eventName: {
-                type: String
+                type: String,
+                default: 'button-clicked'
             },
             preventDefault: {
                 type: Boolean,
