@@ -83,6 +83,7 @@
                     'Mi',
                     'Do',
                     'Fr',
+                    'Fr',
                     'Sa'
                 ],
                 entriesPerPage: 100,
@@ -134,7 +135,6 @@
             },
             makeList: function(string) {
                 const parts = string.split('\n')
-                console.log(parts)
 
                 if (parts.length < 2) {
 
@@ -206,6 +206,8 @@
                 }
 
                 th, td {
+                    vertical-align: top;
+
                     &:first-child, &:last-child {
                         text-align: right;
                     }

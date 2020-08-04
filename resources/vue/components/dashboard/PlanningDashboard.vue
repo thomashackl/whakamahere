@@ -7,17 +7,19 @@
             <header>
                 Statistik
             </header>
-            <short-statistics :semester="semester"></short-statistics>
+            <short-statistics v-if="isEnabled" :semester="semester"></short-statistics>
+            <studip-messagebox v-else type="error"
+                               message="Für dieses Semester sind keine Planungsdaten hinterlegt."></studip-messagebox>
         </section>
         <section class="align-center" id="publish-planning">
             <header>
                 Planung veröffentlichen
             </header>
-            <publish-planning v-if="isInPlanning" :semester="semester"></publish-planning>
-            <studip-messagebox v-if="planningInactive" type="error"
-                               message="Die Planung für das gewählte Semester wurde bereits veröffentlicht."></studip-messagebox>
-            <studip-messagebox v-if="planningNotYet" type="warning"
-                               message="Die Planung für das gewählte Semester hat noch nicht begonnen."></studip-messagebox>
+            <publish-planning v-if="isPublishingAllowed" :semester="semester"></publish-planning>
+            <studip-messagebox v-if="!isEnabled" type="error"
+                               message="Für dieses Semester sind keine Planungsdaten hinterlegt."></studip-messagebox>
+            <studip-messagebox v-if="!isPublishingAllowed" type="warning"
+                               :message="statusNoPublishing"></studip-messagebox>
         </section>
     </article>
 </template>
@@ -46,17 +48,21 @@
             allStatus: {
                 type: Object,
                 required: true
+            },
+            isEnabled: {
+                type: Boolean,
+                default: true
+            },
+            isPublishingAllowed: {
+                type: Boolean,
+                default: false
             }
         },
-        computed: {
-            isInPlanning: function() {
-                return ['planning', 'review'].includes(this.semesterStatus)
-            },
-            planningInactive: function() {
-                return ['closed', 'finished'].includes(this.semesterStatus)
-            },
-            planningNotYet: function() {
-                return ['input', 'prepare'].includes(this.semesterStatus)
+        data() {
+            return {
+                statusNoPublishing: 'Das Semester ist aktuell im Status "' +
+                    this.allStatus[this.semesterStatus] +
+                    '", daher kann keine Veröffentlichung stattfinden.'
             }
         }
     }

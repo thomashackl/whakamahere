@@ -41,6 +41,10 @@ class DashboardController extends AuthenticatedController {
 
         $this->semester = $semesterId ? Semester::find($semesterId) : Semester::findNext();
 
+        $status = WhakamahereSemesterStatus::find($this->semester->id);
+        $this->isEnabled = $status->isEnabled();
+        $this->isPublishingAllowed = $status->isPublishingAllowed();
+
         // Semester selector widget
         $this->sidebar = Sidebar::get();
         $this->sidebar->setImage('sidebar/schedule-sidebar.png');

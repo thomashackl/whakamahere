@@ -47,8 +47,8 @@ class PublishController extends AuthenticatedController {
                 FROM `whakamahere_requests` r
                     JOIN `whakamahere_course_slots` cs ON (cs.`request_id` = r.`request_id`)
                     JOIN `whakamahere_course_times` ct ON (ct.`slot_id` = cs.`slot_id`)
-                    JOIN `whakamahere_time_bookings` tb ON (tb.`time_id` = ct.`time_id`)
-                    JOIN `resource_bookings` b ON (b.`id` = tb.`booking_id`)
+                    LEFT JOIN `whakamahere_time_bookings` tb ON (tb.`time_id` = ct.`time_id`)
+                    LEFT JOIN `resource_bookings` b ON (b.`id` = tb.`booking_id`)
                     JOIN `seminare` s ON (s.`Seminar_id` = r.`course_id`)
                     JOIN `semester_data` sd ON (sd.`beginn` = s.`start_time`)
                 WHERE sd.`semester_id` = :semester",
@@ -250,7 +250,7 @@ class PublishController extends AuthenticatedController {
 
                             }
 
-                        // This date has no room booked.
+                        // This date has no booked room.
                         } else {
 
                             /*
@@ -345,7 +345,7 @@ class PublishController extends AuthenticatedController {
                             }, $failedDates));
                         } else {
                             $log->state = 'error';
-                            $log->note = 'Fehler bei allen Terminen aufgetreten.';
+                            $log->note = 'Alle Termine ohne Raumbuchung.';
                         }
                     }
 

@@ -23,17 +23,24 @@
                 <div v-if="error > 0" class="publish-error">
                     {{ error }} Veranstaltungen nicht gebucht.
                 </div>
+                <div v-if="processed == courseIds.length">
+                    <a :href="logUrl">Veröffentlichungslog anzeigen</a>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script>
+    import { globalfunctions } from '../mixins/globalfunctions'
     import StudipButton from '../studip/StudipButton'
     import VueSimpleSpinner from 'vue-simple-spinner'
 
     export default {
         name: 'PublishPlanning',
+        mixins: [
+            globalfunctions
+        ],
         components: {
             StudipButton,
             VueSimpleSpinner
@@ -53,7 +60,8 @@
                 successful: 0,
                 warning: 0,
                 error: 0,
-                errors : []
+                errors : [],
+                logUrl: STUDIP.URLHelper.getURL(this.$pluginBase + '/log/view/' + this.semester.id)
             }
         },
         methods: {

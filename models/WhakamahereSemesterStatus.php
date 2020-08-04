@@ -59,4 +59,39 @@ class WhakamahereSemesterStatus extends SimpleORMap
         return $this->semester->name;
     }
 
+    /**
+     * Checks whether creating new WhakamaherePlanningRequest is allowed
+     * according to semester status.
+     */
+    public function isCreatingAllowed()
+    {
+        return in_array($this->status, ['input', 'prepare']);
+    }
+
+    /**
+     * Checks whether changing an existing WhakamaherePlanningRequest
+     * is allowed according to semester status.
+     */
+    public function isChangingAllowed()
+    {
+        return in_array($this->status, ['input', 'prepare', 'planning']);
+    }
+
+    /**
+     * Checks whether publishing the planning data into real course cycles
+     * and dates is allowed according to semester status.
+     */
+    public function isPublishingAllowed()
+    {
+        return in_array($this->status, ['planning', 'review']);
+    }
+
+    /**
+     * Checks whether semester planning is or was enabled for this semester.
+     */
+    public function isEnabled()
+    {
+        return !in_array($this->status, ['closed']);
+    }
+
 }
