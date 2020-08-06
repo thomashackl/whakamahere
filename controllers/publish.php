@@ -158,7 +158,8 @@ class PublishController extends AuthenticatedController {
 
                                     $failedDates[] = [
                                         'date' => $date->date,
-                                        'error' => $status['ERROR_STORE_BOOKING']
+                                        'error' => str_replace(':room', $booking->booking->resource->name,
+                                            $status['ERROR_STORE_BOOKING'])
                                     ];
 
                                     $result['slots'][] = [

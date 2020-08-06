@@ -162,7 +162,7 @@ class WhakamaherePublishLogEntry extends SimpleORMap
             'SUCCESS' => 'Erfolgreich.',
             'WARNING' => 'Teilweise erfolgreich.',
             'ERROR_NO_DATES' => 'Es wurden keine Termine erzeugt.',
-            'ERROR_STORE_BOOKING' => 'Die Raumbuchung konnte nicht gespeichert werden.',
+            'ERROR_STORE_BOOKING' => 'Die Raumbuchung in :room konnte nicht gespeichert werden.',
             'ERROR_BOOKING_NOT_FOUND' => 'Die verknüpfte Raumbuchung wurde nicht gefunden.',
             'ERROR_NO_BOOKING_ASSIGNED' => 'Es wurde kein Raum gebucht.'
         ];
