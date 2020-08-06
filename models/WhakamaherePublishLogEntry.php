@@ -88,14 +88,15 @@ class WhakamaherePublishLogEntry extends SimpleORMap
             'course' => [
                 'id' => $this->course_id,
                 'number' => $this->course->veranstaltungsnummer,
-                'name' => $this->course->name,
+                'name' => (string) $this->course->name,
                 'fullname' => $this->course->getFullname()
             ],
             'time' => [
                 'id' => (int) $this->time_id,
                 'weekday' => (int) $this->time->weekday,
                 'start' => date('H:i', strtotime($this->time->start)),
-                'end' => date('H:i', strtotime($this->time->end))
+                'end' => date('H:i', strtotime($this->time->end)),
+                'text' => (string) $this->time
             ],
             'exception' => $this->exception_id == null ? [] : [],
             'date' => $this->date_id == null ? [] : [],
@@ -137,14 +138,20 @@ class WhakamaherePublishLogEntry extends SimpleORMap
         $sql = "JOIN `seminare` s ON (s.`Seminar_id` = `whakamahere_publish_log`.`course_id`)
                 JOIN `whakamahere_course_times` t ON (t.`time_id` = `whakamahere_publish_log`.`time_id`)
             WHERE `semester_id` = :semester";
-        $parameters = ['semester' => $semester_id, 'start' => (int) $start, 'limit' => (int) $limit];
+        $parameters = ['semester' => $semester_id];
 
         if ($filter['status']) {
             $sql .= " AND `whakamahere_publish_log`.`state` = :status";
             $parameters['status'] = $filter['status'];
         }
 
-        $sql .= " ORDER BY s.`VeranstaltungsNummer`, s.`Name` LIMIT :start, :limit";
+        $sql .= " ORDER BY s.`VeranstaltungsNummer`, s.`Name`";
+
+        if ($start != 0 && $limit != 0) {
+            $sql .= "LIMIT :start, :limit";
+            $parameters['start'] = (int) $start;
+            $parameters['limit'] = (int) $limit;
+        }
 
         return self::findBySQL($sql, $parameters);
     }

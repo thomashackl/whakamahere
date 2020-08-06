@@ -1,6 +1,6 @@
 <div id="whakamahere-log-view">
     <publish-log-viewer semester="<?php echo $semester ?>"
-                        :entries='<?php echo studip_json_encode($entries) ?>'
+                        :entries='<?php echo json_encode($entries, JSON_HEX_APOS) ?>'
                         :total="<?php echo $total ?>"></publish-log-viewer>
 </div>
 <script>

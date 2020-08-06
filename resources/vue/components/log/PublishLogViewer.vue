@@ -40,6 +40,10 @@
                 </tr>
             </tbody>
         </table>
+        <paginate v-if="total > entriesPerPage" v-model="currentPage"
+                  prev-text="&lt; " next-text=" &gt;"
+                  :page-count="numberOfPages" :click-handler="changePage"
+                  container-class="whakamahere-paginate" page-class="whakamahere-page"></paginate>
     </div>
 </template>
 
@@ -82,7 +86,6 @@
                     'Di',
                     'Mi',
                     'Do',
-                    'Fr',
                     'Fr',
                     'Sa'
                 ],
@@ -210,6 +213,12 @@
 
                     &:first-child, &:last-child {
                         text-align: right;
+                    }
+
+                    ul {
+                        li {
+                            margin-left: -25px;
+                        }
                     }
                 }
             }

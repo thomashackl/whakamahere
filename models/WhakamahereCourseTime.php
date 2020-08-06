@@ -472,6 +472,16 @@ class WhakamahereCourseTime extends SimpleORMap
         return $entry;
     }
 
+    public function __toString()
+    {
+        $weekdays = $this->getWeekdays();
+
+        $start = strtotime('next ' . $weekdays[$this->weekday] . ' ' . $this->start);
+        $end = strtotime('next ' . $weekdays[$this->weekday] . ' ' . $this->end);
+
+        return strftime('%a %H:%M', $start) . ' - ' . strftime('%H:%M', $end);
+    }
+
     /**
      * Fetch all weekdays in a given week that are no holidays.
      *

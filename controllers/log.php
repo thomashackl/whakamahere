@@ -86,6 +86,15 @@ class LogController extends AuthenticatedController {
 
         $this->total = WhakamaherePublishLogEntry::countBySemester_id($semester_id, $filter);
         $this->semester = $semester_id;
+
+        if ($this->total > 0) {
+            $export = $sidebar->addWidget(new ExportWidget());
+            $export->addLink(dgettext('whakamahere', 'Diese Ansicht als CSV exportieren'),
+                $this->link_for('log/export', $semester_id),
+                Icon::create('log+move_right')
+            );
+        }
+
     }
 
 
@@ -103,6 +112,55 @@ class LogController extends AuthenticatedController {
         }
 
         $this->render_json($entries);
+    }
+
+    public function export_action($semester_id)
+    {
+        $filter = [];
+        if (($status = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_LOG_STATUS) !== null) {
+            $filter['status'] = $status;
+        }
+
+        $csv = [
+            [
+                dgettext('whakamahere', 'Nummer'),
+                dgettext('whakamahere', 'Veranstaltung'),
+                dgettext('whakamahere', 'Regelmäßige Zeit'),
+                dgettext('whakamahere', 'Gebuchter Raum'),
+                dgettext('whakamahere', 'Status'),
+                dgettext('whakamahere', 'Kommentar'),
+                dgettext('whakamahere', 'Datum')
+            ]
+        ];
+
+        foreach (WhakamaherePublishLogEntry::findFiltered($semester_id, 0, 0, $filter) as $entry) {
+            $room = null;
+            if (count($entry->time->bookings) > 0) {
+                if ($entry->time->bookings->first()->booking) {
+                    $room = $entry->time->bookings->first()->booking->resource->name;
+                }
+            }
+
+            $csv[] = [
+                $entry->course->veranstaltungsnummer,
+                $entry->course->name,
+                (string) $entry->time,
+                $room ?: '-',
+                $entry->state == 'success' ?
+                    dgettext('whakamahere', 'erfolgreich') :
+                    ($entry->state == 'warning' ?
+                        dgettext('whakamahere', 'teilweise erfolgreich') :
+                        dgettext('whakamahere', 'fehlerhaft')),
+                $entry->note ?: '-',
+                date('d.m.Y H:i:s', strtotime($entry->mkdate))
+            ];
+        }
+
+        $semester = Semester::find($semester_id);
+        $filename = strtolower('semesterplanung-' . str_replace([' ', '/'], '-', $semester->name));
+
+        $this->response->add_header('Content-Disposition', 'attachment;filename=' . $filename . '.csv');
+        $this->render_text(array_to_csv($csv));
     }
 
 }

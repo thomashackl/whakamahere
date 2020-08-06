@@ -71,10 +71,11 @@ class DashboardController extends AuthenticatedController {
         );
         $widget->setOptions($options, $this->semester->id);
         $this->sidebar->addWidget($widget);
+
     }
 
     /**
-     * Show widgets.
+     * Show elements.
      */
     public function index_action()
     {
