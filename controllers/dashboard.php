@@ -49,20 +49,24 @@ class DashboardController extends AuthenticatedController {
         $this->sidebar = Sidebar::get();
         $this->sidebar->setImage('sidebar/schedule-sidebar.png');
 
-        // Views widget if necessary
+        // Views widget
+        $views = new ViewsWidget();
+        $views->setTitle(dgettext('whakamahere', 'Dashboard'));
+        $views->addLink(
+            dgettext('whakamahere', 'Übersicht'),
+            $this->link_for('dashboard')
+        )->setActive(true);
+        $views->addLink(
+            dgettext('whakamahere', 'Veranstaltungen'),
+            $this->link_for('listing')
+        )->setActive(false);
         if (WhakamaherePublishLogEntry::countBySemester_id($this->semester->id)) {
-            $views = new ViewsWidget();
-            $views->setTitle(dgettext('whakamahere', 'Dashboard'));
-            $views->addLink(
-                dgettext('whakamahere', 'Übersicht'),
-                $this->link_for('dashboard')
-            )->setActive(true);
             $views->addLink(
                 dgettext('whakamahere', 'Veröffentlichungslog'),
-                $this->link_for('log/view', $this->semester->id)
+                $this->link_for('log/view')
             )->setActive(false);
-            $this->sidebar->addWidget($views);
         }
+        $this->sidebar->addWidget($views);
 
         $widget = new SelectWidget(
             dgettext('whakamahere', 'Semester'),

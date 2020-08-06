@@ -4,7 +4,8 @@
                   prev-text="&lt; " next-text=" &gt;"
                   :page-count="numberOfPages" :click-handler="changePage"
                   container-class="whakamahere-paginate" page-class="whakamahere-page"></paginate>
-        <table class="default">
+        <vue-simple-spinner v-if="loading" size="32" message="Logeinträge werden geladen..."></vue-simple-spinner>
+        <table v-if="!loading" class="default">
             <caption>Veröffentlichungsprotokoll ({{ start }} - {{ Math.min(end, total) }}/{{ total }})</caption>
             <colgroup>
                 <col width="20">
@@ -40,7 +41,7 @@
                 </tr>
             </tbody>
         </table>
-        <paginate v-if="total > entriesPerPage" v-model="currentPage"
+        <paginate v-if="total > entriesPerPage && !loading" v-model="currentPage"
                   prev-text="&lt; " next-text=" &gt;"
                   :page-count="numberOfPages" :click-handler="changePage"
                   container-class="whakamahere-paginate" page-class="whakamahere-page"></paginate>
@@ -49,12 +50,14 @@
 
 <script>
     import { globalfunctions } from '../mixins/globalfunctions'
+    import VueSimpleSpinner from 'vue-simple-spinner'
     import Paginate from 'vuejs-paginate'
     import StudipIcon from '../studip/StudipIcon'
 
     export default {
         name: 'PublishLogViewer',
         components: {
+            VueSimpleSpinner,
             Paginate,
             StudipIcon
         },
@@ -77,6 +80,7 @@
         },
         data() {
             return {
+                loading: false,
                 theEntries: this.entries,
                 start: 1,
                 end: 100,
@@ -100,8 +104,8 @@
         },
         methods: {
             changePage: function (pageNum) {
+                this.loading = true
                 fetch(STUDIP.URLHelper.getURL(this.$pluginBase + '/log/get_entries/' +
-                    this.semester + '/' +
                         ((pageNum - 1) * this.entriesPerPage) + '/' + this.entriesPerPage))
                 .then((response) => {
                     if (!response.ok) {
@@ -115,6 +119,7 @@
                             ((pageNum - 1) * this.entriesPerPage) + this.entriesPerPage,
                             this.total
                         )
+                        this.loading = false
                     })
                 }).catch((error) => {
                     this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)

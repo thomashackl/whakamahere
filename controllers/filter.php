@@ -105,7 +105,7 @@ class FilterController extends AuthenticatedController {
             case 'log_status':
                 $field = 'WHAKAMAHERE_LOG_STATUS';
                 $value = Request::get('value');
-                $target = 'log/view/' . Request::option('semester');
+                $target = 'log/view';
                 break;
         }
 

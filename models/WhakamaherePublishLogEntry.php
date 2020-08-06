@@ -147,7 +147,7 @@ class WhakamaherePublishLogEntry extends SimpleORMap
 
         $sql .= " ORDER BY s.`VeranstaltungsNummer`, s.`Name`";
 
-        if ($start != 0 && $limit != 0) {
+        if ($limit != 0) {
             $sql .= "LIMIT :start, :limit";
             $parameters['start'] = (int) $start;
             $parameters['limit'] = (int) $limit;

@@ -61,7 +61,7 @@
                 warning: 0,
                 error: 0,
                 errors : [],
-                logUrl: STUDIP.URLHelper.getURL(this.$pluginBase + '/log/view/' + this.semester.id)
+                logUrl: STUDIP.URLHelper.getURL(this.$pluginBase + '/log/view')
             }
         },
         methods: {

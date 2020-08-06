@@ -30,19 +30,19 @@ class LogController extends AuthenticatedController {
         $this->set_layout(Request::isXhr() ? null : $GLOBALS['template_factory']->open('layouts/base'));
 
         $this->flash = Trails_Flash::instance();
+
+        $semesterId = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_SEMESTER;
+        $this->semester = $semesterId ? Semester::find($semesterId) : Semester::findNext();
     }
 
     /**
      * View log entries for the given semester.
-     *
-     * @param string $semester_id the selected semester
-     * @param int $start start at entry number $start
-     * @param int $limit show $limit entries
      */
-    public function view_action($semester_id)
+    public function view_action()
     {
         Navigation::activateItem('/resources/whakamahere/dashboard');
 
+        // Views widget
         $sidebar = Sidebar::get();
         $views = new ViewsWidget();
         $views->setTitle(dgettext('whakamahere', 'Dashboard'));
@@ -51,9 +51,13 @@ class LogController extends AuthenticatedController {
             $this->link_for('dashboard')
         )->setActive(false);
         $views->addLink(
+            dgettext('whakamahere', 'Veranstaltungen'),
+            $this->link_for('listing')
+        )->setActive(false);
+        $views->addLink(
             dgettext('whakamahere', 'Veröffentlichungslog'),
-            $this->link_for('log/view', $semester_id)
-        )->setActive(true);
+            $this->link_for('log/view')
+        )->setActive(false);
         $sidebar->addWidget($views);
 
         $options = [
@@ -64,7 +68,7 @@ class LogController extends AuthenticatedController {
         ];
         $widget = new SelectWidget(
             dgettext('whakamahere', 'Status'),
-            $this->link_for('filter/store_selection', ['semester' => $semester_id, 'type' => 'log_status']),
+            $this->link_for('filter/store_selection', ['semester' => $this->semester->id, 'type' => 'log_status']),
             'value'
         );
         $widget->setOptions($options, UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_LOG_STATUS);
@@ -80,17 +84,16 @@ class LogController extends AuthenticatedController {
         }
 
         $this->entries = [];
-        foreach (WhakamaherePublishLogEntry::findFiltered($semester_id, 0, 100, $filter) as $entry) {
+        foreach (WhakamaherePublishLogEntry::findFiltered($this->semester->id, 0, 100, $filter) as $entry) {
             $this->entries[] = $entry->formatForDisplay();
         }
 
-        $this->total = WhakamaherePublishLogEntry::countBySemester_id($semester_id, $filter);
-        $this->semester = $semester_id;
+        $this->total = WhakamaherePublishLogEntry::countBySemester_id($this->semester->id, $filter);
 
         if ($this->total > 0) {
             $export = $sidebar->addWidget(new ExportWidget());
             $export->addLink(dgettext('whakamahere', 'Diese Ansicht als CSV exportieren'),
-                $this->link_for('log/export', $semester_id),
+                $this->link_for('log/export'),
                 Icon::create('log+move_right')
             );
         }
@@ -98,7 +101,7 @@ class LogController extends AuthenticatedController {
     }
 
 
-    public function get_entries_action($semester_id, $start = 0, $limit = 100)
+    public function get_entries_action($start = 0, $limit = 100)
     {
         $entries = [];
 
@@ -107,14 +110,14 @@ class LogController extends AuthenticatedController {
             $filter['status'] = $status;
         }
 
-        foreach (WhakamaherePublishLogEntry::findFiltered($semester_id, $start, $limit, $filter) as $entry) {
+        foreach (WhakamaherePublishLogEntry::findFiltered($this->semester->id, $start, $limit, $filter) as $entry) {
             $entries[] = $entry->formatForDisplay();
         }
 
         $this->render_json($entries);
     }
 
-    public function export_action($semester_id)
+    public function export_action()
     {
         $filter = [];
         if (($status = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_LOG_STATUS) !== null) {
@@ -133,7 +136,7 @@ class LogController extends AuthenticatedController {
             ]
         ];
 
-        foreach (WhakamaherePublishLogEntry::findFiltered($semester_id, 0, 0, $filter) as $entry) {
+        foreach (WhakamaherePublishLogEntry::findFiltered($this->semester->id, 0, 0, $filter) as $entry) {
             $room = null;
             if (count($entry->time->bookings) > 0) {
                 if ($entry->time->bookings->first()->booking) {
@@ -156,8 +159,7 @@ class LogController extends AuthenticatedController {
             ];
         }
 
-        $semester = Semester::find($semester_id);
-        $filename = strtolower('semesterplanung-' . str_replace([' ', '/'], '-', $semester->name));
+        $filename = strtolower('semesterplanung-' . str_replace([' ', '/'], '-', $this->semester->name));
 
         $this->response->add_header('Content-Disposition', 'attachment;filename=' . $filename . '.csv');
         $this->render_text(array_to_csv($csv));
