@@ -62,6 +62,11 @@ class FilterController extends AuthenticatedController {
                 $value = Request::get('value');
                 $target = Request::isXhr() ? null : 'dashboard';
                 break;
+            case 'list_semester':
+                $field = 'WHAKAMAHERE_SELECTED_SEMESTER';
+                $value = Request::get('value');
+                $target = 'listing';
+                break;
             case 'searchterm':
                 $field = 'WHAKAMAHERE_SEARCHTERM';
                 $value = Request::get('value');
@@ -81,6 +86,11 @@ class FilterController extends AuthenticatedController {
                 $field = 'WHAKAMAHERE_SELECTED_INSTITUTE';
                 $value = Request::get('value');
                 $target = 'planning';
+                break;
+            case 'list_institute':
+                $field = 'WHAKAMAHERE_LIST_INSTITUTE';
+                $value = Request::get('value');
+                $target = 'listing';
                 break;
             case 'lecturer':
                 $field = 'WHAKAMAHERE_SELECTED_LECTURER';

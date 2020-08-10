@@ -29,7 +29,8 @@
                 <tr v-for="(entry, index) in theEntries" :key="entry.id" :class="getClass(entry.state)">
                     <td>{{ start + index }}.</td>
                     <td>
-                        <a :href="getCourseUrl(entry.course.id)" target="_blank">{{ entry.course.fullname }}</a>
+                        <a :href="getCourseUrl(entry.course.id, 'timesrooms')"
+                           target="_blank">{{ entry.course.fullname }}</a>
                     </td>
                     <td>{{ getWeekdayName(entry.time.weekday) }}, {{ entry.time.start }} - {{ entry.time.end }}</td>
                     <td>{{ entry.booking.room }}</td>
@@ -125,9 +126,6 @@
                     this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
                 })
             },
-            getCourseUrl: function (id) {
-                return STUDIP.URLHelper.getURL('dispatch.php/course/timesrooms', {cid: id})
-            },
             getClass: function (state) {
                 switch (state) {
                     case 'success':
@@ -166,42 +164,6 @@
 </script>
 
 <style lang="scss">
-    ul.whakamahere-paginate {
-        background-color: #e7ebf1;
-        border: 1px solid #d0d7e3;
-        display: flex;
-        flex-direction: row;
-        height: 25px;
-        margin-bottom: 10px;
-        margin-top: 10px;
-        padding-left: 10px;
-        padding-right: 10px;
-
-        li {
-            line-height: 25px;
-            list-style-type: none;
-            padding-right: 5px;
-
-            &:first-of-type.disabled, &:last-of-type.disabled {
-                display: none;
-            }
-
-            &.whakamahere-page {
-                text-align: center;
-                width: 25px;
-
-                &.active {
-                    background-color: #24437c;
-                    font-weight: bold;
-
-                    a {
-                        color: #ffffff;
-                    }
-                }
-            }
-        }
-    }
-
     table.default {
         thead, tbody {
             tr {

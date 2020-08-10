@@ -61,6 +61,74 @@ class WhakamaherePlanningRequest extends SimpleORMap
         parent::configure($config);
     }
 
+    /**
+     * Gets all requests belonging in the given semester.
+     *
+     * @param string $semester_id
+     * @param string $institute_id
+     * @param int $offset start at entry $offset
+     * @param int $limit get up to $limit entries
+     * @return array
+     */
+    public static function findAllCourses($semester_id, $institute_id = '', $offset = 0, $limit = 0)
+    {
+        $parameters = ['semester' => $semester_id];
+
+        $joins = [
+            "JOIN `semester_data` sem ON (sem.`beginn` = `seminare`.`start_time`)"
+        ];
+        $where = " WHERE sem.`semester_id` = :semester";
+
+        if ($institute_id !== '') {
+            $joins[] = "JOIN `Institute` i ON (i.`institut_id` = `seminare`.`institut_id`)";
+            $where .= " AND (i.`Institut_id` = :institute OR i.`fakultaets_id` = :institute)";
+            $parameters['institute'] = $institute_id;
+        }
+
+        $order = " ORDER BY `seminare`.`VeranstaltungsNummer`, `seminare`.`Name`";
+
+        if ($limit != 0) {
+            $order .= " LIMIT :offset, :limit";
+            $parameters['offset'] = (int) $offset;
+            $parameters['limit'] = (int) $limit;
+        }
+
+        return Course::findBySQL(implode(" ", $joins) . $where . $order, $parameters);
+    }
+
+    /**
+     * Gets all requests belonging in the given semester.
+     *
+     * @param string $semester_id
+     * @param string $institute_id
+     * @return array
+     */
+    public static function countAllCourses($semester_id, $institute_id = '')
+    {
+        $parameters = ['semester' => $semester_id];
+
+        $joins = [
+            "JOIN `semester_data` sem ON (sem.`beginn` = `seminare`.`start_time`)"
+        ];
+        $where = " WHERE sem.`semester_id` = :semester";
+
+        if ($institute_id !== '') {
+            $joins[] = "JOIN `Institute` i ON (i.`institut_id` = `seminare`.`institut_id`)";
+            $where .= " AND (i.`Institut_id` = :institute OR i.`fakultaets_id` = :institute)";
+            $parameters['institute'] = $institute_id;
+        }
+
+        $order = " ORDER BY `seminare`.`VeranstaltungsNummer`, `seminare`.`Name`";
+
+        return Course::countBySQL(implode(" ", $joins) . $where . $order, $parameters);
+    }
+
+    /**
+     * Find lecturers who have courses in this semester, according to the given filter.
+     *
+     * @param array $filter an array of filter conditions
+     * @return mixed
+     */
     public static function findLecturers($filter)
     {
         $sql = "SELECT DISTINCT a.*

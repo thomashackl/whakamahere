@@ -474,7 +474,7 @@ class WhakamahereCourseTime extends SimpleORMap
 
     public function __toString()
     {
-        $weekdays = $this->getWeekdays();
+        $weekdays = WhakamahereCourseSlot::getWeekdays();
 
         $start = strtotime('next ' . $weekdays[$this->weekday] . ' ' . $this->start);
         $end = strtotime('next ' . $weekdays[$this->weekday] . ' ' . $this->end);
@@ -507,19 +507,6 @@ class WhakamahereCourseTime extends SimpleORMap
         }
 
         return $weekdays;
-    }
-
-    private function getWeekdays()
-    {
-        return [
-            0 => 'Sunday',
-            1 => 'Monday',
-            2 => 'Tuesday',
-            3 => 'Wednesday',
-            4 => 'Thursday',
-            5 => 'Friday',
-            6 => 'Saturday',
-        ];
     }
 
 }

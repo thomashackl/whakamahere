@@ -12,6 +12,7 @@ module.exports = {
         "planning": assetsPath + "/javascripts/entry-planning.js",
         "dashboard": assetsPath + "/javascripts/entry-dashboard.js",
         "log": assetsPath + "/javascripts/entry-log.js",
+        "listing": assetsPath + "/javascripts/entry-listing.js",
         "semesterstatus": assetsPath + "/javascripts/entry-semesterstatus.js",
         "planningrequest": assetsPath + "/javascripts/entry-planningrequest.js"
     },

@@ -1,0 +1,35 @@
+ul.whakamahere-paginate {
+  background-color: #e7ebf1;
+  border: 1px solid #d0d7e3;
+  display: flex;
+  flex-direction: row;
+  height: 25px;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+
+  li {
+    line-height: 25px;
+    list-style-type: none;
+    padding-right: 5px;
+
+    &:first-of-type.disabled, &:last-of-type.disabled {
+      display: none;
+    }
+
+    &.whakamahere-page {
+      text-align: center;
+      width: 25px;
+
+      &.active {
+        background-color: #24437c;
+        font-weight: bold;
+
+        a {
+          color: #ffffff;
+        }
+      }
+    }
+  }
+}

@@ -27,6 +27,9 @@ export const globalfunctions = {
                 width: 400,
                 title: title
             })
-        }
+        },
+        getCourseUrl: function (id, target) {
+            return STUDIP.URLHelper.getURL('dispatch.php/course/' + target, {cid: id})
+        },
     }
 }
