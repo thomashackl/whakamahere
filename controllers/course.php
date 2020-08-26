@@ -41,6 +41,7 @@ class CourseController extends AuthenticatedController {
 
     public function planningrequest_action()
     {
+        PageLayout::setTitle($this->course->getFullname() . ' - ' . $this->plugin->getDisplayname());
         PageLayout::addScript($this->plugin->getPluginURL() . '/assets/javascripts/planningrequest.js');
         Navigation::activateItem('/course/admin/whakamahere');
 

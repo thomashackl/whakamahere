@@ -19,12 +19,14 @@
                 <col>
                 <col width="200">
                 <col width="400">
+                <col width="200">
             </colgroup>
             <thead>
                 <tr>
                     <th>Veranstaltung</th>
                     <th>Lehrende</th>
                     <th>Gewünschte regelmäßige Zeit(en)</th>
+                    <th>Wunschraum</th>
                 </tr>
             </thead>
             <tbody>
@@ -54,6 +56,12 @@
                             <li v-for="slot in course.request.slots" :key="slot.id">{{ slot.name }}</li>
                         </ul>
                         <template v-else>unregelmäßig/Blockveranstaltung/kein Raum benötigt</template>
+                    </td>
+                    <td>
+                        <template v-if="typeof(course.request) != 'undefined' && course.request.room_name != null">
+                            {{ course.request.room_name }}
+                        </template>
+                        <template v-else>-</template>
                     </td>
                 </tr>
             </tbody>

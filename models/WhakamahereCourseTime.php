@@ -250,7 +250,7 @@ class WhakamahereCourseTime extends SimpleORMap
     public function buildTimeRanges()
     {
         // Weekday numbers and names for calculation.
-        $weekdays = $this->getWeekdays();
+        $weekdays = WhakamahereCourseSlot::getWeekdays();
 
         // Timeranges to check for bookings.
         $timeranges = [];

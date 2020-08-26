@@ -1,11 +1,13 @@
 <template>
-    <full-calendar ref="schedule" :plugins="calendarPlugins" default-view="timeGridWeek" :locale="locale"
-                   droppable="true" :all-day-slot="false" :header="header" :weekends="weekends" :editable="true"
-                   :column-header-format="columnHeaderFormat" week-number-calculation="ISO" :events="events"
-                   :min-time="minTime" :max-time="maxTime" :default-date="lectureStart"
-                   :valid-range="validRange" time-zone="local" :eventRender="renderEvent"
-                   @eventReceive="dropCourse" @eventDragStart="markAvailableSlots" :custom-buttons="viewButtons"
-                   @eventDragStop="this.unmarkAvailableSlots" @eventDrop="dropCourse" @eventResize="dropCourse"/>
+    <section id="whakamahere-schedule">
+        <full-calendar ref="schedule" :plugins="calendarPlugins" default-view="timeGridWeek" :locale="locale"
+                       droppable="true" :all-day-slot="false" :header="header" :weekends="showWeekends" :editable="true"
+                       :column-header-format="columnHeaderFormat" week-number-calculation="ISO" :events="events"
+                       :min-time="minTime" :max-time="maxTime" :default-date="lectureStart"
+                       :valid-range="validRange" time-zone="local" :eventRender="renderEvent"
+                       @eventReceive="dropCourse" @eventDragStart="markAvailableSlots" :custom-buttons="viewButtons"
+                       @eventDragStop="this.unmarkAvailableSlots" @eventDrop="dropCourse" @eventResize="dropCourse"/>
+    </section>
 </template>
 
 <script>
@@ -41,7 +43,7 @@
                 type: String,
                 default: ''
             },
-            weekends: {
+            showWeekends: {
                 type: Boolean,
                 default: false
             },
@@ -76,6 +78,7 @@
                                 right: ''
                             }
                             this.$refs.schedule.getApi().changeView('timeGridWeek')
+                            console.log(this.$refs.schedule.getApi().view)
                         }
                     },
                     dayViewButton: {
@@ -87,6 +90,7 @@
                                 right: 'prev next'
                             }
                             this.$refs.schedule.getApi().changeView('timeGridDay')
+                            console.log(this.$refs.schedule.getApi().view)
                         }
                     }
                 }
@@ -156,6 +160,9 @@
                 }
 
                 return entries
+            },
+            visibleCourses: function() {
+                return this.events.length
             }
         },
         mounted() {
@@ -517,6 +524,13 @@
         div.fc {
             font-size: 11px;
             overflow: hidden;
+
+            .fc-toolbar {
+                button.fc-button {
+                    margin: 0;
+                    padding: 0;
+                }
+            }
 
             .fc-event {
                 background-color: #28497c;

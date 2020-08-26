@@ -64,25 +64,59 @@ class WhakamaherePlanningRequest extends SimpleORMap
     /**
      * Gets all requests belonging in the given semester.
      *
-     * @param string $semester_id
-     * @param string $institute_id
+     * @param array $filter criteria for searching, like semester, institute, semtype etc.
      * @param int $offset start at entry $offset
      * @param int $limit get up to $limit entries
-     * @return array
+     * @return array Courses matching the given filter
      */
-    public static function findAllCourses($semester_id, $institute_id = '', $offset = 0, $limit = 0)
+    public static function findAllCourses($filter, $offset = 0, $limit = 0)
     {
-        $parameters = ['semester' => $semester_id];
+        $parameters = ['semester' => $filter['semester']];
 
         $joins = [
-            "JOIN `semester_data` sem ON (sem.`beginn` = `seminare`.`start_time`)"
+            "JOIN `semester_data` sem ON (sem.`beginn` = `seminare`.`start_time`)",
+            "JOIN `sem_types` t ON (t.`id` = `seminare`.`status`)"
         ];
-        $where = " WHERE sem.`semester_id` = :semester";
+        $where = " WHERE sem.`semester_id` = :semester AND t.`class` = 1";
 
-        if ($institute_id !== '') {
+        if (isset($filter['institute'])) {
             $joins[] = "JOIN `Institute` i ON (i.`institut_id` = `seminare`.`institut_id`)";
             $where .= " AND (i.`Institut_id` = :institute OR i.`fakultaets_id` = :institute)";
-            $parameters['institute'] = $institute_id;
+            $parameters['institute'] = $filter['institute'];
+        }
+
+        if (isset($filter['semtype'])) {
+            $where .= " AND `seminare`.`status` = :semtype";
+            $parameters['semtype'] = $filter['semtype'];
+        }
+
+        if (isset($filter['planningstatus'])) {
+            switch ($filter['planningstatus']) {
+                case 'no-request':
+                    $where .= " AND NOT EXISTS (
+                            SELECT `request_id` FROM `whakamahere_requests`
+                            WHERE `course_id` = `seminare`.`Seminar_id`
+                        )";
+                    break;
+                case 'request':
+                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
+                    break;
+                case 'planned':
+                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
+                    $joins[] = "JOIN `whakamahere_course_slots` sl ON (sl.`request_id` = r.`request_id`)";
+                    $joins[] = "JOIN `whakamahere_course_times` ti ON (ti.`slot_id` = sl.`slot_id`)";
+                    break;
+                case 'unplanned':
+                    $where .= " AND NOT EXISTS (
+                            SELECT wr.`request_id` FROM `whakamahere_requests` wr
+                                JOIN `whakamahere_course_slots` ws ON (ws.`request_id` = wr.`request_id`)
+                                JOIN `whakamahere_course_times` wt ON (wt.`slot_id` = ws.`slot_id`)
+                            WHERE wr.`course_id` = `seminare`.`Seminar_id`
+                        )";
+                    break;
+            }
+            $where .= " AND `seminare`.`status` = :semtype";
+            $parameters['semtype'] = $filter['semtype'];
         }
 
         $order = " ORDER BY `seminare`.`VeranstaltungsNummer`, `seminare`.`Name`";
@@ -99,28 +133,60 @@ class WhakamaherePlanningRequest extends SimpleORMap
     /**
      * Gets all requests belonging in the given semester.
      *
-     * @param string $semester_id
-     * @param string $institute_id
+     * @param array $filter criteria for searching, like semester, institute, semtype etc.
      * @return array
      */
-    public static function countAllCourses($semester_id, $institute_id = '')
+    public static function countAllCourses($filter)
     {
-        $parameters = ['semester' => $semester_id];
+        $parameters = ['semester' => $filter['semester']];
 
         $joins = [
-            "JOIN `semester_data` sem ON (sem.`beginn` = `seminare`.`start_time`)"
+            "JOIN `semester_data` sem ON (sem.`beginn` = `seminare`.`start_time`)",
+            "JOIN `sem_types` t ON (t.`id` = `seminare`.`status`)"
         ];
-        $where = " WHERE sem.`semester_id` = :semester";
+        $where = " WHERE sem.`semester_id` = :semester AND t.`class` = 1";
 
-        if ($institute_id !== '') {
+        if (isset($filter['institute'])) {
             $joins[] = "JOIN `Institute` i ON (i.`institut_id` = `seminare`.`institut_id`)";
             $where .= " AND (i.`Institut_id` = :institute OR i.`fakultaets_id` = :institute)";
-            $parameters['institute'] = $institute_id;
+            $parameters['institute'] = $filter['institute'];
         }
 
-        $order = " ORDER BY `seminare`.`VeranstaltungsNummer`, `seminare`.`Name`";
+        if (isset($filter['semtype'])) {
+            $where .= " AND `seminare`.`status` = :semtype";
+            $parameters['semtype'] = $filter['semtype'];
+        }
 
-        return Course::countBySQL(implode(" ", $joins) . $where . $order, $parameters);
+        if (isset($filter['planningstatus'])) {
+            switch ($filter['planningstatus']) {
+                case 'no-request':
+                    $where .= " AND NOT EXISTS (
+                            SELECT `request_id` FROM `whakamahere_requests`
+                            WHERE `course_id` = `seminare`.`Seminar_id`
+                        )";
+                    break;
+                case 'request':
+                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
+                    break;
+                case 'planned':
+                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
+                    $joins[] = "JOIN `whakamahere_course_slots` sl ON (sl.`request_id` = r.`request_id`)";
+                    $joins[] = "JOIN `whakamahere_course_times` ti ON (ti.`slot_id` = sl.`slot_id`)";
+                    break;
+                case 'unplanned':
+                    $where .= " AND NOT EXISTS (
+                            SELECT wr.`request_id` FROM `whakamahere_requests` wr
+                                JOIN `whakamahere_course_slots` ws ON (ws.`request_id` = wr.`request_id`)
+                                JOIN `whakamahere_course_times` wt ON (wt.`slot_id` = ws.`slot_id`)
+                            WHERE wr.`course_id` = `seminare`.`Seminar_id`
+                        )";
+                    break;
+            }
+            $where .= " AND `seminare`.`status` = :semtype";
+            $parameters['semtype'] = $filter['semtype'];
+        }
+
+        return Course::countBySQL(implode(" ", $joins) . $where, $parameters);
     }
 
     /**

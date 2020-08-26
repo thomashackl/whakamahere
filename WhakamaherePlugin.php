@@ -21,7 +21,6 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
         parent::__construct();
 
         StudipAutoloader::addAutoloadPath(__DIR__ . '/models');
-        StudipAutoloader::addAutoloadPath(__DIR__ . '/widgets');
 
         // Localization
         bindtextdomain('whakamahere', realpath(__DIR__.'/locale'));

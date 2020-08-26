@@ -26,10 +26,10 @@ class Requests extends Migration {
         DBManager::get()->execute("CREATE TABLE IF NOT EXISTS `whakamahere_requests`
         (
             `request_id` INT NOT NULL AUTO_INCREMENT,
-            `course_id` VARCHAR(32) NOT NULL REFERENCES `seminare`.`Seminar_id`,
-            `semester_id` VARCHAR(32) NOT NULL REFERENCES `semester_data`.`semester_id`,
-            `institute_id` VARCHAR(32) NOT NULL REFERENCES `Institute`.`Institut_id`,
-            `room_id` VARCHAR(32) NULL REFERENCES `resources`.`id`,
+            `course_id` VARCHAR(32) NOT NULL,
+            `semester_id` VARCHAR(32) NOT NULL,
+            `institute_id` VARCHAR(32) NOT NULL,
+            `room_id` VARCHAR(32) NULL,
             `cycle` TINYINT UNSIGNED NOT NULL DEFAULT 1,
             `startweek` TINYINT UNSIGNED NOT NULL DEFAULT 0,
             `comment` TEXT NOT NULL DEFAULT '',
@@ -46,8 +46,8 @@ class Requests extends Migration {
         DBManager::get()->execute("CREATE TABLE IF NOT EXISTS `whakamahere_property_requests`
         (
             `property_request_id` INT NOT NULL AUTO_INCREMENT,
-            `request_id` VARCHAR(32) NOT NULL REFERENCES `whakamahere_requests`.`request_id`,
-            `property_id` VARCHAR(32) NOT NULL REFERENCES `resource_property_definitions`.`property_id`,
+            `request_id` VARCHAR(32) NOT NULL,
+            `property_id` VARCHAR(32) NOT NULL,
             `value` VARCHAR(255) NOT NULL,
             `mkdate` DATETIME NOT NULL,
             `chdate` DATETIME NOT NULL,
@@ -60,9 +60,9 @@ class Requests extends Migration {
         DBManager::get()->execute("CREATE TABLE IF NOT EXISTS `whakamahere_course_slots`
         (
             `slot_id` INT NOT NULL AUTO_INCREMENT,
-            `request_id` VARCHAR(32) NOT NULL REFERENCES `whakamahere_requests`.`request_id`,
+            `request_id` VARCHAR(32) NOT NULL,
             `duration` SMALLINT NOT NULL,
-            `user_id` VARCHAR(32) NULL REFERENCES `auth_user_md5`.`user_id`,
+            `user_id` VARCHAR(32) NULL,
             `weekday` TINYINT NOT NULL,
             `time` TIME NOT NULL,
             `mkdate` DATETIME NOT NULL,
@@ -75,7 +75,6 @@ class Requests extends Migration {
         // Rename column and add foreign key constraint.
         DBManager::get()->execute("ALTER TABLE `whakamahere_course_times`
             CHANGE `part_num` `slot_id` INT(11) NOT NULL,
-            ADD FOREIGN KEY (`slot_id`) REFERENCES `whakamahere_course_slots` (`slot_id`),
             ADD UNIQUE INDEX `course_slot` (`course_id`, `slot_id`),
             DROP INDEX `course_part`");
     }

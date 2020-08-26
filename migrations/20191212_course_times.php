@@ -25,7 +25,7 @@ class CourseTimes extends Migration {
         DBManager::get()->execute("CREATE TABLE IF NOT EXISTS `whakamahere_course_times`
         (
             `time_id` INT NOT NULL AUTO_INCREMENT,
-            `course_id` VARCHAR(32) COLLATE latin1_bin NOT NULL REFERENCES `seminare`.`Seminar_id`,
+            `course_id` VARCHAR(32) COLLATE latin1_bin NOT NULL,
             `part_num` INT NOT NULL DEFAULT 0,
             `weekday` INT NOT NULL,
             `start` TIME NOT NULL,

@@ -29,7 +29,7 @@ class CreateDatabaseTables extends Migration {
         // Semester planning status
         DBManager::get()->execute("CREATE TABLE IF NOT EXISTS `whakamahere_semester_status`
         (
-            `semester_id` VARCHAR(32) COLLATE latin1_bin NOT NULL REFERENCES `semester_data`.`semester_id`,
+            `semester_id` VARCHAR(32) COLLATE latin1_bin NOT NULL,
             `status` ENUM ('closed', 'input', 'prepare', 'planning', 'review', 'finished') NOT NULL DEFAULT 'input',
             `mkdate` DATETIME NOT NULL,
             `chdate` DATETIME NOT NULL,
@@ -54,12 +54,12 @@ class CreateDatabaseTables extends Migration {
         DBManager::get()->execute("CREATE TABLE IF NOT EXISTS `whakamahere_timeline`
         (
             `phase_id` INT NOT NULL AUTO_INCREMENT,
-            `semester_id` VARCHAR(32) NOT NULL REFERENCES `semester_data`.`semester_id`,
+            `semester_id` VARCHAR(32) NOT NULL,
             `name` VARCHAR(255) NOT NULL DEFAULT '',
             `start` DATE NOT NULL,
             `end` DATE NOT NULL,
             `color` VARCHAR(7) NOT NULL DEFAULT '#ffffff',
-            `auto_status` ENUM ('closed', 'input', 'prepare', 'planning', 'review', 'finished') NULL REFERENCES `whakamahere_semester_status`.`status`,
+            `auto_status` ENUM ('closed', 'input', 'prepare', 'planning', 'review', 'finished') NULL,
             `mkdate` DATETIME NOT NULL,
             `chdate` DATETIME NOT NULL,
             PRIMARY KEY (`phase_id`)

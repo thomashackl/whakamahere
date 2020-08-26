@@ -92,7 +92,10 @@
             })
         },
         mounted() {
-            this.$el.style.top = (document.querySelector('.fc-divider').offsetTop + 24) + 'px'
+            const dividerCoords = document.querySelector('hr.fc-divider').getBoundingClientRect()
+            const calendarCoords = document.querySelector('#whakamahere-schedule').getBoundingClientRect()
+            this.$el.style.top = (Math.ceil(dividerCoords.top - calendarCoords.top) + 3) + 'px'
+            this.$el.style.height = (window.innerHeight - this.$el.getBoundingClientRect().top - 30) + 'px'
             document.querySelector('div.fc').style.maxHeight = this.$el.style.top
         },
         watch: {

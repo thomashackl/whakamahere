@@ -31,10 +31,14 @@ class ListingController extends AuthenticatedController {
 
         $this->flash = Trails_Flash::instance();
 
-        $semesterId = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_SEMESTER;
+        $this->config = UserConfig::get(User::findCurrent()->id);
+
+        $semesterId = $this->config->WHAKAMAHERE_SELECTED_SEMESTER;
         $this->semester = $semesterId ? Semester::find($semesterId) : Semester::findNext();
 
-        $this->institute = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_LIST_INSTITUTE;
+        $this->institute = $this->config->WHAKAMAHERE_LIST_INSTITUTE ?: null;
+        $this->semtype = $this->config->WHAKAMAHERE_LIST_SEMTYPE ?: null;
+        $this->planningstatus = $this->config->WHAKAMAHERE_LIST_PLANNING ?: null;
 
         $version = $this->plugin->getVersion();
         PageLayout::addScript($this->plugin->getPluginURL() .
@@ -50,11 +54,11 @@ class ListingController extends AuthenticatedController {
     {
         Navigation::activateItem('/resources/whakamahere/dashboard');
 
-        $this->total = WhakamaherePlanningRequest::countAllCourses($this->semester->id,
-            UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_LIST_INSTITUTE);
+        $filter = $this->getFilter();
+
+        $this->total = WhakamaherePlanningRequest::countAllCourses($filter);
         $this->courses = [];
-        foreach (WhakamaherePlanningRequest::findAllCourses($this->semester->id, $this->institute,
-                0, 100) as $course) {
+        foreach (WhakamaherePlanningRequest::findAllCourses($filter, 0, 100) as $course) {
             $this->courses[] = $this->asJSON($course);
         }
     }
@@ -64,13 +68,49 @@ class ListingController extends AuthenticatedController {
      */
     public function courses_action($offset = 0, $limit = 100)
     {
+        $filter = $this->getFilter();
+
         $this->courses = [];
-        foreach (WhakamaherePlanningRequest::findAllCourses($this->semester->id,
-                $this->institute, $offset, $limit) as $course) {
+        foreach (WhakamaherePlanningRequest::findAllCourses($filter, $offset, $limit) as $course) {
             $this->courses[] = $this->asJSON($course);
         }
 
         $this->render_json($this->courses);
+    }
+
+    public function export_action()
+    {
+        $filter = $this->getFilter();
+
+        $csv = [
+            [
+                'Nummer',
+                'Name',
+                'Lehrende',
+                'Gewünschte regelmäßige Zeit(en)',
+                'Wunschraum'
+            ]
+        ];
+
+        foreach (WhakamaherePlanningRequest::findAllCourses($filter) as $course) {
+            $json = $this->asJSON($course);
+            $csv[] = [
+                $json['number'],
+                $json['title'],
+                implode("\n", array_map(function($l) {
+                        return $l['name'];
+                    }, $json['lecturers'])),
+                $json['request'] ? implode("\n", array_map(function($s) {
+                        return $s['name'];
+                    }, $json['request']['slots'])) : '-',
+                is_array($json['request']) && $json['request']['room_id'] ? $json['request']['room_name'] : '-'
+            ];
+        }
+
+        $filename = strtolower('veranstaltungen-' . str_replace([' ', '/'], '-', $this->semester->name));
+
+        $this->response->add_header('Content-Disposition', 'attachment;filename=' . $filename . '.csv');
+        $this->render_text(array_to_csv($csv));
     }
 
     private function setupSidebar()
@@ -116,7 +156,35 @@ class ListingController extends AuthenticatedController {
             $this->link_for('filter/store_selection', ['type' => 'list_institute']),
             'value'
         ));
-        $institutes->setOptions($options, UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_LIST_INSTITUTE);
+        $institutes->setOptions($options, $this->config->WHAKAMAHERE_LIST_INSTITUTE);
+
+        $options = [
+            '' => '--' . dgettext('whakamahere', 'alle') . '--'
+        ];
+        $types = array_filter(SemType::getTypes(), function($t) { return $t['class'] == 1; });
+        foreach ($types as $one) {
+            $options[$one['id']] = $one['name'];
+        }
+        $semtypes = $this->sidebar->addWidget(new SelectWidget(
+            dgettext('whakamahere', 'Veranstaltungstyp'),
+            $this->link_for('filter/store_selection', ['type' => 'list_semtype']),
+            'value'
+        ));
+        $semtypes->setOptions($options, $this->config->WHAKAMAHERE_LIST_SEMTYPE);
+
+        $options = [
+            '' => '--' . dgettext('whakamahere', 'alle') . '--',
+            'no-request' => dgettext('whakamahere', 'ohne regelmäßige Zeitwünsche'),
+            'request' => dgettext('whakamahere', 'mit regelmäßigen Zeitwünschen'),
+            'planned' => dgettext('whakamahere', 'bereits geplant'),
+            'unplanned' => dgettext('whakamahere', 'noch nicht geplant'),
+        ];
+        $planning = $this->sidebar->addWidget(new SelectWidget(
+            dgettext('whakamahere', 'Planungsdaten'),
+            $this->link_for('filter/store_selection', ['type' => 'list_planning']),
+            'value'
+        ));
+        $planning->setOptions($options, $this->config->WHAKAMAHERE_LIST_PLANNING);
 
         $export = $this->sidebar->addWidget(new ExportWidget());
         $export->addLink(dgettext('whakamahere', 'Diese Ansicht als CSV exportieren'),
@@ -129,6 +197,8 @@ class ListingController extends AuthenticatedController {
     {
         $result = [
             'id' => $course->id,
+            'number' => $course->veranstaltungsnummer,
+            'title' => $course->name,
             'name' => $course->getFullname(),
             'lecturers' => []
         ];
@@ -147,7 +217,9 @@ class ListingController extends AuthenticatedController {
                 'startweek' => $request->cycle,
                 'end_offset' => $request->end_offset,
                 'comment' => $request->comment,
-                'slots' => []
+                'slots' => [],
+                'room_id' => $request->room_id,
+                'room_name' => $request->room_id != null ? $request->room->name : null
             ];
 
             foreach ($request->slots as $slot) {
@@ -185,5 +257,29 @@ class ListingController extends AuthenticatedController {
         }
 
         return $result;
+    }
+
+    /**
+     * Gets course filter as array.
+     *
+     * @return array
+     */
+    private function getFilter()
+    {
+        $filter = [
+            'semester' => $this->semester->id
+        ];
+
+        if ($this->institute) {
+            $filter['institute'] = $this->institute;
+        }
+        if ($this->semtype) {
+            $filter['semtype'] = $this->semtype;
+        }
+        if ($this->planningstatus) {
+            $filter['planningstatus'] = $this->planningstatus;
+        }
+
+        return $filter;
     }
 }

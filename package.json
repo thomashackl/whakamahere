@@ -1,6 +1,6 @@
 {
     "name": "@studip/whakamahere",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Stud.IP semester course time and room planning plugin",
     "private": true,
     "scripts": {
@@ -28,6 +28,7 @@
         "copy-webpack-plugin": "^5.1.1",
         "css-loader": "^2.1.0",
         "favico.js": "^0.3.0",
+        "is-obj": "^2.0.0",
         "luxon": "^1.24.1",
         "mini-css-extract-plugin": "^0.7.0",
         "node-sass": "^4.14.1",

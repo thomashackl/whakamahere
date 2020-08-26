@@ -25,11 +25,11 @@ class TimeWeekExceptions extends Migration {
         DBManager::get()->execute("CREATE TABLE IF NOT EXISTS `whakamahere_course_time_exceptions`
         (
             `exception_id` INT NOT NULL AUTO_INCREMENT,
-            `time_id` INT NOT NULL REFERENCES `whakamahere_course_times`.`time_id`,
+            `time_id` INT NOT NULL,
             `week` TINYINT UNSIGNED NOT NULL,
             `start` DATETIME NOT NULL,
             `end` DATETIME NOT NULL,
-            `booking_id` VARCHAR(32) NULL DEFAULT NULL REFERENCES `resource_bookings`.`booking_id`,
+            `booking_id` VARCHAR(32) NULL DEFAULT NULL,
             `mkdate` DATETIME NOT NULL,
             `chdate` DATETIME NOT NULL,
             PRIMARY KEY (`exception_id`),
