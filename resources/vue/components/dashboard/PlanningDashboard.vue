@@ -15,11 +15,9 @@
             <header>
                 Planung veröffentlichen
             </header>
-            <publish-planning v-if="isPublishingAllowed" :semester="semester"></publish-planning>
-            <studip-messagebox v-if="!isEnabled" type="error"
-                               message="Für dieses Semester sind keine Planungsdaten hinterlegt."></studip-messagebox>
-            <studip-messagebox v-if="!isPublishingAllowed" type="warning"
-                               :message="statusNoPublishing"></studip-messagebox>
+            <studip-messagebox type="info"
+                               message="Diese Funktion wird demnächst vom Entwickler Ihres Vertrauens freigeschaltet.">
+            </studip-messagebox>
         </section>
     </article>
 </template>
