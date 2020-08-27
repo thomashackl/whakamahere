@@ -169,7 +169,7 @@ class DashboardController extends AuthenticatedController {
                 ];
             }
 
-            $cache->write('planning-statistics-' . $this->semester->id, studip_json_encode($statistics), 86400);
+            $cache->write('planning-statistics-' . $this->semester->id, studip_json_encode($statistics), 7200);
 
         }
 
