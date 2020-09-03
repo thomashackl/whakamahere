@@ -41,6 +41,7 @@ class WhakamahereWizardStep implements CourseWizardStep
 
         $status = WhakamahereSemesterStatus::find($semester->id);
         $tpl->set_attribute('status', $status->status);
+        $tpl->set_attribute('disabled', !$status->isCreatingAllowed());
 
         // Get lecturers assigned to this course-to-be
         $lecs = [];
@@ -110,8 +111,7 @@ class WhakamahereWizardStep implements CourseWizardStep
     }
 
     /**
-     * The function only needs to handle person adding and removing
-     * as other actions are handled by normal request processing.
+     * Nothing needs to happen here.
      * @param Array $values currently set values for the wizard.
      * @return bool
      */
@@ -246,7 +246,7 @@ class WhakamahereWizardStep implements CourseWizardStep
 
         $status = WhakamahereSemesterStatus::find($semester->id);
 
-        return in_array($status->status, ['input']);
+        return $status->isCreatingAllowed();
 
     }
 

@@ -65,16 +65,18 @@ class WhakamahereSemesterStatus extends SimpleORMap
      */
     public function isCreatingAllowed()
     {
-        return in_array($this->status, ['input', 'prepare']);
+        $config = Config::get()->WHAKAMAHERE_ENABLED_IN_COURSES;
+        return in_array($this->status, $config['create']);
     }
 
     /**
      * Checks whether changing an existing WhakamaherePlanningRequest
      * is allowed according to semester status.
      */
-    public function isChangingAllowed()
+    public function isEditingAllowed()
     {
-        return in_array($this->status, ['input', 'prepare', 'planning']);
+        $config = Config::get()->WHAKAMAHERE_ENABLED_IN_COURSES;
+        return in_array($this->status, $config['edit']);
     }
 
     /**
@@ -83,7 +85,7 @@ class WhakamahereSemesterStatus extends SimpleORMap
      */
     public function isPublishingAllowed()
     {
-        return in_array($this->status, ['planning', 'review']);
+        return in_array($this->status, Config::get()->WHAKAMAHERE_PUBLISHING_ALLOWED);
     }
 
     /**
@@ -91,7 +93,8 @@ class WhakamahereSemesterStatus extends SimpleORMap
      */
     public function isEnabled()
     {
-        return !in_array($this->status, ['closed']);
+        $config = Config::get()->WHAKAMAHERE_ENABLED_IN_COURSES;
+        return in_array($this->status, array_merge($config['create'], $config['edit'], $config['readonly']));
     }
 
 }

@@ -63,8 +63,8 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
         if (Navigation::hasItem('/course/admin')) {
             $course = Course::findCurrent();
             $planningdata = WhakamaherePlanningRequest::findOneByCourse_id($course->id);
-            $semesterstatus = WhakamahereSemesterStatus::find($course->start_semester->id);
-            if ($planningdata || in_array($semesterstatus->status, ['input'])) {
+            $status = WhakamahereSemesterStatus::find($course->start_semester->id);
+            if ($status->isEnabled()) {
                 $navigation = new Navigation($this->getDisplayName(),
                     PluginEngine::getURL($this, array(), 'course/planningrequest'));
                 $navigation->setImage(Icon::create('resources'));

@@ -95,6 +95,8 @@ class CourseController extends AuthenticatedController {
             $request = WhakamaherePlanningRequest::findOneByCourse_id($this->course->id);
         }
 
+        $status = WhakamahereSemesterStatus::find($this->course->start_semester->id);
+
         if ($request) {
             $this->regular = 1;
             $this->request = $request->toArray();
@@ -110,6 +112,15 @@ class CourseController extends AuthenticatedController {
                 $this->request['slots'][$i] = $one->toArray();
                 $i++;
             }
+
+            $this->disabled = !$status->isCreatingAllowed() && !$status->isEditingAllowed();
+
+            if ($this->disabled) {
+                PageLayout::postWarning(dgettext('whakamahere','Sie können die gemachten Angaben ' .
+                    'nicht ändern, da die Planung bereits begonnen hat oder abgeschlossen wurde. Bitte wenden ' .
+                    'Sie sich direkt an die Raumvergabe.'));
+            }
+
         } else {
             $this->regular = 0;
             $this->request = [
@@ -124,6 +135,14 @@ class CourseController extends AuthenticatedController {
                 'property_requests' => [],
                 'slots' => []
             ];
+
+            $this->disabled = !$status->isCreatingAllowed();
+            if ($this->disabled) {
+                PageLayout::postWarning(dgettext('whakamahere','Sie können keine Wünsche zur ' .
+                    'Semesterplanung mehr eintragen, da die Planung bereits begonnen hat oder abgeschlossen ' .
+                    'wurde. Bitte wenden Sie sich direkt an die Raumvergabe.'));
+            }
+
         }
 
         $this->form = true;

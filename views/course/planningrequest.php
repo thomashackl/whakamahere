@@ -1,5 +1,6 @@
 <?php if ($form) : ?>
-<form class="default" action="<?php echo $controller->link_for('course/store_request') ?>" method="post">
+<form class="default" action="<?php echo $disabled ? '' : $controller->link_for('course/store_request') ?>"
+      method="post">
 <?php endif ?>
 <fieldset>
     <legend>
@@ -12,7 +13,8 @@
                           :rooms='<?= studip_json_encode($rooms) ?>'
                           :start-weeks='<?= studip_json_encode($start_weeks) ?>'
                           :end-weeks='<?= studip_json_encode($end_weeks) ?>'
-                          :request='<?= studip_json_encode($request) ?>'></planning-request>
+                          :request='<?= studip_json_encode($request) ?>'
+                          :disabled="<?php echo $disabled ? 'true' : 'false' ?>"></planning-request>
     </div>
 
     <script>
@@ -26,7 +28,7 @@
     <?php echo CSRFProtection::tokenTag() ?>
     <footer data-dialog-button>
         <?php echo Studip\Button::createAccept(dgettext('whakamahere', 'Speichern'),
-            'submit') ?>
+            'submit', $disabled ? ['disabled' => true] : null) ?>
     </footer>
 </form>
 <?php endif;

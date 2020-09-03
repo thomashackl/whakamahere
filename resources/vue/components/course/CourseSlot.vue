@@ -2,15 +2,16 @@
     <article class="course-slot">
         <header>
             Regelmäßiger Termin {{ internalNumber }}
-            <studip-icon shape="trash" size="20" role="info_alt" @click="removeMe"></studip-icon>
+            <studip-icon v-if="!disabled" shape="trash" size="20" role="info_alt" @click="removeMe"></studip-icon>
             <input v-if="data.slot_id != null" type="hidden" :name="'slots[' + internalNumber + '][slot_id]'"
-                   :value="data.slot_id">
+                   :value="data.slot_id" :disabled="disabled">
         </header>
         <section>
             <label :for="'lecturer-' + internalNumber">
                 <span class="required">Dozent/in</span>
             </label>
-            <select :id="'lecturer-' + internalNumber" :name="'slots[' + internalNumber + '][user_id]'">
+            <select :id="'lecturer-' + internalNumber" :name="'slots[' + internalNumber + '][user_id]'"
+                    :disabled="disabled">
                 <option v-for="person in lecturers" :key="person.id" :value="person.id"
                         :selected="person.id == data.user_id">{{ person.name }}</option>
                 <option value="">N. N.</option>
@@ -22,14 +23,15 @@
             </label>
             <input type="number" :id="'duration-' + internalNumber"
                    :name="'slots[' + internalNumber + '][duration]'" :value="data.duration"
-                   min="30" max="480" step="30">
+                   min="30" max="480" step="30" :disabled="disabled">
         </section>
         <section>
             <span class="required">Zeitpräferenz</span>
             <label :for="'weekday-' + internalNumber">
                 Wochentag
             </label>
-            <select :id="'weekday-' + internalNumber" :name="'slots[' + internalNumber + '][weekday]'">
+            <select :id="'weekday-' + internalNumber" :name="'slots[' + internalNumber + '][weekday]'"
+                    :disabled="disabled">
                 <option v-for="day in weekdays" :key="day.number" :value="day.number"
                         :selected="day.number == data.weekday">{{ day.name }}</option>
             </select>
@@ -39,7 +41,7 @@
                 Uhrzeit
             </label>
             <input type="time" :id="'time-' + internalNumber" :name="'slots[' + internalNumber + '][time]'"
-                   :value="data.time" min="08:00" max="22:00">
+                   :value="data.time" min="08:00" max="22:00" :disabled="disabled">
         </section>
     </article>
 </template>
@@ -78,6 +80,10 @@
                         time: '08:00'
                     }
                 }
+            },
+            disabled: {
+                type: Boolean,
+                default: false
             }
         },
         data() {

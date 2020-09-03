@@ -39,6 +39,69 @@
     </fieldset>
     <fieldset>
         <legend>
+            <?= dgettext('whakamahere', 'In welchen Phasen sind Angaben zur Semesterplanung erlaubt?') ?>
+        </legend>
+        <section>
+            <label for="create">
+                <?= dgettext('whakamahere', 'Angaben neu anlegen und bearbeiten') ?>:
+            </label>
+            <select name="create[]" id="create" class="nested-select" multiple>
+                <?php foreach ($semesterstatus as $status => $name) : ?>
+                    <option value="<?php echo htmlReady($status) ?>"
+                        <?php echo in_array($status, $create) ? 'selected' : '' ?>>
+                        <?php echo htmlReady($name) ?>
+                    </option>
+                <?php endforeach ?>
+            </select>
+        </section>
+        <section>
+            <label for="edit-only">
+                <?= dgettext('whakamahere',
+                    'Bereits vorhandene Angaben bearbeiten, aber keine neuen anlegen') ?>:
+            </label>
+            <select name="edit[]" id="edit-only" class="nested-select" multiple>
+                <?php foreach ($semesterstatus as $status => $name) : ?>
+                    <option value="<?php echo htmlReady($status) ?>"
+                        <?php echo in_array($status, $edit) ? 'selected' : '' ?>>
+                        <?php echo htmlReady($name) ?>
+                    </option>
+                <?php endforeach ?>
+            </select>
+        </section>
+        <section>
+            <label for="read-only">
+                <?= dgettext('whakamahere', 'Nur Lesezugriff') ?>:
+            </label>
+            <select name="read[]" id="read-only" class="nested-select" multiple>
+                <?php foreach ($semesterstatus as $status => $name) : ?>
+                    <option value="<?php echo htmlReady($status) ?>"
+                        <?php echo in_array($status, $readonly) ? 'selected' : '' ?>>
+                        <?php echo htmlReady($name) ?>
+                    </option>
+                <?php endforeach ?>
+            </select>
+        </section>
+    </fieldset>
+    <fieldset>
+        <legend>
+            <?= dgettext('whakamahere', 'In welchen Phasen kann die Planung veröffentlicht werden?') ?>
+        </legend>
+        <section>
+            <label for="publish">
+                <?= dgettext('whakamahere', 'Veröffentlichung der Planung möglich in') ?>:
+            </label>
+            <select name="publish[]" id="publish" class="nested-select" multiple>
+                <?php foreach ($semesterstatus as $status => $name) : ?>
+                    <option value="<?php echo htmlReady($status) ?>"
+                        <?php echo in_array($status, $publish) ? 'selected' : '' ?>>
+                        <?php echo htmlReady($name) ?>
+                    </option>
+                <?php endforeach ?>
+            </select>
+        </section>
+    </fieldset>
+    <fieldset>
+        <legend>
             <?= dgettext('whakamahere', 'Dashboard-Statistik') ?>
         </legend>
         <section class="col-2">

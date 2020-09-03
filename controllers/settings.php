@@ -63,6 +63,15 @@ class SettingsController extends AuthenticatedController {
                 'name' => $one['is_fak'] ? (string) $one['Name'] : '&nbsp;&nbsp;' . ((string) $one['Name'])
             ];
         }
+
+        // Get status and corresponding permissions to create and edit course planning data.
+        $this->semesterstatus = WhakamahereSemesterStatus::getStatusValues();
+        $in_courses = Config::get()->WHAKAMAHERE_ENABLED_IN_COURSES;
+        $this->create = $in_courses['create'];
+        $this->edit = $in_courses['edit'];
+        $this->readonly = $in_courses['readonly'];
+
+        $this->publish = Config::get()->WHAKAMAHERE_PUBLISHING_ALLOWED;
     }
 
     public function store_action() {
@@ -121,13 +130,22 @@ class SettingsController extends AuthenticatedController {
 
         // Clear cache for semester statistics if institutes have changed.
         if ($oldInstitutes != Request::getArray('statistics_institutes')) {
-            PageLayout::postInfo('Institutes have changed, clearing cache.');
             $cache = StudipCacheFactory::getCache();
 
             foreach (Semester::getAll() as $semester) {
                 $cache->expire('planning-statistics-' . $semester->id);
             }
         }
+
+        // Store settings for semester status - planning data permissions.
+        $newdata = [
+            'create' => Request::optionArray('create'),
+            'edit' => Request::optionArray('edit'),
+            'readonly' => Request::optionArray('read')
+        ];
+        Config::get()->store('WHAKAMAHERE_ENABLED_IN_COURSES', $newdata);
+        Config::get()->store('WHAKAMAHERE_PUBLISHING_ALLOWED', Request::optionArray('publish'));
+
 
         if ($success) {
             PageLayout::postSuccess(dgettext('whakamahere', 'Die Einstellungen wurden gespeichert.'));
