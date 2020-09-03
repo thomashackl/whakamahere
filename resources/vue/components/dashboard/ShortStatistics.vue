@@ -1,6 +1,8 @@
 <template>
     <div>
-        <table v-if="statistics.length > 0" class="default">
+        <vue-simple-spinner v-if="loading" class="data-loading" size="48"
+                            message="Daten werden geladen..."></vue-simple-spinner>
+        <table v-if="!loading && statistics.length > 0" class="default">
             <caption v-if="unplanned > 0">
                 {{ unplanned }} regelmäßige Veranstaltungszeiten sind noch nicht geplant!
             </caption>
@@ -42,12 +44,17 @@
 
 <script>
     import { globalfunctions } from '../mixins/globalfunctions'
+    import VueSimpleSpinner from 'vue-simple-spinner'
+    import StudipButton from "../studip/StudipButton";
 
     export default {
         name: 'ShortStatistics',
         mixins: [
             globalfunctions
         ],
+        components: {
+            VueSimpleSpinner
+        },
         props: {
             semester: {
                 type: Object,
@@ -57,7 +64,8 @@
         data() {
             return {
                 statistics: [],
-                unplanned: 0
+                unplanned: 0,
+                loading: false
             }
         },
         computed: {
@@ -99,6 +107,7 @@
                 }
             },
             loadStatistics: function() {
+                this.loading = true
                 fetch(
                     STUDIP.URLHelper.getURL(this.$pluginBase + '/dashboard/statistics')
                 ).then((response) => {
@@ -109,9 +118,11 @@
                         .then((json) => {
                             this.statistics = json.institutes
                             this.unplanned = json.unplanned.length
+                            this.loading = false
                         })
                 }).catch((error) => {
                     this.showMessage('error', 'Fehler (' + error.status + ')', error.statusText)
+                    this.loading = false
                 })
             }
         }
@@ -119,6 +130,9 @@
 </script>
 
 <style lang="scss">
+    .data-loading {
+        padding: 10px;
+    }
     table.default {
         tr {
             td {
