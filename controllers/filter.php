@@ -117,6 +117,11 @@ class FilterController extends AuthenticatedController {
                 $value = Request::get('value');
                 $target = 'listing';
                 break;
+            case 'list_turnout':
+                $field = 'WHAKAMAHERE_LIST_TURNOUT';
+                $value = json_encode(['min' => Request::int('min') ?: null, 'max' => Request::int('max') ?: null]);
+                $target = 'listing';
+                break;
             case 'list_semtype':
                 $field = 'WHAKAMAHERE_LIST_SEMTYPE';
                 $value = Request::get('value');

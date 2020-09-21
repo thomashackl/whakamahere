@@ -35,8 +35,14 @@ class ListingController extends AuthenticatedController {
 
         $semesterId = $this->config->WHAKAMAHERE_SELECTED_SEMESTER;
         $this->semester = $semesterId ? Semester::find($semesterId) : Semester::findNext();
-
         $this->institute = $this->config->WHAKAMAHERE_LIST_INSTITUTE ?: null;
+
+        $turnout = $this->config->WHAKAMAHERE_LIST_TURNOUT ?
+            json_decode($this->config->WHAKAMAHERE_LIST_TURNOUT, true) :
+            ['min' => 0, 'max' => 0];
+        $this->min = $turnout['min'];
+        $this->max = $turnout['max'];
+
         $this->semtype = $this->config->WHAKAMAHERE_LIST_SEMTYPE ?: null;
         $this->planningstatus = $this->config->WHAKAMAHERE_LIST_PLANNING ?: null;
 
@@ -138,6 +144,7 @@ class ListingController extends AuthenticatedController {
             )->setActive(false);
         }
 
+        // Semester filter
         $options = [];
         foreach (Semester::getAll() as $one) {
             $options[$one->id] = (string) $one->name;
@@ -149,6 +156,7 @@ class ListingController extends AuthenticatedController {
         ));
         $semester->setOptions($options, $this->semester->id);
 
+        // Institute filter
         $options = [
             '' => '--' . dgettext('whakamahere', 'alle') . '--'
         ];
@@ -162,6 +170,20 @@ class ListingController extends AuthenticatedController {
         ));
         $institutes->setOptions($options, $this->config->WHAKAMAHERE_LIST_INSTITUTE);
 
+        // Turnout filter
+        $factory = $this->get_template_factory();
+        $template = $factory->open('filter/turnout');
+        $this->sidebar->addWidget(new TemplateWidget(
+            dgettext('whakamahere', 'Teilnehmende'),
+            $template,
+            [
+                'min' => $this->min,
+                'max' => $this->max,
+                'controller' => $this
+            ]
+        ));
+
+        // Coursetype filter
         $options = [
             '' => '--' . dgettext('whakamahere', 'alle') . '--'
         ];
@@ -176,6 +198,7 @@ class ListingController extends AuthenticatedController {
         ));
         $semtypes->setOptions($options, $this->config->WHAKAMAHERE_LIST_SEMTYPE);
 
+        // Planning status filter
         $options = [
             '' => '--' . dgettext('whakamahere', 'alle') . '--',
             'no-request' => dgettext('whakamahere', 'ohne regelmäßige Zeitwünsche'),
@@ -283,9 +306,18 @@ class ListingController extends AuthenticatedController {
             $filter['institute'] = $this->institute;
         }
 
+        if ($this->min) {
+            $filter['min'] = $this->min;
+        }
+
+        if ($this->max) {
+            $filter['max'] = $this->max;
+        }
+
         if ($this->semtype) {
             $filter['semtype'] = $this->semtype;
         }
+
         if ($this->planningstatus) {
             $filter['planningstatus'] = $this->planningstatus;
         }

@@ -71,61 +71,9 @@ class WhakamaherePlanningRequest extends SimpleORMap
      */
     public static function findAllCourses($filter, $offset = 0, $limit = 0)
     {
-        $parameters = ['semester' => $filter['semester']];
+        $query = self::getFilteredCoursesSQL($filter, $offset, $limit);
 
-        $joins = [
-            "JOIN `semester_data` sem ON (sem.`beginn` = `seminare`.`start_time`)",
-            "JOIN `sem_types` t ON (t.`id` = `seminare`.`status`)"
-        ];
-        $where = " WHERE sem.`semester_id` = :semester AND t.`class` = 1";
-
-        if (isset($filter['institute'])) {
-            $joins[] = "JOIN `Institute` i ON (i.`institut_id` = `seminare`.`institut_id`)";
-            $where .= " AND (i.`Institut_id` = :institute OR i.`fakultaets_id` = :institute)";
-            $parameters['institute'] = $filter['institute'];
-        }
-
-        if (isset($filter['semtype'])) {
-            $where .= " AND `seminare`.`status` = :semtype";
-            $parameters['semtype'] = $filter['semtype'];
-        }
-
-        if (isset($filter['planningstatus'])) {
-            switch ($filter['planningstatus']) {
-                case 'no-request':
-                    $where .= " AND NOT EXISTS (
-                            SELECT `request_id` FROM `whakamahere_requests`
-                            WHERE `course_id` = `seminare`.`Seminar_id`
-                        )";
-                    break;
-                case 'request':
-                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
-                    break;
-                case 'planned':
-                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
-                    $joins[] = "JOIN `whakamahere_course_slots` sl ON (sl.`request_id` = r.`request_id`)";
-                    $joins[] = "JOIN `whakamahere_course_times` ti ON (ti.`slot_id` = sl.`slot_id`)";
-                    break;
-                case 'unplanned':
-                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
-                    $where .= " AND NOT EXISTS (
-                            SELECT ws.`request_id` FROM `whakamahere_course_slots` ws
-                                JOIN `whakamahere_course_times` wt ON (wt.`slot_id` = ws.`slot_id`)
-                            WHERE ws.`request_id` = r.`request_id`
-                        )";
-                    break;
-            }
-        }
-
-        $order = " ORDER BY `seminare`.`VeranstaltungsNummer`, `seminare`.`Name`";
-
-        if ($limit != 0) {
-            $order .= " LIMIT :offset, :limit";
-            $parameters['offset'] = (int) $offset;
-            $parameters['limit'] = (int) $limit;
-        }
-
-        return Course::findBySQL(implode(" ", $joins) . $where . $order, $parameters);
+        return Course::findBySQL($query['sql'], $query['parameters']);
     }
 
     /**
@@ -136,53 +84,9 @@ class WhakamaherePlanningRequest extends SimpleORMap
      */
     public static function countAllCourses($filter)
     {
-        $parameters = ['semester' => $filter['semester']];
+        $query = self::getFilteredCoursesSQL($filter, 0, 0);
 
-        $joins = [
-            "JOIN `semester_data` sem ON (sem.`beginn` = `seminare`.`start_time`)",
-            "JOIN `sem_types` t ON (t.`id` = `seminare`.`status`)"
-        ];
-        $where = " WHERE sem.`semester_id` = :semester AND t.`class` = 1";
-
-        if (isset($filter['institute'])) {
-            $joins[] = "JOIN `Institute` i ON (i.`institut_id` = `seminare`.`institut_id`)";
-            $where .= " AND (i.`Institut_id` = :institute OR i.`fakultaets_id` = :institute)";
-            $parameters['institute'] = $filter['institute'];
-        }
-
-        if (isset($filter['semtype'])) {
-            $where .= " AND `seminare`.`status` = :semtype";
-            $parameters['semtype'] = $filter['semtype'];
-        }
-
-        if (isset($filter['planningstatus'])) {
-            switch ($filter['planningstatus']) {
-                case 'no-request':
-                    $where .= " AND NOT EXISTS (
-                            SELECT `request_id` FROM `whakamahere_requests`
-                            WHERE `course_id` = `seminare`.`Seminar_id`
-                        )";
-                    break;
-                case 'request':
-                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
-                    break;
-                case 'planned':
-                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
-                    $joins[] = "JOIN `whakamahere_course_slots` sl ON (sl.`request_id` = r.`request_id`)";
-                    $joins[] = "JOIN `whakamahere_course_times` ti ON (ti.`slot_id` = sl.`slot_id`)";
-                    break;
-                case 'unplanned':
-                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
-                    $where .= " AND NOT EXISTS (
-                            SELECT ws.`request_id` FROM `whakamahere_course_slots` ws
-                                JOIN `whakamahere_course_times` wt ON (wt.`slot_id` = ws.`slot_id`)
-                            WHERE ws.`request_id` = r.`request_id`
-                        )";
-                    break;
-            }
-        }
-
-        return Course::countBySQL(implode(" ", $joins) . $where, $parameters);
+        return Course::countBySQL($query['sql'], $query['parameters']);
     }
 
     /**
@@ -334,6 +238,99 @@ class WhakamaherePlanningRequest extends SimpleORMap
             return array_reverse($endWeeks);
         }
 
+    }
+
+    private static function getFilteredCoursesSQL($filter, $offset, $limit)
+    {
+        $parameters = ['semester' => $filter['semester']];
+
+        $joins = [
+            "JOIN `semester_data` sem ON (sem.`beginn` = `seminare`.`start_time`)",
+            "JOIN `sem_types` t ON (t.`id` = `seminare`.`status`)"
+        ];
+        $where = " WHERE sem.`semester_id` = :semester AND t.`class` = 1";
+
+        if (isset($filter['institute'])) {
+            $joins[] = "JOIN `Institute` i ON (i.`institut_id` = `seminare`.`institut_id`)";
+            $where .= " AND (i.`Institut_id` = :institute OR i.`fakultaets_id` = :institute)";
+            $parameters['institute'] = $filter['institute'];
+        }
+
+        if (isset($filter['semtype'])) {
+            $where .= " AND `seminare`.`status` = :semtype";
+            $parameters['semtype'] = $filter['semtype'];
+        }
+
+        if (isset($filter['planningstatus'])) {
+            switch ($filter['planningstatus']) {
+                case 'no-request':
+                    $where .= " AND NOT EXISTS (
+                            SELECT `request_id` FROM `whakamahere_requests`
+                            WHERE `course_id` = `seminare`.`Seminar_id`
+                        )";
+                    break;
+                case 'request':
+                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
+                    break;
+                case 'planned':
+                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
+                    $joins[] = "JOIN `whakamahere_course_slots` sl ON (sl.`request_id` = r.`request_id`)";
+                    $joins[] = "JOIN `whakamahere_course_times` ti ON (ti.`slot_id` = sl.`slot_id`)";
+                    break;
+                case 'unplanned':
+                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
+                    $where .= " AND NOT EXISTS (
+                            SELECT ws.`request_id` FROM `whakamahere_course_slots` ws
+                                JOIN `whakamahere_course_times` wt ON (wt.`slot_id` = ws.`slot_id`)
+                            WHERE ws.`request_id` = r.`request_id`
+                        )";
+                    break;
+            }
+        }
+
+        if ($filter['min'] || $filter['max']) {
+            $joins[] = "LEFT JOIN `whakamahere_requests` tr ON (tr.`course_id` = `seminare`.`Seminar_id`)";
+            $joins[] = "LEFT JOIN `whakamahere_property_requests` tpr ON (tpr.`request_id` = tr.`request_id`)";
+
+            if ($filter['min'] && !$filter['max']) {
+                $where .= " AND (
+                        (tr.`request_id` IS NOT NULL AND tpr.`property_id` = :seats AND tpr.`value` >= :min)
+                        OR
+                        (tr.`request_id` IS NULL AND `seminare`.`admission_turnout` >= :min)
+                    )";
+                $parameters['min'] = (int) $filter['min'];
+            } else if (!$filter['min'] && $filter['max']) {
+                $where .= " AND (
+                        (tr.`request_id` IS NOT NULL AND tpr.`property_id` = :seats AND tpr.`value` <= :max)
+                        OR
+                        (tr.`request_id` IS NULL AND `seminare`.`admission_turnout` <= :max)
+                    )";
+                $parameters['max'] = (int) $filter['max'];
+            } else {
+                $where .= " AND (
+                        (tr.`request_id` IS NOT NULL AND tpr.`property_id` = :seats AND tpr.`value` BETWEEN :min AND :max)
+                        OR
+                        (tr.`request_id` IS NULL AND `seminare`.`admission_turnout` BETWEEN :min AND :max)
+                    )";
+                $parameters['min'] = (int) $filter['min'];
+                $parameters['max'] = (int) $filter['max'];
+            }
+
+            $parameters['seats'] = WhakamaherePropertyRequest::getSeatsPropertyId();
+        }
+
+        $order = " ORDER BY `seminare`.`VeranstaltungsNummer`, `seminare`.`Name`";
+
+        if ($limit != 0) {
+            $order .= " LIMIT :offset, :limit";
+            $parameters['offset'] = (int) $offset;
+            $parameters['limit'] = (int) $limit;
+        }
+
+        return [
+            'sql' => implode(" ", $joins) . $where . $order,
+            'parameters' => $parameters
+        ];
     }
 
 }

@@ -1,6 +1,7 @@
 import './public-path'
 import Vue from 'vue'
 import bus from './bus'
+import '../stylesheets/listing.scss'
 import '../stylesheets/paginate.scss'
 
 window.Vue = Vue
