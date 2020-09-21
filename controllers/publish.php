@@ -138,31 +138,43 @@ class PublishController extends AuthenticatedController {
                                 $booking->booking->booking_type = 0;
                                 $booking->booking->range_id = $date->id;
                                 $booking->booking->description = '';
-                                if ($booking->booking->store() !== false) {
 
-                                    $result['slots'][] = [
-                                        'slot_id' => $slot->id,
-                                        'status' => 'success',
-                                        'date' => $date->date
-                                    ];
+                                try {
+                                    if ($booking->booking->store() !== false) {
 
-                                    $log->state = 'success';
+                                        $result['slots'][] = [
+                                            'slot_id' => $slot->id,
+                                            'status' => 'success',
+                                            'date' => $date->date
+                                        ];
 
-                                } else {
+                                        $log->state = 'success';
+
+                                    } else {
+
+                                        $failedDates[] = [
+                                            'date' => $date->date,
+                                            'error' => str_replace(':room', $booking->booking->resource->name,
+                                                $status['ERROR_STORE_BOOKING'])
+                                        ];
+
+                                        $result['slots'][] = [
+                                            'slot_id' => $slot->id,
+                                            'status' => 'error_store_booking',
+                                            'date' => $date->date
+                                        ];
+                                        $errors++;
+
+                                    }
+
+                                } catch (ResourceBookingOverlapException $e) {
+
+                                    $booking->delete();
 
                                     $failedDates[] = [
                                         'date' => $date->date,
-                                        'error' => str_replace(':room', $booking->booking->resource->name,
-                                            $status['ERROR_STORE_BOOKING'])
+                                        'error' => $e->getMessage()
                                     ];
-
-                                    $result['slots'][] = [
-                                        'slot_id' => $slot->id,
-                                        'status' => 'error_store_booking',
-                                        'date' => $date->date
-                                    ];
-                                    $errors++;
-
                                 }
 
                             } else {

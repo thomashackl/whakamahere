@@ -59,7 +59,7 @@ class LogController extends AuthenticatedController {
         $views->addLink(
             dgettext('whakamahere', 'Veröffentlichungsprotokoll'),
             $this->link_for('log/view')
-        )->setActive(false);
+        )->setActive(true);
         $sidebar->addWidget($views);
 
         $options = [
