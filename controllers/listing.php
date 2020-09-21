@@ -181,7 +181,7 @@ class ListingController extends AuthenticatedController {
             'no-request' => dgettext('whakamahere', 'ohne regelmäßige Zeitwünsche'),
             'request' => dgettext('whakamahere', 'mit regelmäßigen Zeitwünschen'),
             'planned' => dgettext('whakamahere', 'bereits geplant'),
-            'unplanned' => dgettext('whakamahere', 'noch nicht geplant'),
+            'unplanned' => dgettext('whakamahere', 'Zeitwünsche, aber nicht geplant'),
         ];
         $planning = $this->sidebar->addWidget(new SelectWidget(
             dgettext('whakamahere', 'Planungsdaten'),
@@ -282,6 +282,7 @@ class ListingController extends AuthenticatedController {
         if ($this->institute) {
             $filter['institute'] = $this->institute;
         }
+
         if ($this->semtype) {
             $filter['semtype'] = $this->semtype;
         }

@@ -107,16 +107,14 @@ class WhakamaherePlanningRequest extends SimpleORMap
                     $joins[] = "JOIN `whakamahere_course_times` ti ON (ti.`slot_id` = sl.`slot_id`)";
                     break;
                 case 'unplanned':
+                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
                     $where .= " AND NOT EXISTS (
-                            SELECT wr.`request_id` FROM `whakamahere_requests` wr
-                                JOIN `whakamahere_course_slots` ws ON (ws.`request_id` = wr.`request_id`)
+                            SELECT ws.`request_id` FROM `whakamahere_course_slots` ws
                                 JOIN `whakamahere_course_times` wt ON (wt.`slot_id` = ws.`slot_id`)
-                            WHERE wr.`course_id` = `seminare`.`Seminar_id`
+                            WHERE ws.`request_id` = r.`request_id`
                         )";
                     break;
             }
-            $where .= " AND `seminare`.`status` = :semtype";
-            $parameters['semtype'] = $filter['semtype'];
         }
 
         $order = " ORDER BY `seminare`.`VeranstaltungsNummer`, `seminare`.`Name`";
@@ -174,16 +172,14 @@ class WhakamaherePlanningRequest extends SimpleORMap
                     $joins[] = "JOIN `whakamahere_course_times` ti ON (ti.`slot_id` = sl.`slot_id`)";
                     break;
                 case 'unplanned':
+                    $joins[] = "JOIN `whakamahere_requests` r ON (r.`course_id` = `seminare`.`Seminar_id`)";
                     $where .= " AND NOT EXISTS (
-                            SELECT wr.`request_id` FROM `whakamahere_requests` wr
-                                JOIN `whakamahere_course_slots` ws ON (ws.`request_id` = wr.`request_id`)
+                            SELECT ws.`request_id` FROM `whakamahere_course_slots` ws
                                 JOIN `whakamahere_course_times` wt ON (wt.`slot_id` = ws.`slot_id`)
-                            WHERE wr.`course_id` = `seminare`.`Seminar_id`
+                            WHERE ws.`request_id` = r.`request_id`
                         )";
                     break;
             }
-            $where .= " AND `seminare`.`status` = :semtype";
-            $parameters['semtype'] = $filter['semtype'];
         }
 
         return Course::countBySQL(implode(" ", $joins) . $where, $parameters);
