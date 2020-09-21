@@ -17,6 +17,7 @@
             </caption>
             <colgroup>
                 <col>
+                <col width="75">
                 <col width="200">
                 <col width="400">
                 <col width="200">
@@ -24,6 +25,7 @@
             <thead>
                 <tr>
                     <th>Veranstaltung</th>
+                    <th># TN</th>
                     <th>Lehrende</th>
                     <th>Gewünschte regelmäßige Zeit(en)</th>
                     <th>Wunschraum</th>
@@ -36,6 +38,9 @@
                            target="_blank">
                             {{ course.name }}
                         </a>
+                    </td>
+                    <td>
+                        {{ course.turnout }}
                     </td>
                     <td>
                         <div v-for="lecturer in course.lecturers" :key="lecturer.id">

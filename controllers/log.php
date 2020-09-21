@@ -33,6 +33,8 @@ class LogController extends AuthenticatedController {
 
         $semesterId = UserConfig::get(User::findCurrent()->id)->WHAKAMAHERE_SELECTED_SEMESTER;
         $this->semester = $semesterId ? Semester::find($semesterId) : Semester::findNext();
+
+        PageLayout::setTitle(dgettext('whakamahere', 'Veröffentlichungsprotokoll'));
     }
 
     /**
@@ -55,7 +57,7 @@ class LogController extends AuthenticatedController {
             $this->link_for('listing')
         )->setActive(false);
         $views->addLink(
-            dgettext('whakamahere', 'Veröffentlichungslog'),
+            dgettext('whakamahere', 'Veröffentlichungsprotokoll'),
             $this->link_for('log/view')
         )->setActive(false);
         $sidebar->addWidget($views);

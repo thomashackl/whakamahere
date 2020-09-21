@@ -45,6 +45,8 @@ class ListingController extends AuthenticatedController {
             '/assets/javascripts/listing.js?v=' . $version);
 
         $this->setupSidebar();
+
+        PageLayout::setTitle(dgettext('whakamahere', 'Veranstaltungen'));
     }
 
     /**
@@ -86,6 +88,7 @@ class ListingController extends AuthenticatedController {
             [
                 'Nummer',
                 'Name',
+                '# TN',
                 'Lehrende',
                 'Gewünschte regelmäßige Zeit(en)',
                 'Wunschraum'
@@ -97,6 +100,7 @@ class ListingController extends AuthenticatedController {
             $csv[] = [
                 $json['number'],
                 $json['title'],
+                $json['turnout'],
                 implode("\n", array_map(function($l) {
                         return $l['name'];
                     }, $json['lecturers'])),
@@ -129,7 +133,7 @@ class ListingController extends AuthenticatedController {
         )->setActive(true);
         if (WhakamaherePublishLogEntry::countBySemester_id($this->semester->id)) {
             $views->addLink(
-                dgettext('whakamahere', 'Veröffentlichungslog'),
+                dgettext('whakamahere', 'Veröffentlichungsprotokoll'),
                 $this->link_for('log/view')
             )->setActive(false);
         }
@@ -211,6 +215,9 @@ class ListingController extends AuthenticatedController {
         }
 
         if ($request = WhakamaherePlanningRequest::findOneByCourse_id($course->id)) {
+            $result['turnout'] = $request->property_requests->findOneBy(
+                    'property_id', WhakamaherePropertyRequest::getSeatsPropertyId()
+                )->value;
             $result['request'] = [
                 'id' => $request->id,
                 'cycle' => $request->cycle,
@@ -254,6 +261,8 @@ class ListingController extends AuthenticatedController {
 
                 $result['request']['slots'][] = $slot;
             }
+        } else {
+            $result['turnout'] = $course->admission_turnout ?: '-';
         }
 
         return $result;

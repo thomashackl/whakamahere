@@ -43,7 +43,7 @@ class TimelinesController extends AuthenticatedController {
         // Navigation handling.
         Navigation::activateItem('/resources/whakamahere/timelines');
 
-        PageLayout::setTitle(dgettext('whakamahere', 'Semesterzeitpläne'));
+        PageLayout::setTitle(dgettext('whakamahere', 'Planungszeiträume'));
 
         $actions = new ActionsWidget();
         $actions->addLink(dgettext('whakamahere', 'Planungsphase hinzufügen'),

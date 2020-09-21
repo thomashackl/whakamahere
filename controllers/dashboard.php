@@ -62,7 +62,7 @@ class DashboardController extends AuthenticatedController {
         )->setActive(false);
         if (WhakamaherePublishLogEntry::countBySemester_id($this->semester->id)) {
             $views->addLink(
-                dgettext('whakamahere', 'Veröffentlichungslog'),
+                dgettext('whakamahere', 'Veröffentlichungsprotokoll'),
                 $this->link_for('log/view')
             )->setActive(false);
         }
@@ -76,6 +76,7 @@ class DashboardController extends AuthenticatedController {
         $widget->setOptions($options, $this->semester->id);
         $this->sidebar->addWidget($widget);
 
+        PageLayout::setTitle(dgettext('whakamahere', 'Dashboard'));
     }
 
     /**
@@ -86,8 +87,6 @@ class DashboardController extends AuthenticatedController {
 
         // Navigation handling.
         Navigation::activateItem('/resources/whakamahere/dashboard');
-
-        PageLayout::setTitle(dgettext('whakamahere', 'Dashboard'));
 
         $version = $this->plugin->getVersion();
         PageLayout::addScript($this->plugin->getPluginURL() .

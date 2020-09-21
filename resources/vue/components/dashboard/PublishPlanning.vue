@@ -24,7 +24,7 @@
                     {{ error }} Veranstaltungen nicht gebucht.
                 </div>
                 <div v-if="processed == courseIds.length">
-                    <a :href="logUrl">Veröffentlichungslog anzeigen</a>
+                    <a :href="logUrl">Veröffentlichungsprotokoll anzeigen</a>
                 </div>
             </div>
         </div>
