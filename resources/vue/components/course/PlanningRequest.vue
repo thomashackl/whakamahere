@@ -15,7 +15,7 @@
                 <input type="radio" name="regular" id="is-irregular" v-model="regular" v-bind:value="0"
                        :disabled="disabled">
                 <label class="undecorated" for="is-irregular">
-                    unregelmäßig oder eine Blockveranstaltung
+                    unregelmäßig, findet online statt oder benötigt keinen Raum
                 </label>
             </section>
         </fieldset>
@@ -103,9 +103,8 @@
             </section>
         </fieldset>
         <studip-messagebox v-if="regular == 0" :type="info"
-                           message="Für unregelmäßige Veranstaltungen sind hier keine weiteren Angaben
-                                erforderlich. Bitte wenden Sie sich wegen Ihren benötigten Räumen
-                                direkt an die Raumvergabe.">
+                           message="Für unregelmäßige oder Online-Veranstaltungen sind hier keine weiteren Angaben
+                                erforderlich." :details="details">
         </studip-messagebox>
     </div>
 </template>
@@ -156,6 +155,15 @@
             disabled: {
                 type: Boolean,
                 default: false
+            }
+        },
+        data() {
+            return {
+                details: [
+                    'Falls Sie Räume benötigen, wenden Sie sich bitte direkt an die Raumvergabe.',
+                    'Für Online-Veranstaltungen können Sie ihre Termine selbst in der Veranstaltung' +
+                        'unter Verwaltung -> Zeiten/Räume anlegen.'
+                ]
             }
         },
         computed: {
