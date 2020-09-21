@@ -62,18 +62,20 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
         // Create navigation for resource requirements in courses
         if (Navigation::hasItem('/course/admin')) {
             $course = Course::findCurrent();
-            $planningdata = WhakamaherePlanningRequest::findOneByCourse_id($course->id);
-            $status = WhakamahereSemesterStatus::find($course->start_semester->id);
-            if ($status->isEnabled()) {
-                $navigation = new Navigation($this->getDisplayName(),
-                    PluginEngine::getURL($this, array(), 'course/planningrequest'));
-                $navigation->setImage(Icon::create('resources'));
-                $navigation->setDescription(dgettext('whakamahere',
-                    'Hier werden Ihre Anforderungen an Räume und Zeiten für die zentrale Raumplanung erfasst.'));
-                $navigation->addSubNavigation('planningrequest',
-                    new Navigation(dgettext('whakamahere', 'Angaben zur Semesterplanung'),
-                        PluginEngine::getURL($this, array(), 'course/planningrequest')));
-                Navigation::addItem('/course/admin/whakamahere', $navigation);
+
+            if ($course) {
+                $status = WhakamahereSemesterStatus::find($course->start_semester->id);
+                if ($status->isEnabled()) {
+                    $navigation = new Navigation($this->getDisplayName(),
+                        PluginEngine::getURL($this, array(), 'course/planningrequest'));
+                    $navigation->setImage(Icon::create('resources'));
+                    $navigation->setDescription(dgettext('whakamahere',
+                        'Hier werden Ihre Anforderungen an Räume und Zeiten für die zentrale Raumplanung erfasst.'));
+                    $navigation->addSubNavigation('planningrequest',
+                        new Navigation(dgettext('whakamahere', 'Angaben zur Semesterplanung'),
+                            PluginEngine::getURL($this, array(), 'course/planningrequest')));
+                    Navigation::addItem('/course/admin/whakamahere', $navigation);
+                }
             }
         }
     }

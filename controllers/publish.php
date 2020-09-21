@@ -42,6 +42,9 @@ class PublishController extends AuthenticatedController {
      */
     public function get_courses_action()
     {
+        // Cleanup old log entries from previous exports.
+        WhakamaherePublishLogEntry::deleteBySemester_id($this->semester->id);
+
         $this->render_json(
             DBManager::get()->fetchFirst("SELECT DISTINCT r.`course_id`
                 FROM `whakamahere_requests` r
@@ -55,15 +58,6 @@ class PublishController extends AuthenticatedController {
                 ['semester' => $this->semester->id]
             )
         );
-        /*$this->render_json([
-            '019f2a6102558a61ab3794bd94264412',
-            '021c468881d9454d3c25ca7a3a8e8526',
-            '052730662655aacc6576a1206e315cd4',
-            '0cd8de9b57255050fd2c775d11a2947f',
-            '1035e794f89f2b421f7e80c56b58eb2d',
-            '0e250995bab6b8ed8b24ae8a203d9fe9',
-            '341086f83fcf8676259e8f9d57156b3a'
-        ]);*/
     }
 
     /**
@@ -83,7 +77,7 @@ class PublishController extends AuthenticatedController {
         $lastweek = max(array_keys(WhakamaherePlanningRequest::getEndWeeks($request->course->start_semester)));
 
         // Delete all course cycles in this course - planning takes precedence.
-        SeminarCycleDate::deleteBySeminar_id($course_id);
+        //SeminarCycleDate::deleteBySeminar_id($course_id);
 
         $status = WhakamaherePublishLogEntry::getStatusMessages();
 

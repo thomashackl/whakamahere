@@ -200,13 +200,9 @@ class WhakamaherePlanningRequest extends SimpleORMap
         $sql = "SELECT DISTINCT a.*
             FROM `auth_user_md5` a
                 JOIN `whakamahere_course_slots` s ON (s.`user_id` = a.`user_id`)
-                JOIN `whakamahere_requests` r ON (r.`request_id` = s.`request_id`)
-                JOIN `seminare` sem ON (r.`course_id` = sem.`Seminar_id`)
-                JOIN `semester_data` sd ON (sem.`start_time` BETWEEN sd.`beginn` AND sd.`ende`)";
-        $where = " WHERE sd.`semester_id` = :semester";
-        $params = [
-            'semester' => $filter['semester']
-        ];
+                JOIN `whakamahere_requests` r ON (r.`request_id` = s.`request_id`)";
+        $where = "";
+        $params = [];
 
         if ($filter['institute'] != '') {
 

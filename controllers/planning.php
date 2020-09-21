@@ -133,6 +133,7 @@ class PlanningController extends AuthenticatedController {
         }
 
         $this->lecturers = $this->getLecturers($filter);
+        //$this->lecturers = [];
 
         $this->setupSidebar();
 

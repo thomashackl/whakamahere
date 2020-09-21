@@ -11,13 +11,11 @@
             <studip-messagebox v-else type="error"
                                message="Für dieses Semester sind keine Planungsdaten hinterlegt."></studip-messagebox>
         </section>
-        <section class="align-center" id="publish-planning">
+        <section v-if="isPublishingAllowed" class="align-center" id="publish-planning">
             <header>
                 Planung veröffentlichen
             </header>
-            <studip-messagebox type="info"
-                               message="Diese Funktion wird demnächst vom Entwickler Ihres Vertrauens freigeschaltet.">
-            </studip-messagebox>
+            <publish-planning :semester="semester"></publish-planning>
         </section>
     </article>
 </template>
