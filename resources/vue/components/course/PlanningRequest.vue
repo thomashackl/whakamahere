@@ -161,7 +161,7 @@
             return {
                 details: [
                     'Falls Sie Räume benötigen, wenden Sie sich bitte direkt an die Raumvergabe.',
-                    'Für Online-Veranstaltungen können Sie ihre Termine selbst in der Veranstaltung' +
+                    'Für Online-Veranstaltungen können Sie ihre Termine selbst in der Veranstaltung ' +
                         'unter Verwaltung -> Zeiten/Räume anlegen.'
                 ]
             }

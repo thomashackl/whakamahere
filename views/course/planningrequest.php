@@ -1,8 +1,8 @@
 <?php if ($form) : ?>
 <form class="default" action="<?php echo $disabled ? '' : $controller->link_for('course/store_request') ?>"
       method="post">
+    <fieldset>
 <?php endif ?>
-<fieldset>
     <legend>
         <?php echo dgettext('whakamahere', 'Angaben zur Semesterplanung') ?>
     </legend>
@@ -22,13 +22,13 @@
             el: '#whakamahere-planning-request'
         });
     </script>
-</fieldset>
 
 <?php if ($form) : ?>
-    <?php echo CSRFProtection::tokenTag() ?>
-    <footer data-dialog-button>
-        <?php echo Studip\Button::createAccept(dgettext('whakamahere', 'Speichern'),
-            'submit', $disabled ? ['disabled' => true] : null) ?>
-    </footer>
+        <?php echo CSRFProtection::tokenTag() ?>
+        <footer data-dialog-button>
+            <?php echo Studip\Button::createAccept(dgettext('whakamahere', 'Speichern'),
+                'submit', $disabled ? ['disabled' => true] : null) ?>
+        </footer>
+    </fieldset>
 </form>
 <?php endif;
