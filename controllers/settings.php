@@ -72,6 +72,10 @@ class SettingsController extends AuthenticatedController {
         $this->readonly = $in_courses['readonly'];
 
         $this->publish = Config::get()->WHAKAMAHERE_PUBLISHING_ALLOWED;
+
+        $this->mailto = Config::get()->WHAKAMAHERE_NOTIFICATION_MAIL_ADDRESSES ?: [];
+        $this->follow_users = Config::get()->WHAKAMAHERE_NOTIFY_ON_USERS ?: [];
+        $this->user_search = Quicksearch::get('users[]', new StandardSearch('username'))->withButton();
     }
 
     public function store_action() {
@@ -145,6 +149,9 @@ class SettingsController extends AuthenticatedController {
         ];
         Config::get()->store('WHAKAMAHERE_ENABLED_IN_COURSES', $newdata);
         Config::get()->store('WHAKAMAHERE_PUBLISHING_ALLOWED', Request::optionArray('publish'));
+
+        Config::get()->store('WHAKAMAHERE_NOTIFICATION_MAIL_ADDRESSES', array_filter(Request::getArray('mailto')));
+        Config::get()->store('WHAKAMAHERE_NOTIFY_ON_USERS', array_filter(Request::usernameArray('users')));
 
 
         if ($success) {

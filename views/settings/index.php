@@ -156,6 +156,53 @@
             </select>
         </section>
     </fieldset>
+    <fieldset>
+        <legend>
+            <?= dgettext('whakamahere', 'Mailbenachrichtigungen') ?>
+        </legend>
+        <section>
+            <header>
+                <h2><?= dgettext('whakamahere', 'An welche E-Mailadressen sollen ' .
+                    'Benachrichtigungen geschickt werden?') ?></h2>
+            </header>
+            <label for="mailto">
+                <?= dgettext('whakamahere', 'E-Mailadresse hinzufügen') ?>
+            </label>
+            <input type="email" name="mailto[]" id="mailto">
+            <div>
+                <?php foreach ($mailto as $one) : ?>
+                    <ul class="list-entry">
+                        <li>
+                            <?= htmlReady($one) ?>
+                            <input type="hidden" name="mailto[]" value="<?= htmlReady($one) ?>">
+                            <?= Icon::create('trash', 'clickable', ['onclick' => '$(this).parent().remove()']) ?>
+                        </li>
+                    </ul>
+                <?php endforeach ?>
+            </div>
+        </section>
+        <section>
+            <header>
+                <h2><?= dgettext('whakamahere', 'Die Aktionen welcher Kennungen ' .
+                    'sollen Benachrichtigungen auslösen?') ?></h2>
+            </header>
+            <label for="user">
+                <?= dgettext('whakamahere', 'Kennung hinzufügen') ?>
+            </label>
+            <?= $user_search->render() ?>
+            <div>
+                <?php foreach ($follow_users as $one) : ?>
+                    <ul class="list-entry">
+                        <li>
+                            <?= htmlReady($one) ?>
+                            <input type="hidden" name="users[]" value="<?= htmlReady($one) ?>">
+                            <?= Icon::create('trash', 'clickable', ['onclick' => '$(this).parent().remove()']) ?>
+                        </li>
+                    </ul>
+                <?php endforeach ?>
+            </div>
+        </section>
+    </fieldset>
     <?= CSRFProtection::tokenTag() ?>
     <footer data-dialog-button>
         <?= Studip\Button::createAccept(dgettext('whakamahere', 'Speichern'), 'submit') ?>

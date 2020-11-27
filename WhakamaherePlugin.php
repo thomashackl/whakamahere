@@ -57,6 +57,11 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
             Navigation::addItem('/resources/whakamahere', $navigation);
 
             NotificationCenter::addObserver($this, 'removeDeletedBooking', 'ResourceBookingDidDelete');
+
+            // Add Observers for notifying room management on booking updates or deletions
+            NotificationCenter::addObserver($this, 'mailNotification', 'ResourceBookingDidCreate');
+            NotificationCenter::addObserver($this, 'mailNotification', 'ResourceBookingDidUpdate');
+            NotificationCenter::addObserver($this, 'mailNotification', 'ResourceBookingDidDelete');
         }
 
         // Create navigation for resource requirements in courses
@@ -125,6 +130,64 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
     public function removeDeletedBooking($event, $affected, $data)
     {
         WhakamahereTimeBooking::deleteByBooking_id($affected->id);
+    }
+
+    /**
+     * Send mail notifications to configured users if necessary.
+     *
+     * @param string $event event that happened, like "ResourceBookingDidCreate"
+     * @param ResourceBooking $affected affected ResourceBooking object
+     * @param mixed $data
+     */
+    public function mailNotification($event, $affected, $data)
+    {
+        $mailto = Config::get()->WHAKAMAHERE_NOTIFICATION_MAIL_ADDRESSES;
+        $users = Config::get()->WHAKAMAHERE_NOTIFY_ON_USERS;
+
+        if (in_array(User::findCurrent()->username, $users) && count($mailto) > 0 && $affected->booking_type < 3) {
+
+            $subject = '';
+            $action = '';
+
+            $type = 'Raumbuchung';
+            switch ($affected->booking_type) {
+                case 1:
+                    $type = 'Reservierung';
+                    break;
+                case 2:
+                    $type = 'Sperrbuchung';
+                    break;
+            }
+
+            switch ($event) {
+                case 'ResourceBookingDidCreate':
+                    $action = 'angelegt';
+                    break;
+                case 'ResourceBookingDidUpdate':
+                    $action = 'verändert';
+                    break;
+                case 'ResourceBookingDidDelete':
+                    $action = 'gelöscht';
+                    break;
+            }
+
+            $subject = sprintf('%1$s wurde %2$s', $type, $action);
+
+            $message = sprintf(
+                'Hallo,\n\n%1$s hat folgende %2$s %3$s:\n\nRaum: %4$s\nZeit: %5$s\nVeranstaltung: %6$s\n\nGruß,\nIhr Stud.IP',
+                User::findCurrent()->getFullname(),
+                $type,
+                $action,
+                $affected->room_name,
+                date('d.m.Y H:i', $affected->begin) . ' - ' . date('d.m.Y H:i', $affected->end),
+                $affected->course_id ? Course::find($affected->course_id)->getFullname() : '-'
+            );
+
+            foreach ($mailto as $mail) {
+                StudipMail::sendMessage($mail, $subject, $message);
+            }
+
+        }
     }
 
 }
