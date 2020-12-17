@@ -113,7 +113,7 @@ class CourseController extends AuthenticatedController {
                 $i++;
             }
 
-            $this->disabled = !$status->isCreatingAllowed() && !$status->isEditingAllowed();
+            $this->disabled = !$status->isEditingAllowed();
 
             if ($this->disabled) {
                 PageLayout::postWarning(dgettext('whakamahere','Sie können die gemachten Angaben ' .
@@ -136,7 +136,7 @@ class CourseController extends AuthenticatedController {
                 'slots' => []
             ];
 
-            $this->disabled = !$status->isCreatingAllowed();
+            $this->disabled = !$status->isEditingAllowed();
             if ($this->disabled) {
                 PageLayout::postWarning(dgettext('whakamahere','Sie können keine Wünsche zur ' .
                     'Semesterplanung mehr eintragen, da die Planung bereits begonnen hat oder abgeschlossen ' .

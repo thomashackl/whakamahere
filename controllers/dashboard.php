@@ -43,7 +43,7 @@ class DashboardController extends AuthenticatedController {
 
         $status = WhakamahereSemesterStatus::find($this->semester->id);
         $this->isEnabled = $status->isEnabled();
-        $this->isPublishingAllowed = $status->isPublishingAllowed();
+        $this->isPublishingAllowed = $status->isPublishingAllowed() && $this->plugin->hasPermission('root');
 
         // Semester selector widget
         $this->sidebar = Sidebar::get();
@@ -86,7 +86,9 @@ class DashboardController extends AuthenticatedController {
     {
 
         // Navigation handling.
-        Navigation::activateItem('/resources/whakamahere/dashboard');
+        Navigation::activateItem(Navigation::hasItem('/resources') ?
+            '/resources/whakamahere/dashboard' :
+            '/tools/whakamahere/dashboard');
 
         $version = $this->plugin->getVersion();
         PageLayout::addScript($this->plugin->getPluginURL() .

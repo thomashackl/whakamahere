@@ -38,11 +38,11 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
                 new Navigation(dgettext('whakamahere', 'Planung'),
                     PluginEngine::getURL($this, [], 'planning')));
 
-            $navigation->addSubNavigation('semesters',
-                new Navigation(dgettext('whakamahere', 'Semestereinstellungen'),
-                    PluginEngine::getURL($this, [], 'semesters')));
-
             if ($this->hasPermission('root')) {
+
+                $navigation->addSubNavigation('semesters',
+                    new Navigation(dgettext('whakamahere', 'Semestereinstellungen'),
+                        PluginEngine::getURL($this, [], 'semesters')));
 
                 $navigation->addSubNavigation('timelines',
                     new Navigation(dgettext('whakamahere', 'Planungszeiträume'),
@@ -54,14 +54,12 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
 
             }
 
-            Navigation::addItem('/resources/whakamahere', $navigation);
+            if (Navigation::hasItem('/resources')) {
+                Navigation::addItem('/resources/whakamahere', $navigation);
+            } else {
+                Navigation::addItem('/tools/whakamahere', $navigation);
+            }
 
-            NotificationCenter::addObserver($this, 'removeDeletedBooking', 'ResourceBookingDidDelete');
-
-            // Add Observers for notifying room management on booking updates or deletions
-            NotificationCenter::addObserver($this, 'mailNotification', 'ResourceBookingDidCreate');
-            NotificationCenter::addObserver($this, 'mailNotification', 'ResourceBookingDidUpdate');
-            NotificationCenter::addObserver($this, 'mailNotification', 'ResourceBookingDidDelete');
         }
 
         // Create navigation for resource requirements in courses
@@ -83,6 +81,13 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
                 }
             }
         }
+
+        NotificationCenter::addObserver($this, 'removeDeletedBooking', 'ResourceBookingDidDelete');
+
+        // Add Observers for notifying room management on booking updates or deletions
+        NotificationCenter::addObserver($this, 'mailNotification', 'ResourceBookingDidCreate');
+        NotificationCenter::addObserver($this, 'mailNotification', 'ResourceBookingDidUpdate');
+        NotificationCenter::addObserver($this, 'mailNotification', 'ResourceBookingDidDelete');
     }
 
     /**
@@ -108,7 +113,13 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
      */
     public function hasPermission($neededPermission)
     {
-        return $GLOBALS['perm']->have_perm('root');
+        switch ($neededPermission) {
+            case 'read':
+                return $GLOBALS['perm']->have_perm('admin');
+            case 'write':
+            case 'root':
+                return $GLOBALS['perm']->have_perm('root');
+        }
     }
 
 
@@ -144,7 +155,18 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
         $mailto = Config::get()->WHAKAMAHERE_NOTIFICATION_MAIL_ADDRESSES;
         $users = Config::get()->WHAKAMAHERE_NOTIFY_ON_USERS;
 
-        if (in_array(User::findCurrent()->username, $users) && count($mailto) > 0 && $affected->booking_type < 3) {
+        $log = fopen('/Users/thomashackl/Downloads/whaka.log', 'w');
+        fwrite('Event caught: ' . $event . "\n");
+
+        if ($event == 'ResourceBookingDidDelete') {
+            $shouldSend = count($mailto) > 0 && $affected->booking_type < 3;
+        } else {
+            in_array(User::findCurrent()->username, $users) && count($mailto) > 0 && $affected->booking_type < 3;
+        }
+
+        fwrite('Send mail? ' . $shouldSend . "\n");
+
+        if ($shouldSend) {
 
             $subject = '';
             $action = '';
@@ -174,7 +196,16 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
             $subject = sprintf('%1$s wurde %2$s', $type, $action);
 
             $message = sprintf(
-                'Hallo,\n\n%1$s hat folgende %2$s %3$s:\n\nRaum: %4$s\nZeit: %5$s\nVeranstaltung: %6$s\n\nGruß,\nIhr Stud.IP',
+                'Hallo,
+
+%1$s hat folgende %2$s %3$s:
+
+Raum: %4$s
+Zeit: %5$s
+Veranstaltung: %6$s
+
+Gruß,
+Ihr Stud.IP',
                 User::findCurrent()->getFullname(),
                 $type,
                 $action,
@@ -182,6 +213,9 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
                 date('d.m.Y H:i', $affected->begin) . ' - ' . date('d.m.Y H:i', $affected->end),
                 $affected->course_id ? Course::find($affected->course_id)->getFullname() : '-'
             );
+
+            fwrite($log, $subject . "\n");
+            fwrite($log, $message . "\n");
 
             foreach ($mailto as $mail) {
                 StudipMail::sendMessage($mail, $subject, $message);

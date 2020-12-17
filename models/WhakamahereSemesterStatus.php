@@ -66,7 +66,7 @@ class WhakamahereSemesterStatus extends SimpleORMap
     public function isCreatingAllowed()
     {
         $config = Config::get()->WHAKAMAHERE_ENABLED_IN_COURSES;
-        return in_array($this->status, $config['create']);
+        return $GLOBALS['perm']->have_perm('root') || in_array($this->status, $config['create']);
     }
 
     /**
@@ -76,7 +76,7 @@ class WhakamahereSemesterStatus extends SimpleORMap
     public function isEditingAllowed()
     {
         $config = Config::get()->WHAKAMAHERE_ENABLED_IN_COURSES;
-        return in_array($this->status, $config['edit']);
+        return $GLOBALS['perm']->have_perm('root') || in_array($this->status, $config['edit']);
     }
 
     /**

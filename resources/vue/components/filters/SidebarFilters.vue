@@ -163,7 +163,6 @@
             })
             bus.$on('updated-no-room', (state) => {
                 this.showNoRoom = state
-                console.log('Show without room only: ' + state)
                 this.storeSelection('no_room', state)
             })
 

@@ -61,7 +61,9 @@ class PlanningController extends AuthenticatedController {
     public function index_action($show = 'semester')
     {
         // Navigation handling.
-        Navigation::activateItem('/resources/whakamahere/planning');
+        Navigation::activateItem(Navigation::hasItem('/resources') ?
+            '/resources/whakamahere/planning' :
+            '/tools/whakamahere/planning');
 
         PageLayout::setTitle(dgettext('whakamahere', 'Planung'));
         PageLayout::allowFullscreenMode();
@@ -136,6 +138,8 @@ class PlanningController extends AuthenticatedController {
         //$this->lecturers = [];
 
         $this->setupSidebar();
+
+        $this->editable = $this->plugin->hasPermission('write');
 
     }
 

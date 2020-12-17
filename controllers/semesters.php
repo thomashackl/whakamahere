@@ -47,7 +47,9 @@ class SemestersController extends AuthenticatedController {
     public function index_action($all = false)
     {
         // Navigation handling.
-        Navigation::activateItem('/resources/whakamahere/semesters');
+        Navigation::activateItem(Navigation::hasItem('/resources') ?
+            '/resources/whakamahere/semesters' :
+            '/tools/whakamahere/semesters');
 
         PageLayout::setTitle(dgettext('whakamahere', 'Semestereinstellungen'));
 

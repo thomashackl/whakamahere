@@ -3,7 +3,7 @@
         <table v-if="courseList.length > 0" class="default">
             <caption>
                 {{ courseList.length }} ungeplante Veranstaltung(en)
-                <span class="actions">
+                <span v-if="editable" class="actions">
                     <a href="#" @click="acceptAllTimePreferences">
                         <studip-icon shape="check-circle"/>
                     </a>
@@ -27,9 +27,10 @@
                     <th>Aktionen</th>
                 </tr>
             </thead>
-            <tbody class="container" v-dragula="courseList" drake="courselist">
+            <tbody class="container" v-dragula="editable ? courseList : null" :drake="editable ? 'courselist' : null">
                 <tr v-for="course in courseList" :id="course.course_id + '-' + course.slot_id"
-                    class="course" :data-course-id="course.course_id" :data-slot-id="course.slot_id"
+                    :class="'course' + (editable ? ' draggable' : '')"
+                    :data-course-id="course.course_id" :data-slot-id="course.slot_id"
                     :data-course-number="course.course_number" :data-course-name="course.course_name"
                     :data-turnout="course.turnout" :data-weekday="course.weekday" :data-time="course.time"
                     :data-duration="course.duration" :data-lecturer-id="course.lecturer_id"
@@ -40,7 +41,7 @@
                     <td class="course-lecturer">{{ course.lecturer }}</td>
                     <td class="course-preftime">{{ getWeekday(course.weekday) }} {{ course.time.slice(0, 5) }}</td>
                     <td class="course-actions">
-                        <a href="#" @click="acceptTimePreference($event)" v-if="course.time != ''">
+                        <a href="#" @click="acceptTimePreference($event)" v-if="editable && course.time != ''">
                             <studip-icon shape="check-circle"/>
                         </a>
                     </td>
@@ -70,6 +71,10 @@
             lectureStart: {
                 type: String,
                 default: ''
+            },
+            editable: {
+                type: Boolean,
+                default: false
             }
         },
         data() {
@@ -78,18 +83,20 @@
             }
         },
         created() {
-            const service = this.$dragula.$service
-            service.options('courselist', {
-                accepts: function(el, target, source, sibling) {
-                    return false
-                }
-            })
-            service.eventBus.$on('drag', (args) => {
-                bus.$emit('start-drag-course', args.el.dataset)
-            })
-            service.eventBus.$on('cancel', (args) => {
-                bus.$emit('cancel-drag-course', args.el.dataset)
-            })
+            if (this.editable) {
+                const service = this.$dragula.$service
+                service.options('courselist', {
+                    accepts: function (el, target, source, sibling) {
+                        return false
+                    }
+                })
+                service.eventBus.$on('drag', (args) => {
+                    bus.$emit('start-drag-course', args.el.dataset)
+                })
+                service.eventBus.$on('cancel', (args) => {
+                    bus.$emit('cancel-drag-course', args.el.dataset)
+                })
+            }
         },
         mounted() {
             const dividerCoords = document.querySelector('hr.fc-divider').getBoundingClientRect()
@@ -174,7 +181,7 @@
                 font-size: 11px;
                 padding: 1px;
 
-                &.course {
+                &.course.draggable {
                     cursor: move;
 
                     .course-actions {

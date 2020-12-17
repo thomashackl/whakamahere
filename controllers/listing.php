@@ -60,7 +60,9 @@ class ListingController extends AuthenticatedController {
      */
     public function index_action()
     {
-        Navigation::activateItem('/resources/whakamahere/dashboard');
+        Navigation::activateItem(Navigation::hasItem('/resources') ?
+            '/resources/whakamahere/dashboard' :
+            '/tools/whakamahere/dashboard');
 
         $filter = $this->getFilter();
 
@@ -301,6 +303,14 @@ class ListingController extends AuthenticatedController {
         $filter = [
             'semester' => $this->semester->id
         ];
+
+        if (!$GLOBALS['perm']->have_perm('root')) {
+            $filter['my_institutes'] = array_map(function ($i) {
+                    return $i['Institut_id'];
+                },
+                Institute::getMyInstitutes()
+            );
+        }
 
         if ($this->institute) {
             $filter['institute'] = $this->institute;

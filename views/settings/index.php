@@ -42,10 +42,10 @@
             <?= dgettext('whakamahere', 'In welchen Phasen sind Angaben zur Semesterplanung erlaubt?') ?>
         </legend>
         <section>
-            <label for="create">
+            <label for="edit">
                 <?= dgettext('whakamahere', 'Angaben neu anlegen und bearbeiten') ?>:
             </label>
-            <select name="create[]" id="create" class="nested-select" multiple>
+            <select name="edit[]" id="edit" class="nested-select" multiple>
                 <?php foreach ($semesterstatus as $status => $name) : ?>
                     <option value="<?php echo htmlReady($status) ?>"
                         <?php echo in_array($status, $create) ? 'selected' : '' ?>>
@@ -55,11 +55,11 @@
             </select>
         </section>
         <section>
-            <label for="edit-only">
+            <label for="create-only">
                 <?= dgettext('whakamahere',
-                    'Bereits vorhandene Angaben bearbeiten, aber keine neuen anlegen') ?>:
+                    'Neue Angaben anlegen, aber keine bestehenden bearbeiten') ?>:
             </label>
-            <select name="edit[]" id="edit-only" class="nested-select" multiple>
+            <select name="create[]" id="create-only" class="nested-select" multiple>
                 <?php foreach ($semesterstatus as $status => $name) : ?>
                     <option value="<?php echo htmlReady($status) ?>"
                         <?php echo in_array($status, $edit) ? 'selected' : '' ?>>
@@ -158,7 +158,7 @@
     </fieldset>
     <fieldset>
         <legend>
-            <?= dgettext('whakamahere', 'Mailbenachrichtigungen') ?>
+            <?= dgettext('whakamahere', 'Mailbenachrichtigungen bei Raumbuchungsänderungen') ?>
         </legend>
         <section>
             <header>
@@ -185,6 +185,7 @@
             <header>
                 <h2><?= dgettext('whakamahere', 'Die Aktionen welcher Kennungen ' .
                     'sollen Benachrichtigungen auslösen?') ?></h2>
+                <h3><?= dgettext('whakamahere', '(Buchungslöschungen lösen immer eine Benachrichtigung aus, unabhängig davon, wer sie vornimmt)') ?></h3>
             </header>
             <label for="user">
                 <?= dgettext('whakamahere', 'Kennung hinzufügen') ?>

@@ -5,12 +5,12 @@
                                   :width="128" :height="128"/>
         <schedule v-if="mode == 'semester'" :min-time="minTime" :max-time="maxTime" :locale="locale"
                   :show-weekends="showWeekends" :lecture-start="lectureStart"
-                  :courses="plannedCourseList"></schedule>
+                  :courses="plannedCourseList" :editable="editable"></schedule>
         <week-schedule v-if="mode == 'week'" :min-time="minTime" :max-time="maxTime" :locale="locale"
                        :weeks="semesterWeeks" :selectedWeek="selectedWeek" :show-weekends="showWeekends"
-                       :courses="plannedCourseList"></week-schedule>
+                       :courses="plannedCourseList" :editable="editable"></week-schedule>
         <unplanned-courses-list v-if="mode == 'semester'" :courses="unplannedCourseList"
-                                :lectureStart="lectureStart"></unplanned-courses-list>
+                                :lectureStart="lectureStart" :editable="editable"></unplanned-courses-list>
     </div>
 </template>
 
@@ -105,6 +105,10 @@
             room: {
                 type: String,
                 default: ''
+            },
+            editable: {
+                type: Boolean,
+                default: false
             }
         },
         data() {

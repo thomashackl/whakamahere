@@ -1,9 +1,9 @@
 <template>
     <section id="whakamahere-schedule">
         <full-calendar ref="schedule" :plugins="calendarPlugins" default-view="timeGridWeek" :locale="locale"
-                       droppable="true" :all-day-slot="false" :header="header" :weekends="showWeekends" :editable="true"
+                       droppable="true" :all-day-slot="false" :header="header" :weekends="showWeekends"
                        :column-header-format="columnHeaderFormat" week-number-calculation="ISO" :events="events"
-                       :min-time="minTime" :max-time="maxTime" :default-date="lectureStart"
+                       :min-time="minTime" :max-time="maxTime" :default-date="lectureStart" :editable="editable"
                        :valid-range="validRange" time-zone="local" :eventRender="renderEvent"
                        @eventReceive="dropCourse" @eventDragStart="markAvailableSlots" :custom-buttons="viewButtons"
                        @eventDragStop="this.unmarkAvailableSlots" @eventDrop="dropCourse" @eventResize="dropCourse"/>
@@ -54,6 +54,10 @@
             courses: {
                 type: Array,
                 default: () => []
+            },
+            editable: {
+                type: Boolean,
+                default: false
             }
         },
         data() {
@@ -139,7 +143,7 @@
                         courseId: this.courses[i].course_id,
                         courseName: this.courses[i].course_name,
                         courseNumber: this.courses[i].course_number,
-                        editable: this.courses[i].pinned == 0 ? true : false,
+                        editable: this.editable ? (this.courses[i].pinned == 0 ? true : false) : false,
                         end: new Date(day + ' ' + this.courses[i].end),
                         id: this.courses[i].course_id + '-' + this.courses[i].slot_id,
                         lecturerId: this.courses[i].lecturer_id,
@@ -168,7 +172,9 @@
         mounted() {
             // Re-initialize drag & drop after courses changed
             bus.$on('updated-courses', (value) => {
-                this.drag.destroy()
+                if (this.drag != null) {
+                    this.drag.destroy()
+                }
 
                 /*
                   * We need to do this in the next tick, as only then the HTML
@@ -210,37 +216,39 @@
             },
             // Initialize the drag & drop functionality with Dragula and FullCalendar.
             initDragAndDrop: function() {
-                const container = document.querySelector('#whakamahere-unplanned-courses table.default tbody')
+                if (this.editable) {
+                    const container = document.querySelector('#whakamahere-unplanned-courses table.default tbody')
 
-                // Now connect dragula to fullcalendar
-                this.drag = new ThirdPartyDraggable(container, {
-                    itemSelector: '.course',
-                    mirrorSelector: '.gu-mirror',
-                    eventData: function(eventEl) {
-                        let title = eventEl.dataset.courseName
-                        if (eventEl.dataset.courseNumber != '') {
-                            title = eventEl.dataset.courseNumber + ' ' + title
+                    // Now connect dragula to fullcalendar
+                    this.drag = new ThirdPartyDraggable(container, {
+                        itemSelector: '.course',
+                        mirrorSelector: '.gu-mirror',
+                        eventData: function (eventEl) {
+                            let title = eventEl.dataset.courseName
+                            if (eventEl.dataset.courseNumber != '') {
+                                title = eventEl.dataset.courseNumber + ' ' + title
+                            }
+                            return {
+                                id: eventEl.id,
+                                title: title,
+                                start: '10:00',
+                                end: '12:00',
+                                duration: {
+                                    minutes: eventEl.dataset.duration
+                                },
+                                course_id: eventEl.dataset.courseId,
+                                course_number: eventEl.dataset.courseNumber,
+                                course_name: eventEl.dataset.courseName,
+                                slot_id: eventEl.dataset.slotId,
+                                bookings: [],
+                                turnout: eventEl.dataset.turnout,
+                                lecturer: eventEl.dataset.lecturer,
+                                lecturer_id: eventEl.dataset.lecturerId,
+                                rooms: eventEl.dataset.rooms
+                            }
                         }
-                        return {
-                            id: eventEl.id,
-                            title: title,
-                            start: '10:00',
-                            end: '12:00',
-                            duration: {
-                                minutes: eventEl.dataset.duration
-                            },
-                            course_id: eventEl.dataset.courseId,
-                            course_number: eventEl.dataset.courseNumber,
-                            course_name: eventEl.dataset.courseName,
-                            slot_id: eventEl.dataset.slotId,
-                            bookings: [],
-                            turnout: eventEl.dataset.turnout,
-                            lecturer: eventEl.dataset.lecturer,
-                            lecturer_id: eventEl.dataset.lecturerId,
-                            rooms: eventEl.dataset.rooms
-                        }
-                    }
-                })
+                    })
+                }
             },
             // Mark slots where a course can or cannot be dropped.
             async markAvailableSlots(info) {
@@ -438,47 +446,51 @@
                 // Define available menu items
                 let menuItems = document.createElement('ul')
                 const items = []
-                items.push({
-                    icon: 'room-request',
-                    label: 'Raum auswählen',
-                    click: (clickEvent) => {
-                        clickEvent.preventDefault()
-                        this.getRoomProposals(calendarEvent.extendedProps.timeId)
-                        contextMenu.remove()
-                    }
-                })
 
-                if (calendarEvent.extendedProps.bookings.length > 0) {
+                if (this.editable) {
                     items.push({
-                        icon: 'room-occupied',
-                        label: 'Raumbuchung entfernen',
+                        icon: 'room-request',
+                        label: 'Raum auswählen',
                         click: (clickEvent) => {
                             clickEvent.preventDefault()
-                            this.removeBookings(calendarEvent)
+                            this.getRoomProposals(calendarEvent.extendedProps.timeId)
+                            contextMenu.remove()
+                        }
+                    })
+
+                    if (calendarEvent.extendedProps.bookings.length > 0) {
+                        items.push({
+                            icon: 'room-occupied',
+                            label: 'Raumbuchung entfernen',
+                            click: (clickEvent) => {
+                                clickEvent.preventDefault()
+                                this.removeBookings(calendarEvent)
+                                contextMenu.remove()
+                            }
+                        })
+                    }
+
+                    items.push({
+                        icon: 'trash',
+                        label: 'Aus der Planung entfernen',
+                        click: (clickEvent) => {
+                            clickEvent.preventDefault()
+                            this.unplan(calendarEvent)
+                            contextMenu.remove()
+                        }
+                    })
+                    items.push({
+                        icon: 'place',
+                        label: editable ? 'Anheften' : 'Lösen',
+                        label2: editable ? 'Lösen' : 'Anheften',
+                        click: (clickEvent) => {
+                            clickEvent.preventDefault()
+                            this.pin(calendarEvent, clickEvent)
                             contextMenu.remove()
                         }
                     })
                 }
 
-                items.push({
-                    icon: 'trash',
-                    label: 'Aus der Planung entfernen',
-                    click: (clickEvent) => {
-                        clickEvent.preventDefault()
-                        this.unplan(calendarEvent)
-                        contextMenu.remove()
-                    }
-                })
-                items.push({
-                    icon: 'place',
-                    label: editable ? 'Anheften' : 'Lösen',
-                    label2: editable ? 'Lösen' : 'Anheften',
-                    click: (clickEvent) => {
-                        clickEvent.preventDefault()
-                        this.pin(calendarEvent, clickEvent)
-                        contextMenu.remove()
-                    }
-                })
                 items.push({
                     icon: 'info',
                     label: 'Details',

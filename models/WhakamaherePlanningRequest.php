@@ -256,6 +256,12 @@ class WhakamaherePlanningRequest extends SimpleORMap
             $parameters['institute'] = $filter['institute'];
         }
 
+        if (isset($filter['my_institutes'])) {
+            $joins[] = "JOIN `Institute` my ON (my.`institut_id` = `seminare`.`institut_id`)";
+            $where .= " AND (my.`Institut_id` IN (:institutes) OR my.`fakultaets_id` IN (:institutes))";
+            $parameters['institutes'] = $filter['my_institutes'];
+        }
+
         if (isset($filter['semtype'])) {
             $where .= " AND `seminare`.`status` = :semtype";
             $parameters['semtype'] = $filter['semtype'];

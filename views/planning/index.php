@@ -3,6 +3,7 @@
                 :locale="'<?php echo $locale ?>'" mode="<?php echo $view ?>" :show-weekends="<?php echo $weekends ?>"
                 lecture-start="<?php echo $semesterStart->format('Y-m-d') ?>"
                 :semester-weeks='<?php echo json_encode($weeks) ?>'
+                :editable="<?php echo $editable ? 'true' : 'false' ?>"
                 <?php if ($selectedSemester) : ?>
                 :semester="'<?php echo $selectedSemester ?>'"
                 <?php endif ?>
