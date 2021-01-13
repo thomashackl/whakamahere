@@ -24,7 +24,7 @@ class PlanningController extends AuthenticatedController {
         $this->plugin = $this->dispatcher->plugin;
         $this->flash = Trails_Flash::instance();
 
-        if (!$this->plugin->hasPermission('read')) {
+        if (!$this->plugin->hasPermission('write')) {
             throw new AccessDeniedException();
         }
 

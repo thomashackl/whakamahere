@@ -48,7 +48,7 @@
             <select name="edit[]" id="edit" class="nested-select" multiple>
                 <?php foreach ($semesterstatus as $status => $name) : ?>
                     <option value="<?php echo htmlReady($status) ?>"
-                        <?php echo in_array($status, $create) ? 'selected' : '' ?>>
+                        <?php echo in_array($status, $edit) ? 'selected' : '' ?>>
                         <?php echo htmlReady($name) ?>
                     </option>
                 <?php endforeach ?>
@@ -62,7 +62,7 @@
             <select name="create[]" id="create-only" class="nested-select" multiple>
                 <?php foreach ($semesterstatus as $status => $name) : ?>
                     <option value="<?php echo htmlReady($status) ?>"
-                        <?php echo in_array($status, $edit) ? 'selected' : '' ?>>
+                        <?php echo in_array($status, $create) ? 'selected' : '' ?>>
                         <?php echo htmlReady($name) ?>
                     </option>
                 <?php endforeach ?>
