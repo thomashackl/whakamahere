@@ -77,7 +77,7 @@ class PublishController extends AuthenticatedController {
         $lastweek = max(array_keys(WhakamaherePlanningRequest::getEndWeeks($request->course->start_semester)));
 
         // Delete all course cycles in this course - planning takes precedence.
-        //SeminarCycleDate::deleteBySeminar_id($course_id);
+        SeminarCycleDate::deleteBySeminar_id($course_id);
 
         $status = WhakamaherePublishLogEntry::getStatusMessages();
 
@@ -166,6 +166,7 @@ class PublishController extends AuthenticatedController {
                                         $errors++;
 
                                     }
+
 
                                 } catch (ResourceBookingOverlapException $e) {
 
