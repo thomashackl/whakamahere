@@ -75,7 +75,7 @@ class SettingsController extends AuthenticatedController {
 
         $this->mailto = Config::get()->WHAKAMAHERE_NOTIFICATION_MAIL_ADDRESSES ?: [];
         $this->follow_users = Config::get()->WHAKAMAHERE_NOTIFY_ON_USERS ?: [];
-        $this->user_search = Quicksearch::get('users[]', new StandardSearch('username'))->withButton();
+        $this->user_search = QuickSearch::get('users[]', new StandardSearch('username'))->withButton();
     }
 
     public function store_action() {
