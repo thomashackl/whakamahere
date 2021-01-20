@@ -159,16 +159,11 @@ class WhakamaherePlugin extends StudIPPlugin implements SystemPlugin {
         $mailto = Config::get()->WHAKAMAHERE_NOTIFICATION_MAIL_ADDRESSES;
         $users = Config::get()->WHAKAMAHERE_NOTIFY_ON_USERS;
 
-        $log = fopen('/Users/thomashackl/Downloads/whaka.log', 'w');
-        fwrite('Event caught: ' . $event . "\n");
-
         if ($event == 'ResourceBookingDidDelete') {
             $shouldSend = count($mailto) > 0 && $affected->booking_type < 3;
         } else {
             in_array(User::findCurrent()->username, $users) && count($mailto) > 0 && $affected->booking_type < 3;
         }
-
-        fwrite('Send mail? ' . $shouldSend . "\n");
 
         if ($shouldSend) {
 
@@ -217,9 +212,6 @@ Ihr Stud.IP',
                 date('d.m.Y H:i', $affected->begin) . ' - ' . date('d.m.Y H:i', $affected->end),
                 $affected->course_id ? Course::find($affected->course_id)->getFullname() : '-'
             );
-
-            fwrite($log, $subject . "\n");
-            fwrite($log, $message . "\n");
 
             foreach ($mailto as $mail) {
                 StudipMail::sendMessage($mail, $subject, $message);
