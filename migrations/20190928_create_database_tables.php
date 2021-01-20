@@ -54,7 +54,7 @@ class CreateDatabaseTables extends Migration {
         DBManager::get()->execute("CREATE TABLE IF NOT EXISTS `whakamahere_timeline`
         (
             `phase_id` INT NOT NULL AUTO_INCREMENT,
-            `semester_id` VARCHAR(32) NOT NULL,
+            `semester_id` VARCHAR(32) COLLATE latin1_bin NOT NULL,
             `name` VARCHAR(255) NOT NULL DEFAULT '',
             `start` DATE NOT NULL,
             `end` DATE NOT NULL,

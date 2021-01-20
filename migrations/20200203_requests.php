@@ -26,10 +26,10 @@ class Requests extends Migration {
         DBManager::get()->execute("CREATE TABLE IF NOT EXISTS `whakamahere_requests`
         (
             `request_id` INT NOT NULL AUTO_INCREMENT,
-            `course_id` VARCHAR(32) NOT NULL,
-            `semester_id` VARCHAR(32) NOT NULL,
-            `institute_id` VARCHAR(32) NOT NULL,
-            `room_id` VARCHAR(32) NULL,
+            `course_id` VARCHAR(32) COLLATE latin1_bin NOT NULL,
+            `semester_id` VARCHAR(32) COLLATE latin1_bin NOT NULL,
+            `institute_id` VARCHAR(32) COLLATE latin1_bin NOT NULL,
+            `room_id` VARCHAR(32) COLLATE latin1_bin NULL,
             `cycle` TINYINT UNSIGNED NOT NULL DEFAULT 1,
             `startweek` TINYINT UNSIGNED NOT NULL DEFAULT 0,
             `comment` TEXT NOT NULL DEFAULT '',
@@ -47,7 +47,7 @@ class Requests extends Migration {
         (
             `property_request_id` INT NOT NULL AUTO_INCREMENT,
             `request_id` VARCHAR(32) NOT NULL,
-            `property_id` VARCHAR(32) NOT NULL,
+            `property_id` VARCHAR(32) COLLATE latin1_bin NOT NULL,
             `value` VARCHAR(255) NOT NULL,
             `mkdate` DATETIME NOT NULL,
             `chdate` DATETIME NOT NULL,
@@ -62,7 +62,7 @@ class Requests extends Migration {
             `slot_id` INT NOT NULL AUTO_INCREMENT,
             `request_id` VARCHAR(32) NOT NULL,
             `duration` SMALLINT NOT NULL,
-            `user_id` VARCHAR(32) NULL,
+            `user_id` VARCHAR(32) COLLATE latin1_bin NULL,
             `weekday` TINYINT NOT NULL,
             `time` TIME NOT NULL,
             `mkdate` DATETIME NOT NULL,

@@ -26,7 +26,7 @@ class CourseDataEnabled extends Migration {
     {
         // Which semester status values allow creating, editing or viewing planning data in courses?
         Config::get()->create('WHAKAMAHERE_ENABLED_IN_COURSES', [
-            'value' => '{"create":["input"],"edit":["prepare"],"readonly":["planning","review","finished"]}',
+            'value' => '{"create":["input","prepare"],"edit":["planning"],"readonly":["review","finished"]}',
             'type' => 'array',
             'range' => 'global',
             'section' => 'whakamahereplugin',

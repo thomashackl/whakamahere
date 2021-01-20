@@ -29,7 +29,7 @@ class TimeWeekExceptions extends Migration {
             `week` TINYINT UNSIGNED NOT NULL,
             `start` DATETIME NOT NULL,
             `end` DATETIME NOT NULL,
-            `booking_id` VARCHAR(32) NULL DEFAULT NULL,
+            `booking_id` VARCHAR(32) COLLATE latin1_bin NULL DEFAULT NULL,
             `mkdate` DATETIME NOT NULL,
             `chdate` DATETIME NOT NULL,
             PRIMARY KEY (`exception_id`),
