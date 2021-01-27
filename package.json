@@ -1,6 +1,6 @@
 {
     "name": "@studip/whakamahere",
-    "version": "1.8.2",
+    "version": "1.9.0",
     "description": "Stud.IP semester course time and room planning plugin",
     "private": true,
     "scripts": {

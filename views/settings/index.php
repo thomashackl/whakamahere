@@ -84,11 +84,11 @@
     </fieldset>
     <fieldset>
         <legend>
-            <?= dgettext('whakamahere', 'In welchen Phasen kann die Planung veröffentlicht werden?') ?>
+            <?= dgettext('whakamahere', 'Veröffentlichung der Planung') ?>
         </legend>
         <section>
             <label for="publish">
-                <?= dgettext('whakamahere', 'Veröffentlichung der Planung möglich in') ?>:
+                <?= dgettext('whakamahere', 'Veröffentlichung der Planung möglich in den Phasen') ?>:
             </label>
             <select name="publish[]" id="publish" class="nested-select" multiple>
                 <?php foreach ($semesterstatus as $status => $name) : ?>
@@ -98,6 +98,14 @@
                     </option>
                 <?php endforeach ?>
             </select>
+        </section>
+        <section>
+            <input type="checkbox" name="clear_on_publish" id="clear-on-publish"
+                   value="1"<?php echo $clear ? ' checked' : '' ?>>
+            <label for="clear-on-publish" class="undecorated">
+                <?= dgettext('whakamahere', 'Bei Veröffentlichung von Veranstaltungen bereits ' .
+                    'bestehende regelmäßige Zeiten dieser Veranstaltungen löschen') ?>
+            </label>
         </section>
     </fieldset>
     <fieldset>

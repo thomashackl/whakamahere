@@ -72,6 +72,7 @@ class SettingsController extends AuthenticatedController {
         $this->readonly = $in_courses['readonly'];
 
         $this->publish = Config::get()->WHAKAMAHERE_PUBLISHING_ALLOWED;
+        $this->clear = Config::get()->WHAKAMAHERE_CLEAR_CYCLES_ON_PUBLISH;
 
         $this->mailto = Config::get()->WHAKAMAHERE_NOTIFICATION_MAIL_ADDRESSES ?: [];
         $this->follow_users = Config::get()->WHAKAMAHERE_NOTIFY_ON_USERS ?: [];
@@ -150,6 +151,11 @@ class SettingsController extends AuthenticatedController {
         Config::get()->store('WHAKAMAHERE_ENABLED_IN_COURSES', $newdata);
         Config::get()->store('WHAKAMAHERE_PUBLISHING_ALLOWED', Request::optionArray('publish'));
 
+        // Settings for clearing course cycles on publishing
+        Config::get()->store('WHAKAMAHERE_CLEAR_CYCLES_ON_PUBLISH',
+            Request::int('clear_on_publish') == 1 ? true : false);
+
+        // Settings for mail notifications
         Config::get()->store('WHAKAMAHERE_NOTIFICATION_MAIL_ADDRESSES', array_filter(Request::getArray('mailto')));
         Config::get()->store('WHAKAMAHERE_NOTIFY_ON_USERS', array_filter(Request::usernameArray('users')));
 

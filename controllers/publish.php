@@ -76,8 +76,10 @@ class PublishController extends AuthenticatedController {
 
         $lastweek = max(array_keys(WhakamaherePlanningRequest::getEndWeeks($request->course->start_semester)));
 
-        // Delete all course cycles in this course - planning takes precedence.
-        SeminarCycleDate::deleteBySeminar_id($course_id);
+        // If config entry is set: delete all course cycles in this course - planning takes precedence.
+        if (Config::get()->WHAKAMAHERE_CLEAR_CYCLES_ON_PUBLISH) {
+            SeminarCycleDate::deleteBySeminar_id($course_id);
+        }
 
         $status = WhakamaherePublishLogEntry::getStatusMessages();
 
