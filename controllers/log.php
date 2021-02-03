@@ -23,7 +23,7 @@ class LogController extends AuthenticatedController {
     {
         $this->plugin = $this->dispatcher->plugin;
 
-        if (!$this->plugin->hasPermission('admin')) {
+        if (!$this->plugin->hasPermission('root')) {
             throw new AccessDeniedException();
         }
 
